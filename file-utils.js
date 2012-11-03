@@ -6,9 +6,6 @@ var base = require("node-base"),
 	uuid = require("node-uuid"),
 	step = require("step");
 
-exports.YUI_COMPRESSOR_JAR = "/mnt/compendium/DevLab/common/lib/yuicompressor/yuicompressor.jar";
-exports.CLOSURE_COMPILER_JAR = "/mnt/compendium/DevLab/common/lib/closure-compiler/compiler.jar";
-
 exports.searchReplace = searchReplace;
 function searchReplace(file, match, replace, cb)
 {
