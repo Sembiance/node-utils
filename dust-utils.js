@@ -1,7 +1,6 @@
 "use strict";
 
 var base = require("node-base"),
-	C = require("C"),
 	step = require("step"),
 	path = require("path"),
 	fs = require("fs");

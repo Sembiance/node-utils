@@ -1,7 +1,6 @@
 "use strict";
 
-var base = require("node-base"),
-	step = require("step");
+var base = require("node-base");
 
 var categories =
 {
