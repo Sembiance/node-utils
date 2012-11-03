@@ -75,8 +75,8 @@ function concat(files, dest, options, cb)
 	concatNext();
 }
 
-exports.getTempFilePath = getTempFilePath;
-function getTempFilePath()
+exports.generateTempFilePath = generateTempFilePath;
+function generateTempFilePath()
 {
 	var tempFilePath;
 	var existsSync = fs.existsSync ? fs.existsSync : path.existsSync;
