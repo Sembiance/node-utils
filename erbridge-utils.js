@@ -9,12 +9,12 @@ function messageHandler(bridge, messageName, messageData, requestid, socketid)
 {
 	if(requestCallbacks.hasOwnProperty(requestid))
 	{
-		requestCallbacks[requestid](messageName, messageData);
+		requestCallbacks[requestid](undefined, messageName, messageData);
 		delete requestCallbacks[requestid];
 	}
 	else if(requestHandlers.hasOwnProperty(messageName))
 	{
-		requestHandlers[messageName](messageData, function(responseName, responseData) { bridge.send("request", [responseName, responseData, requestid], socketid); });
+		requestHandlers[messageName](undefined, messageData, function(responseName, responseData) { bridge.send("request", [responseName, responseData, requestid], socketid); });
 	}
 }
 
