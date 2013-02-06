@@ -5,6 +5,8 @@ var base = require("node-base"),
 
 exports.run = function run(command, args, options, cb)
 {
+	options = options || {};
+	
 	if(!options.silent)
 		base.info("%G: %Y %s", "RUNNING", command, args.join(" "));
 	if(!options.maxBuffer)
