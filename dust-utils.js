@@ -1,7 +1,7 @@
 "use strict";
 
 var base = require("node-base"),
-	step = require("step"),
+	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs");
 
@@ -21,16 +21,13 @@ function render(basePath, name, data, options, cb)
 	var dust = require("dustjs-linkedin");
 	dust.onLoad = readDustFile;
 
-	step(
+	tiptoe(
 		function loadTemplate()
 		{
 			readDustFile(name, this);
 		},
-		function render(err, template)
+		function render(template)
 		{
-			if(err)
-				throw err;
-
 			dust.optimizers.format = function(ctx, node) { if(options.keepWhitespace) { return node; } };
 			dust.renderSource(template, data, this);
 		},

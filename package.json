@@ -7,7 +7,7 @@
 	"main"					: "index.js",
 	"dependencies"			:
 	{
-		"step"				: "git://github.com/Sembiance/step.git",
+		"tiptoe"			: ">= 0.1.1",
 		"node-uuid"			: ">= 1.4.0",
 		"dustjs-linkedin"   : ">= 1.1.1",
 		"unicode"			: ">= 0.4.3",

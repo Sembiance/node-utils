@@ -4,21 +4,18 @@ var base = require("node-base"),
 	fs = require("fs"),
 	path = require("path"),
 	uuid = require("node-uuid"),
-	step = require("step");
+	tiptoe = require("tiptoe");
 
 exports.searchReplace = searchReplace;
 function searchReplace(file, match, replace, cb)
 {
-	step(
+	tiptoe(
 		function loadFile()
 		{
 			fs.readFile(file, "utf8", this);
 		},
-		function replaceAndSave(err, data)
+		function replaceAndSave(data)
 		{
-			if(err)
-				throw err;
-
 			fs.writeFile(file, data.replace(new RegExp(match, "g"), replace), "utf8", this);
 		},
 		function handleErrors(err) { cb(err); }
