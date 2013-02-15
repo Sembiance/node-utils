@@ -7,9 +7,9 @@
 	"main"					: "index.js",
 	"dependencies"			:
 	{
-		"tiptoe"			: ">= 0.1.1",
+		"tiptoe"			: ">= 0.1.2",
 		"node-uuid"			: ">= 1.4.0",
-		"dustjs-linkedin"   : ">= 1.1.1",
+		"dustjs-linkedin"   : ">= 1.2.0",
 		"unicode"			: ">= 0.4.3",
 		"erbridge"			: ">= 0.1.4",
 		"node-base"			: "git://github.com/Sembiance/node-base.git"
