@@ -3,6 +3,7 @@
 var base = require("node-base"),
 	fs = require("fs"),
 	path = require("path"),
+	util = require("util"),
 	uuid = require("node-uuid"),
 	tiptoe = require("tiptoe");
 
@@ -70,6 +71,30 @@ function concat(files, dest, options, cb)
 	}
 
 	concatNext();
+}
+
+exports.copy = copy;
+function copy(src, dest, cb)
+{
+	var cbCalled = false;
+
+	var rd = fs.createReadStream(src);
+	rd.on("error", function(err) { done(err); });
+
+	var wr = fs.createWriteStream(dest);
+	wr.on("error", function(err) { done(err); });
+
+	wr.on("close", function(ex) { done(); });
+	rd.pipe(wr);
+
+	function done(err)
+	{
+		if(!cbCalled)
+		{
+			cb(err);
+			cbCalled = true;
+		}
+	}
 }
 
 exports.generateTempFilePath = generateTempFilePath;

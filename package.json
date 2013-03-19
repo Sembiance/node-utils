@@ -11,6 +11,7 @@
 		"node-uuid"			: ">= 1.4.0",
 		"dustjs-linkedin"   : ">= 1.2.0",
 		"unicode"			: ">= 0.4.3",
+		"rimraf"			: ">= 2.1.4",
 		"erbridge"			: ">= 0.1.4",
 		"node-base"			: "git://github.com/Sembiance/node-base.git"
 	}

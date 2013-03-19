@@ -7,3 +7,4 @@ exports.unicode = require("./unicode-utils");
 exports.erbridge = require("./erbridge-utils");
 exports.crypto = require("./crypto-utils");
 exports.print = require("./print-utils");
+exports.video = require("./video-utils");
