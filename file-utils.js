@@ -98,14 +98,15 @@ function copy(src, dest, cb)
 }
 
 exports.generateTempFilePath = generateTempFilePath;
-function generateTempFilePath()
+function generateTempFilePath(prefix)
 {
 	var tempFilePath;
 	var existsSync = fs.existsSync ? fs.existsSync : path.existsSync;
+	prefix = prefix || "/tmp";
 
 	do
 	{
-		tempFilePath = path.join("/", "tmp", uuid.v4() + ".tmp");
+		tempFilePath = path.join(prefix, uuid.v4() + ".tmp");
 	} while(existsSync(tempFilePath));
 
 	return tempFilePath;

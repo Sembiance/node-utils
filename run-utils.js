@@ -46,7 +46,12 @@ exports.run = function run(command, args, options, cb)
 			base.info("%G: %Y %s\n", "OUTPUT", command, args.join(" "), (stderr || stdout));
 
 		if(cb)
-			cb(err || stderr, stdout, stderr);
+		{
+			if(options["redirect-stderr"])
+				process.nextTick(function() {cb(err || stderr, stdout); });
+			else
+				process.nextTick(function() {cb(err || stderr, stdout, stderr); });
+		}
 		else
 			options(err || stderr, stdout, stderr);
 	}
