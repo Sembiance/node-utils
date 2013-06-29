@@ -1,18 +1,20 @@
 {
 	"name"					: "node-utils",
-	"version"				: "0.0.9",
+	"version"				: "0.1.0",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
 	"description"			: "private package for utils",
 	"private"				: true,
 	"main"					: "index.js",
+	"repository"            : { "type" : "git", "url" : "https://github.com/Sembiance/node-utils"},
 	"dependencies"			:
 	{
 		"tiptoe"			: ">= 0.1.2",
 		"node-uuid"			: ">= 1.4.0",
-		"dustjs-linkedin"   : ">= 1.2.0",
+		"dustjs-linkedin"   : ">= 1.2.5",
+		"dustjs-helpers"    : ">= 1.1.1",
 		"unicode"			: ">= 0.4.3",
 		"rimraf"			: ">= 2.1.4",
 		"erbridge"			: ">= 0.1.4",
-		"node-base"			: "git://github.com/Sembiance/node-base.git"
+		"accounting"        : ">= 0.3.2"
 	}
 }

@@ -1,6 +1,23 @@
 "use strict";
 
-var base = require("node-base");
+var base = require("base"),
+	accounting = require("accounting");
+
+exports.toSize = function(num, precision)
+{
+	precision = typeof precision==="undefined" ? 1 : precision;
+
+	if(num<base.KB)
+		return accounting.formatNumber(num) + "bytes";
+	else if(num<base.MB)
+		return accounting.formatNumber((num/base.KB), precision) + "KB";
+	else if(num<base.GB)
+		return accounting.formatNumber((num/base.MB), precision) + "MB";
+	else if(num<base.TB)
+		return accounting.formatNumber((num/base.GB), precision) + "GB";
+	else if(num<base.PB)
+		return accounting.formatNumber((num/base.TB), precision) + "TB";
+};
 
 exports.columnizeObject = function(o, options)
 {

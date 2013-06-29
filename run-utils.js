@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("node-base"),
+var base = require("base"),
 	child_process = require("child_process");
 
 exports.run = function run(command, args, options, cb)
@@ -8,7 +8,7 @@ exports.run = function run(command, args, options, cb)
 	options = options || {};
 	
 	if(!options.silent)
-		base.info("%G: %Y %s", "RUNNING", command, args.join(" "));
+		base.info("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
 	if(!options.maxBuffer)
 		options.maxBuffer = (1024*1024)*20;    // 20MB Buffer
 	
@@ -43,7 +43,7 @@ exports.run = function run(command, args, options, cb)
 		}
 
 		if(options["verbose"] && (stderr || (stdout && stdout.length)))
-			base.info("%G: %Y %s\n", "OUTPUT", command, args.join(" "), (stderr || stdout));
+			base.info("OUTPUT: %s %s\n", command, args.join(" "), (stderr || stdout));
 
 		if(cb)
 		{
