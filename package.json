@@ -1,20 +1,21 @@
 {
-	"name"					: "node-utils",
-	"version"				: "0.1.0",
+	"name"					: "xutil",
+	"version"				: "1.0.0",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
-	"description"			: "private package for utils",
+	"description"			: "common util functions I use in many of my node projects",
 	"private"				: true,
 	"main"					: "index.js",
-	"repository"            : { "type" : "git", "url" : "https://github.com/Sembiance/node-utils"},
+	"repository"            : { "type" : "git", "url" : "https://github.com/Sembiance/xutil"},
 	"dependencies"			:
 	{
-		"tiptoe"			: ">= 0.1.2",
-		"node-uuid"			: ">= 1.4.0",
-		"dustjs-linkedin"   : ">= 1.2.5",
+		"tiptoe"			: ">= 1.0.0",
+		"node-uuid"			: ">= 1.4.1",
+		"dustjs-linkedin"   : ">= 2.2.2",
 		"dustjs-helpers"    : ">= 1.1.1",
-		"unicode"			: ">= 0.4.3",
-		"rimraf"			: ">= 2.1.4",
-		"erbridge"			: ">= 0.1.4",
-		"accounting"        : ">= 0.3.2"
+		"unicode"			: ">= 0.4.9",
+		"rimraf"			: ">= 2.2.5",
+		"erbridge"			: ">= 1.0.0",
+		"accounting"        : ">= 0.3.2",
+		"xbase"				: "git://github.com/Sembiance/xbase.git"
 	}
 }

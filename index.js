@@ -1,10 +1,11 @@
 "use strict";
 
-exports.run = require("./run-utils");
-exports.file = require("./file-utils");
-exports.dust = require("./dust-utils");
-exports.unicode = require("./unicode-utils");
-exports.erbridge = require("./erbridge-utils");
-exports.crypto = require("./crypto-utils");
-exports.print = require("./print-utils");
-exports.video = require("./video-utils");
+exports.run = require("./run.js");
+exports.file = require("./file.js");
+exports.dust = require("./dust.js");
+exports.unicode = require("./unicode.js");
+exports.erbridge = require("./erbridge.js");
+exports.crypto = require("./crypto.js");
+exports.print = require("./print.js");
+exports.video = require("./video.js");
+exports.http = require("./http.js");

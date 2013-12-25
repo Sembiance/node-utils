@@ -1,12 +1,12 @@
 "use strict";
 
-var base = require("base"),
+var base = require("xbase"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs"),
-	runUtils = require("./run-utils.js"),
+	runUtil = require("./run.js"),
 	rimraf = require("rimraf"),
-	fileUtils = require("./file-utils.js");
+	fileUtil = require("./file.js");
 
 var	COMMAND_MPLAYER = "/usr/bin/mplayer";
 var	COMMAND_MOGRIFY = "/usr/bin/mogrify";
@@ -16,20 +16,20 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 	tiptoe(
 		function createTempDirectory()
 		{
-			this.data.tempDir = fileUtils.generateTempFilePath();
+			this.data.tempDir = fileUtil.generateTempFilePath();
 			fs.mkdir(this.data.tempDir, this);
 		},
 		function grabFrames()
 		{
-			runUtils.run(COMMAND_MPLAYER, ["-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "png", "--", videoPath], {"redirect-stderr" : true, silent:true, cwd:this.data.tempDir}, this);
+			runUtil.run(COMMAND_MPLAYER, ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "png", "--", videoPath], {silent:true, cwd:this.data.tempDir}, this);
 		},
 		function generateImage()
 		{
-			runUtils.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.png")], {"redirect-stderr" : true, silent:true}, this);
+			runUtil.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.png")], {silent:true}, this);
 		},
 		function moveImage()
 		{
-			fileUtils.copy(path.join(this.data.tempDir, "00000001.png"), thumbnailPath, this);
+			fileUtil.copy(path.join(this.data.tempDir, "00000001.png"), thumbnailPath, this);
 		},
 		function removeTempDirectory()
 		{
@@ -47,7 +47,7 @@ exports.getInfo = function getInfo(videoPath, cb)
 	tiptoe(
 		function runIdentify()
 		{
-			runUtils.run(COMMAND_MPLAYER, ["-frames", "0", "-identify", "--", videoPath], {"redirect-stderr" : true, silent:true}, this);
+			runUtil.run(COMMAND_MPLAYER, ["-frames", "0", "-identify", "--", videoPath], {silent:true}, this);
 		},
 		function processData(data)
 		{

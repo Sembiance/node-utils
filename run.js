@@ -1,6 +1,7 @@
 "use strict";
+/*global setImmediate: true*/
 
-var base = require("base"),
+var base = require("xbase"),
 	child_process = require("child_process");
 
 exports.run = function run(command, args, options, cb)
@@ -11,6 +12,8 @@ exports.run = function run(command, args, options, cb)
 		base.info("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
 	if(!options.maxBuffer)
 		options.maxBuffer = (1024*1024)*20;    // 20MB Buffer
+	if(!options.hasOwnProperty("redirect-stderr"))
+		options["redirect-stderr"] = true;
 	
 	if(cb)
 		child_process.execFile(command, args, options, handler);
@@ -48,9 +51,9 @@ exports.run = function run(command, args, options, cb)
 		if(cb)
 		{
 			if(options["redirect-stderr"])
-				process.nextTick(function() {cb(err || stderr, stdout); });
+				setImmediate(function() { cb(err || stderr, stdout); });
 			else
-				process.nextTick(function() {cb(err || stderr, stdout, stderr); });
+				setImmediate(function() { cb(err || stderr, stdout, stderr); });
 		}
 		else
 			options(err || stderr, stdout, stderr);

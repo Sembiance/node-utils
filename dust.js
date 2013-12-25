@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("base"),
+var base = require("xbase"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs");
