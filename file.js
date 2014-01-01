@@ -19,7 +19,7 @@ function searchReplace(file, match, replace, cb)
 		{
 			fs.writeFile(file, data.replace(new RegExp(match, "g"), replace), "utf8", this);
 		},
-		function handleErrors(err) { cb(err); }
+		function handleErrors(err) { setImmediate(function() { cb(err); }); }
 	);
 }
 
@@ -97,6 +97,22 @@ function copy(src, dest, cb)
 	}
 }
 
+exports.move = move;
+function move(src, dest, cb)
+{
+	tiptoe(
+		function copyFile()
+		{
+			copy(src, dest, this);
+		},
+		function removeFile()
+		{
+			fs.unlink(src, this);
+		},
+		function handleErrors(err) { setImmediate(function() { cb(err); }); }
+	);
+}
+
 exports.generateTempFilePath = generateTempFilePath;
 function generateTempFilePath(prefix)
 {
@@ -110,4 +126,10 @@ function generateTempFilePath(prefix)
 	} while(existsSync(tempFilePath));
 
 	return tempFilePath;
+}
+
+exports.exists = exists;
+function exists(target, cb)
+{
+	fs.exists(target, function(exists) { cb(null, exists); });
 }
