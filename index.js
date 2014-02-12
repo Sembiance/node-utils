@@ -9,3 +9,4 @@ exports.crypto = require("./crypto.js");
 exports.print = require("./print.js");
 exports.video = require("./video.js");
 exports.http = require("./http.js");
+exports.url = require("./url.js");
