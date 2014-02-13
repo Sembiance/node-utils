@@ -1,6 +1,6 @@
 {
 	"name"					: "xutil",
-	"version"				: "1.1.0",
+	"version"				: "1.2.0",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
 	"description"			: "common util functions I use in many of my node projects",
 	"private"				: true,
@@ -16,6 +16,7 @@
 		"rimraf"			: ">= 2.2.5",
 		"erbridge"			: ">= 1.0.0",
 		"accounting"        : ">= 0.3.2",
+		"cli-color"         : ">= 0.2.3",
 		"xbase"				: "git://github.com/Sembiance/xbase.git"
 	}
 }
