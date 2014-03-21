@@ -7,18 +7,10 @@ var base = require("xbase"),
 	tiptoe = require("tiptoe");
 
 exports.download = download;
-function download(targetURL, destination, extraHeaders, cb)
+function download(targetURL, destination, _extraHeaders, cb)
 {
-	cb = cb || extraHeaders;
-	extraHeaders = (!cb ? {} : extraHeaders);
-	var headers =
-	{
-		"accept"          : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-		"accept-charset"  : "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
-		"accept-language" : "en-US,en;q=0.8",
-		"user-agent"      : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.68 Safari/537.36"
-	};
-
+	var extraHeaders = (!cb ? {} : _extraHeaders);
+	cb = cb || _extraHeaders;
 
 	var uo = url.parse(targetURL);
 	var requestOptions =
@@ -27,7 +19,7 @@ function download(targetURL, destination, extraHeaders, cb)
 		port     : uo.port || 80,
 		method   : "GET",
 		path     : uo.path,
-		headers  : Object.merge(headers, extraHeaders)
+		headers  : getHeaders(extraHeaders)
 	};
 
 	var file = fs.createWriteStream(destination);
@@ -36,4 +28,41 @@ function download(targetURL, destination, extraHeaders, cb)
 		response.pipe(file);
 		file.on("finish", function() { file.close(); setImmediate(cb); });
 	});
+}
+
+exports.head = head;
+function head(targetURL, _extraHeaders, cb)
+{
+	var extraHeaders = (!cb ? {} : _extraHeaders);
+	cb = cb || _extraHeaders;
+
+	var uo = url.parse(targetURL);
+	var requestOptions =
+	{
+		hostname : uo.hostname,
+		port     : uo.port || 80,
+		method   : "HEAD",
+		path     : uo.path,
+		agent    : false,
+		headers  : getHeaders(extraHeaders)
+	};
+
+	var req = http.request(requestOptions, function(response)
+	{
+		setImmediate(function() { cb(undefined, response.headers); });
+	});
+	req.end();
+}
+
+function getHeaders(extraHeaders)
+{
+	var headers =
+	{
+		"accept"          : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+		"accept-charset"  : "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
+		"accept-language" : "en-US,en;q=0.8",
+		"user-agent"      : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.68 Safari/537.36"
+	};
+
+	return Object.merge(headers, extraHeaders || {});
 }
