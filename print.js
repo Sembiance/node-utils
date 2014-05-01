@@ -8,7 +8,7 @@ exports.toSize = function(num, precision)
 	precision = typeof precision==="undefined" ? 1 : precision;
 
 	if(num<base.KB)
-		return accounting.formatNumber(num) + "bytes";
+		return accounting.formatNumber(num) + " bytes";
 	else if(num<base.MB)
 		return accounting.formatNumber((num/base.KB), precision) + "KB";
 	else if(num<base.GB)
