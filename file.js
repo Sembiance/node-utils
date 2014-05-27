@@ -133,3 +133,9 @@ function exists(target, cb)
 {
 	fs.exists(target, function(exists) { cb(null, exists); });
 }
+
+exports.unlink = unlink;
+function unlink(target, cb)
+{
+	fs.exists(target, function(exists) { if(exists) { fs.unlink(target, cb); } else { return setImmediate(cb); }});
+}
