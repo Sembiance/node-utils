@@ -69,20 +69,20 @@ function compress(input, output, lossy, cb)
 			if(extension==="png")
 			{
 				if(lossy)
-					runUtil.run("pngquant", ["--speed", "1", tmpFile], this);
+					runUtil.run("pngquant", ["--speed", "1", tmpFile], {silent:true}, this);
 				else
-					runUtil.run("advpng", ["-z", "-4", output], this);
+					runUtil.run("advpng", ["-z", "-4", output], {silent:true}, this);
 			}
 			else if(extension==="jpg" || extension==="jpeg")
 			{
 				if(lossy)
-					runUtil.run("convert", [input, "-quality", "80%", output], this);
+					runUtil.run("convert", [input, "-quality", "80%", output], {silent:true}, this);
 				else
-					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", output, input], this);
+					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", output, input], {silent:true}, this);
 			}
 			else if(extension==="gif")
 			{
-				runUtil.run("gifsicle", ["-O3", input, "-o", output], this);
+				runUtil.run("gifsicle", ["-O3", input, "-o", output], {silent:true}, this);
 			}
 			else
 			{
