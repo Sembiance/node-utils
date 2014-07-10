@@ -2,6 +2,7 @@
 
 var base = require("xbase"),
 	util = require("util"),
+	ansidiff = require("ansidiff"),
 	color = require("cli-color");
 
 exports.diff = diff;
@@ -53,5 +54,10 @@ function diffArray(o, n, indent)
 function diffValues(o, n)
 {
 	if(o!==n)
-		return color.whiteBright(JSON.stringify(o)) + color.yellow(" => ") + color.whiteBright(JSON.stringify(n)) + "\n";
+	{
+		if(typeof o==="string")
+			return ansidiff.words(JSON.stringify(o), JSON.stringify(n), ansidiff.subtle) + "\n";
+		else
+			return color.whiteBright(JSON.stringify(o)) + color.yellow(" => ") + color.whiteBright(JSON.stringify(n)) + "\n";
+	}
 }
