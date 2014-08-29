@@ -35,6 +35,7 @@ function compress(input, output, lossy, cb)
 		throw new Error("Unsupported image extension: " + extension);
 
 	var tmpFile = fileUtil.generateTempFilePath();
+	var deleteInput = false;
 
 	tiptoe(
 		function checkIfInputOutputMatch()
@@ -44,6 +45,7 @@ function compress(input, output, lossy, cb)
 				var inputTMP = fileUtil.generateTempFilePath();
 				fileUtil.copy(input, inputTMP, this);
 				input = inputTMP;
+				deleteInput = true;
 			}
 			else
 			{
@@ -91,6 +93,9 @@ function compress(input, output, lossy, cb)
 		},
 		function cleanup()
 		{
+			if(deleteInput)
+				fileUtil.unlink(input, this.parallel());
+			
 			if(extension==="png" && lossy)
 			{
 				fileUtil.unlink(tmpFile, this.parallel());
