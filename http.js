@@ -4,6 +4,7 @@ var base = require("xbase"),
 	fs = require("fs"),
 	url = require("url"),
 	http = require("http"),
+	streamBuffers = require("stream-buffers"),
 	tiptoe = require("tiptoe");
 
 exports.download = download;
@@ -27,6 +28,30 @@ function download(targetURL, destination, _extraHeaders, cb)
 	{
 		response.pipe(file);
 		file.on("finish", function() { file.close(); setImmediate(cb); });
+	});
+}
+
+exports.get = get;
+function get(targetURL, _extraHeaders, cb)
+{
+	var extraHeaders = (!cb ? {} : _extraHeaders);
+	cb = cb || _extraHeaders;
+
+	var uo = url.parse(targetURL);
+	var requestOptions =
+	{
+		hostname : uo.hostname,
+		port     : uo.port || 80,
+		method   : "GET",
+		path     : uo.path,
+		headers  : getHeaders(extraHeaders)
+	};
+
+	var responseData = new streamBuffers.WritableStreamBuffer();
+	http.get(requestOptions, function(response)
+	{
+		response.on("data", function(d) { responseData.write(d); });
+		response.on("end", function() { cb(undefined, responseData.getContents()); });
 	});
 }
 
