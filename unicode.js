@@ -124,14 +124,15 @@ var UNICODE_CONVERSION_MAP =
 	'Ā':'A', 'Ē':'E', 'Ģ':'G', 'Ī':'i', 'Ķ':'k', 'Ļ':'L', 'Ņ':'N', 'Ū':'u'
 };
 
-exports.unicodeToAscii = function(text)
+exports.unicodeToAscii = function(text, additionalSymbols)
 {
 	var result = "";
+	var CONVERSION_MAP = Object.merge(UNICODE_CONVERSION_MAP, (additionalSymbols || {}));
 
 	for(var i=0,len=text.length;i<len;i++)
 	{
 		var c = text.charAt(i);
-		result += UNICODE_CONVERSION_MAP.hasOwnProperty(c) ? UNICODE_CONVERSION_MAP[c] : c;
+		result += CONVERSION_MAP.hasOwnProperty(c) ? CONVERSION_MAP[c] : c;
 	}
 
 	return result;
