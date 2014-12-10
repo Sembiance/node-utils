@@ -101,6 +101,17 @@ exports.move = move;
 function move(src, dest, cb)
 {
 	tiptoe(
+		function checkExisting()
+		{
+			exports.exists(dest, this);
+		},
+		function removeExisting(exists)
+		{
+			if(exists)
+				fs.unlink(dest, this);
+			else
+				this();
+		},
 		function copyFile()
 		{
 			copy(src, dest, this);
