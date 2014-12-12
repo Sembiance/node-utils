@@ -24,11 +24,12 @@ function download(targetURL, destination, _extraHeaders, cb)
 	};
 
 	var file = fs.createWriteStream(destination);
-	http.get(requestOptions, function(response)
+	var httpRequest = http.get(requestOptions, function(response)
 	{
 		response.pipe(file);
 		file.on("finish", function() { file.close(); setImmediate(cb); });
 	});
+	httpRequest.on("error", function(err) { cb(err); });
 }
 
 exports.get = get;
@@ -48,11 +49,12 @@ function get(targetURL, _extraHeaders, cb)
 	};
 
 	var responseData = new streamBuffers.WritableStreamBuffer();
-	http.get(requestOptions, function(response)
+	var httpRequest = http.get(requestOptions, function(response)
 	{
 		response.on("data", function(d) { responseData.write(d); });
 		response.on("end", function() { cb(undefined, responseData.getContents()); });
 	});
+	httpRequest.on("error", function(err) { cb(err); });
 }
 
 exports.head = head;
@@ -72,11 +74,12 @@ function head(targetURL, _extraHeaders, cb)
 		headers  : getHeaders(extraHeaders)
 	};
 
-	var req = http.request(requestOptions, function(response)
+	var httpRequest = http.request(requestOptions, function(response)
 	{
 		setImmediate(function() { cb(undefined, response.headers); });
 	});
-	req.end();
+	httpRequest.on("error", function(err) { cb(err); });
+	httpRequest.end();
 }
 
 function getHeaders(extraHeaders)
