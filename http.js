@@ -4,6 +4,7 @@ var base = require("xbase"),
 	fs = require("fs"),
 	url = require("url"),
 	http = require("http"),
+	https = require("https"),
 	streamBuffers = require("stream-buffers"),
 	tiptoe = require("tiptoe");
 
@@ -17,18 +18,19 @@ function download(targetURL, destination, _extraHeaders, cb)
 	var requestOptions =
 	{
 		hostname : uo.hostname,
-		port     : uo.port || 80,
+		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
 		method   : "GET",
 		path     : uo.path,
 		headers  : getHeaders(extraHeaders)
 	};
 
 	var file = fs.createWriteStream(destination);
-	var httpRequest = http.get(requestOptions, function(response)
+	var httpResponse = function(response)
 	{
 		response.pipe(file);
 		file.on("finish", function() { file.close(); setImmediate(cb); });
-	});
+	};
+	var httpRequest = (targetURL.startsWith("https") ? https : http).get(requestOptions, httpResponse);
 	httpRequest.on("error", function(err) { cb(err); });
 }
 
@@ -42,18 +44,19 @@ function get(targetURL, _extraHeaders, cb)
 	var requestOptions =
 	{
 		hostname : uo.hostname,
-		port     : uo.port || 80,
+		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
 		method   : "GET",
 		path     : uo.path,
 		headers  : getHeaders(extraHeaders)
 	};
 
 	var responseData = new streamBuffers.WritableStreamBuffer();
-	var httpRequest = http.get(requestOptions, function(response)
+	var httpResponse = function(response)
 	{
 		response.on("data", function(d) { responseData.write(d); });
 		response.on("end", function() { cb(undefined, responseData.getContents()); });
-	});
+	};
+	var httpRequest = (targetURL.startsWith("https") ? https : http).get(requestOptions, httpResponse);
 	httpRequest.on("error", function(err) { cb(err); });
 }
 
@@ -67,17 +70,18 @@ function head(targetURL, _extraHeaders, cb)
 	var requestOptions =
 	{
 		hostname : uo.hostname,
-		port     : uo.port || 80,
+		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
 		method   : "HEAD",
 		path     : uo.path,
 		agent    : false,
 		headers  : getHeaders(extraHeaders)
 	};
 
-	var httpRequest = http.request(requestOptions, function(response)
+	var httpResponse = function(response)
 	{
 		setImmediate(function() { cb(undefined, response.headers); });
-	});
+	};
+	var httpRequest = (targetURL.startsWith("https") ? https : http).request(requestOptions, httpResponse);
 	httpRequest.on("error", function(err) { cb(err); });
 	httpRequest.end();
 }
