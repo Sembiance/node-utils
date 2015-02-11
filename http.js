@@ -79,7 +79,7 @@ function head(targetURL, _extraHeaders, cb)
 
 	var httpResponse = function(response)
 	{
-		setImmediate(function() { cb(undefined, response.headers); });
+		setImmediate(function() { cb(undefined, response.headers, response.statusCode); });
 	};
 	var httpRequest = (targetURL.startsWith("https") ? https : http).request(requestOptions, httpResponse);
 	httpRequest.on("error", function(err) { cb(err); });
@@ -93,7 +93,7 @@ function getHeaders(extraHeaders)
 		"accept"          : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 		"accept-charset"  : "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
 		"accept-language" : "en-US,en;q=0.8",
-		"user-agent"      : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.68 Safari/537.36"
+		"user-agent"      : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.69 Safari/537.36"
 	};
 
 	return Object.merge(headers, extraHeaders || {});
