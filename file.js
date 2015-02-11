@@ -13,11 +13,11 @@ function searchReplace(file, match, replace, cb)
 	tiptoe(
 		function loadFile()
 		{
-			fs.readFile(file, "utf8", this);
+			fs.readFile(file, {encoding:"utf8"}, this);
 		},
 		function replaceAndSave(data)
 		{
-			fs.writeFile(file, data.replace(new RegExp(match, "g"), replace), "utf8", this);
+			fs.writeFile(file, data.replace(new RegExp(match, "g"), replace), {encoding:"utf8"}, this);
 		},
 		function handleErrors(err) { setImmediate(function() { cb(err); }); }
 	);
@@ -125,7 +125,7 @@ function move(src, dest, cb)
 }
 
 exports.generateTempFilePath = generateTempFilePath;
-function generateTempFilePath(prefix)
+function generateTempFilePath(prefix, suffix)
 {
 	var tempFilePath;
 	var existsSync = fs.existsSync ? fs.existsSync : path.existsSync;
@@ -133,7 +133,7 @@ function generateTempFilePath(prefix)
 
 	do
 	{
-		tempFilePath = path.join(prefix, uuid.v4() + ".tmp");
+		tempFilePath = path.join(prefix, uuid.v4() + (typeof suffix==="undefined" ? ".tmp" : suffix));
 	} while(existsSync(tempFilePath));
 
 	return tempFilePath;
