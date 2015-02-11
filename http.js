@@ -54,7 +54,7 @@ function get(targetURL, _extraHeaders, cb)
 	var httpResponse = function(response)
 	{
 		response.on("data", function(d) { responseData.write(d); });
-		response.on("end", function() { cb(undefined, responseData.getContents()); });
+		response.on("end", function() { cb(undefined, responseData.getContents(), response.statusCode); });
 	};
 	var httpRequest = (targetURL.startsWith("https") ? https : http).get(requestOptions, httpResponse);
 	httpRequest.on("error", function(err) { cb(err); });
