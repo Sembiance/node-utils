@@ -16,3 +16,13 @@ exports.setQueryParam = function(targetURL, name, value)
 
 	return url.format(urlObj);
 };
+
+exports.stripQuery = function(targetURL)
+{
+	var urlObj = url.parse(targetURL);
+	urlObj.query = null;
+	urlObj.search = null;
+	urlObj.path = urlObj.pathname;
+
+	return url.format(urlObj);
+};
