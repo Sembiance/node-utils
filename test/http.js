@@ -1,6 +1,7 @@
 "use strict";
 
 var assert = require("assert"),
+	fs = require("fs"),
 	httpUtil = require("../index").http;
 
 /*httpUtil.head("http://dev.mtgimage.com/card/azorius æthermage.hq.jpg", function(err, response, statusCode)
@@ -16,6 +17,12 @@ httpUtil.head("http://httpbin.org/delay/10", {timeout:5000}, function(err, respo
 httpUtil.get("http://httpbin.org/delay/10", {timeout:5000}, function(err, responseData, statusCode)
 {
 	assert(err);
+});
+
+httpUtil.download("http://httpbin.org/delay/10", "/tmp/httpDelayTest", {timeout:5000}, function(err, responseData, statusCode)
+{
+	assert(err);
+	assert(!fs.existsSync("/tmp/httpDelayTest"));
 });
 
 httpUtil.head("http://httpbin.org/delay/10", function(err, responseHeaders, statusCode)

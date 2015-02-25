@@ -79,7 +79,10 @@ function httpExecute(targetURL, options, cb)
 	httpRequest.on("error", function(err) {
 		httpClearTimeout();
 		if(outputFile)
+		{
 			outputFile.close();
+			fs.unlinkSync(options.download);
+		}
 		cb(err);
 	});
 
