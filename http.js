@@ -17,86 +17,6 @@ var keepaliveAgent = new Agent({
 	keepAliveTimeout : 30000
 });
 
-exports.download = download;
-function download(targetURL, destination, _extraHeaders, cb)
-{
-	var extraHeaders = (!cb ? {} : _extraHeaders);
-	cb = cb || _extraHeaders;
-
-	var uo = url.parse(targetURL);
-	var requestOptions =
-	{
-		hostname : uo.hostname,
-		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
-		method   : "GET",
-		path     : uo.path,
-		agent    : keepaliveAgent,
-		headers  : getHeaders(extraHeaders)
-	};
-
-	var file = fs.createWriteStream(destination);
-	var httpResponse = function(response)
-	{
-		response.pipe(file);
-		file.on("finish", function() { file.close(); setImmediate(cb); });
-	};
-	var httpRequest = (targetURL.startsWith("https") ? https : http).get(requestOptions, httpResponse);
-	httpRequest.on("error", function(err) { cb(err); });
-}
-
-exports.get = get;
-function get(targetURL, _extraHeaders, cb)
-{
-	var extraHeaders = (!cb ? {} : _extraHeaders);
-	cb = cb || _extraHeaders;
-
-	var uo = url.parse(targetURL);
-	var requestOptions =
-	{
-		hostname : uo.hostname,
-		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
-		method   : "GET",
-		path     : uo.path,
-		agent    : keepaliveAgent,
-		headers  : getHeaders(extraHeaders)
-	};
-
-	var responseData = new streamBuffers.WritableStreamBuffer();
-	var httpResponse = function(response)
-	{
-		response.on("data", function(d) { responseData.write(d); });
-		response.on("end", function() { cb(undefined, responseData.getContents(), response.statusCode); });
-	};
-	var httpRequest = (targetURL.startsWith("https") ? https : http).get(requestOptions, httpResponse);
-	httpRequest.on("error", function(err) { cb(err); });
-}
-
-exports.head = head;
-function head(targetURL, _extraHeaders, cb)
-{
-	var extraHeaders = (!cb ? {} : _extraHeaders);
-	cb = cb || _extraHeaders;
-
-	var uo = url.parse(targetURL);
-	var requestOptions =
-	{
-		hostname : uo.hostname,
-		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
-		method   : "HEAD",
-		path     : uo.path,
-		agent    : false,
-		headers  : getHeaders(extraHeaders)
-	};
-
-	var httpResponse = function(response)
-	{
-		setImmediate(function() { cb(undefined, response.headers, response.statusCode); });
-	};
-	var httpRequest = (targetURL.startsWith("https") ? https : http).request(requestOptions, httpResponse);
-	httpRequest.on("error", function(err) { cb(err); });
-	httpRequest.end();
-}
-
 function getHeaders(extraHeaders)
 {
 	var headers =
@@ -110,4 +30,86 @@ function getHeaders(extraHeaders)
 	};
 
 	return Object.merge(headers, extraHeaders || {});
+}
+
+function httpExecute(targetURL, options, cb)
+{
+	var uo = url.parse(targetURL);
+	var requestOptions =
+	{
+		hostname : uo.hostname,
+		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
+		method   : options.method,
+		path     : uo.path,
+		agent    : false,
+		headers  : getHeaders(options.headers)
+	};
+
+	if(options.method==="GET")
+		requestOptions.agent = keepaliveAgent;
+
+	var timeoutid = options.timeout ? setTimeout(function() { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
+	var httpClearTimeout = function() { if(timeoutid!==undefined) { clearTimeout(timeoutid); timeoutid = undefined; } };
+	var responseData = options.method==="GET" ? new streamBuffers.WritableStreamBuffer() : undefined;
+	var outputFile = options.download ? fs.createWriteStream(options.download) : undefined;
+
+	var httpResponse = function(response)
+	{
+		if(options.download)
+		{
+			response.pipe(outputFile);
+			outputFile.on("finish", function() { httpClearTimeout(); outputFile.close(); setImmediate(function() { cb(undefined, response.headers, response.statusCode); }); });
+		}
+		else if(options.method==="GET")
+		{
+			response.on("data", function(d) { responseData.write(d); });
+			response.on("end", function() { httpClearTimeout(); setImmediate(function() { cb(undefined, responseData.getContents(), response.headers, response.statusCode); }); });
+		}
+		else if(options.method==="HEAD")
+		{
+			setImmediate(function() {
+				httpClearTimeout();
+				cb(undefined, response.headers, response.statusCode);
+			});
+		}
+	};
+
+	var httpRequest = (targetURL.startsWith("https") ? https : http).request(requestOptions, httpResponse);
+
+	httpRequest.on("error", function(err) {
+		httpClearTimeout();
+		if(outputFile)
+			outputFile.close();
+		cb(err);
+	});
+
+	httpRequest.end();
+}
+
+exports.download = download;
+function download(targetURL, destination, _options, cb)
+{
+	var options = (!cb ? {} : _options);
+	options.method = "GET";
+	options.download = destination;
+
+	return httpExecute(targetURL, options, cb || _options);
+}
+
+exports.head = head;
+function head(targetURL, _options, cb)
+{
+	var options = (!cb ? {} : _options);
+	options.method = "HEAD";
+
+	return httpExecute(targetURL, options, cb || _options);
+}
+
+exports.get = get;
+function get(targetURL, _options, cb)
+{
+	var options = (!cb ? {} : _options);
+	options.method = "GET";
+
+	return httpExecute(targetURL, options, cb || _options);
 }
