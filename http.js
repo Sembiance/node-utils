@@ -10,8 +10,9 @@ var base = require("xbase"),
 	tiptoe = require("tiptoe");
 
 var keepaliveAgent = new Agent({
+	keepAlive        : true,
 	maxSockets       : 100,
-	maxFreeSockets   : 10,
+	maxFreeSockets   : 100,
 	timeout          : 60000,
 	keepAliveTimeout : 30000
 });
