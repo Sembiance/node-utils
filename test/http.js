@@ -36,3 +36,8 @@ httpUtil.get("http://httpbin.org/bytes/1024", function(err, responseData, respon
 	assert(!err);
 	assert.strictEqual(+responseHeaders["content-length"], 1024);
 });
+
+httpUtil.head("http://httpbin.org/delay/10", {timeout:5000, retry:3}, function(err, responseHeaders, statusCode)
+{
+	assert(err);
+});

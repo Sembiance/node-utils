@@ -83,7 +83,18 @@ function httpExecute(targetURL, options, cb)
 			outputFile.close();
 			fs.unlinkSync(options.download);
 		}
-		cb(err);
+
+		if(options.retry && options.retry>=1)
+		{
+			base.error("RETRYING!!!");
+			options = base.clone(options);
+			options.retry = options.retry-1;
+			httpExecute(targetURL, options, cb);
+		}
+		else
+		{
+			cb(err);
+		}
 	});
 
 	httpRequest.end();
