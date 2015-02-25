@@ -48,7 +48,7 @@ function get(targetURL, _extraHeaders, cb)
 {
 	var extraHeaders = (!cb ? {} : _extraHeaders);
 	cb = cb || _extraHeaders;
-	base.info("%d B.1 %s", Date.now(), targetURL);
+
 	var uo = url.parse(targetURL);
 	var requestOptions =
 	{
@@ -59,12 +59,12 @@ function get(targetURL, _extraHeaders, cb)
 		agent    : keepaliveAgent,
 		headers  : getHeaders(extraHeaders)
 	};
-	base.info("%d B.2", Date.now());
+
 	var responseData = new streamBuffers.WritableStreamBuffer();
 	var httpResponse = function(response)
 	{
-		response.on("data", function(d) { base.info("%d B.3", Date.now()); responseData.write(d); });
-		response.on("end", function() { base.info("%d B.4", Date.now()); cb(undefined, responseData.getContents(), response.statusCode); });
+		response.on("data", function(d) { responseData.write(d); });
+		response.on("end", function() { cb(undefined, responseData.getContents(), response.statusCode); });
 	};
 	var httpRequest = (targetURL.startsWith("https") ? https : http).get(requestOptions, httpResponse);
 	httpRequest.on("error", function(err) { cb(err); });
