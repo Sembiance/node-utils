@@ -6,16 +6,7 @@ var base = require("xbase"),
 	http = require("http"),
 	https = require("https"),
 	streamBuffers = require("stream-buffers"),
-	Agent = require("agentkeepalive"),
 	tiptoe = require("tiptoe");
-
-var keepaliveAgent = new Agent({
-	keepAlive        : true,
-	maxSockets       : 100,
-	maxFreeSockets   : 100,
-	timeout          : 60000,
-	keepAliveTimeout : 30000
-});
 
 function getHeaders(extraHeaders)
 {
@@ -44,9 +35,6 @@ function httpExecute(targetURL, options, cb)
 		agent    : false,
 		headers  : getHeaders(options.headers)
 	};
-
-	if(options.method==="GET")
-		requestOptions.agent = keepaliveAgent;
 
 	var timeoutid = options.timeout ? setTimeout(function() { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
 	var httpClearTimeout = function() { if(timeoutid!==undefined) { clearTimeout(timeoutid); timeoutid = undefined; } };
@@ -86,7 +74,7 @@ function httpExecute(targetURL, options, cb)
 
 		if(options.retry && options.retry>=1)
 		{
-			base.error("RETRYING!!!");
+			//base.error("RETRYING %s", targetURL);
 			options = base.clone(options);
 			options.retry = options.retry-1;
 			httpExecute(targetURL, options, cb);

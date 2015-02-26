@@ -1,6 +1,6 @@
 {
 	"name"					: "xutil",
-	"version"				: "1.4.3",
+	"version"				: "1.4.4",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
 	"description"			: "common util functions I use in many of my node projects",
 	"private"				: true,
@@ -19,7 +19,6 @@
 		"accounting"        : ">= 0.3.2",
 		"cli-color"         : ">= 0.2.3",
 		"ansidiff"			: ">= 1.0.0",
-		"agentkeepalive"	: ">= 1.2.0",
 		"xbase"				: "git://github.com/Sembiance/xbase.git"
 	}
 }
