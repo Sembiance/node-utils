@@ -19,6 +19,7 @@
 		"accounting"        : ">= 0.3.2",
 		"cli-color"         : ">= 0.2.3",
 		"ansidiff"			: ">= 1.0.0",
+		"urlencode"         : ">= 0.2.0",
 		"xbase"				: "git://github.com/Sembiance/xbase.git"
 	}
 }

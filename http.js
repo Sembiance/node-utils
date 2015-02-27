@@ -5,6 +5,7 @@ var base = require("xbase"),
 	url = require("url"),
 	http = require("http"),
 	https = require("https"),
+	urlencode = require('urlencode'),
 	streamBuffers = require("stream-buffers"),
 	tiptoe = require("tiptoe");
 
@@ -31,7 +32,7 @@ function httpExecute(targetURL, options, cb)
 		hostname : uo.hostname,
 		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
 		method   : options.method,
-		path     : uo.path,
+		path     : decodeURIComponent(uo.path).split("/").map(function(s) { return !s || !s.length ? "" : urlencode(s); }).join("/"),
 		agent    : false,
 		headers  : getHeaders(options.headers)
 	};
