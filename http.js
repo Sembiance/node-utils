@@ -5,7 +5,7 @@ var base = require("xbase"),
 	url = require("url"),
 	http = require("http"),
 	https = require("https"),
-	urlencode = require('urlencode'),
+	urlencode = require("urlencode"),
 	streamBuffers = require("stream-buffers"),
 	tiptoe = require("tiptoe");
 
@@ -13,12 +13,12 @@ function getHeaders(extraHeaders)
 {
 	var headers =
 	{
-		"accept"          : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-		"accept-charset"  : "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
-		"accept-language" : "en-US,en;q=0.8,fil;q=0.6",
-		"cache-control"   : "no-cache",
-		"pragma"          : "no-cache",
-		"user-agent"      : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.16 Safari/537.36"
+		"Accept"          : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+		"Accept-Charset"  : "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
+		"Accept-Language" : "en-US,en;q=0.8,fil;q=0.6",
+		"Cache-Control"   : "no-cache",
+		"Pragma"          : "no-cache",
+		"User-Agent"      : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.16 Safari/537.36"
 	};
 
 	return Object.merge(headers, extraHeaders || {});
@@ -32,10 +32,12 @@ function httpExecute(targetURL, options, cb)
 		hostname : uo.hostname,
 		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
 		method   : options.method,
-		path     : decodeURIComponent(uo.path).split("/").map(function(s) { return !s || !s.length ? "" : urlencode(s); }).join("/"),
-		agent    : false,
+		path     : decodeURIComponent(uo.pathname).split("/").map(function(s) { return !s || !s.length ? "" : urlencode(s); }).join("/") + (uo.search ? uo.search : ""),
 		headers  : getHeaders(options.headers)
 	};
+
+	if(options.method==="HEAD")
+		requestOptions.agent = false;
 
 	var timeoutid = options.timeout ? setTimeout(function() { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
 	var httpClearTimeout = function() { if(timeoutid!==undefined) { clearTimeout(timeoutid); timeoutid = undefined; } };
