@@ -1,6 +1,6 @@
 {
 	"name"					: "xutil",
-	"version"				: "1.4.5",
+	"version"				: "1.4.6",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
 	"description"			: "common util functions I use in many of my node projects",
 	"private"				: true,
@@ -8,18 +8,18 @@
 	"repository"            : { "type" : "git", "url" : "https://github.com/Sembiance/xutil"},
 	"dependencies"			:
 	{
-		"tiptoe"			: ">= 1.0.0",
-		"node-uuid"			: ">= 1.4.1",
-		"dustjs-linkedin"   : ">= 2.2.2",
-		"dustjs-helpers"    : ">= 1.1.1",
-		"unicode"			: ">= 0.4.9",
-		"stream-buffers"    : ">= 0.2.5",
-		"rimraf"			: ">= 2.2.5",
-		"erbridge"			: ">= 1.0.0",
-		"accounting"        : ">= 0.3.2",
-		"cli-color"         : ">= 0.2.3",
-		"ansidiff"			: ">= 1.0.0",
-		"urlencode"         : ">= 0.2.0",
+		"tiptoe"			: "= 1.0.0",
+		"node-uuid"			: "= 1.4.3",
+		"dustjs-linkedin"   : "= 2.7.2",
+		"dustjs-helpers"    : "= 1.7.1",
+		"unicode"			: "= 0.6.1",
+		"stream-buffers"    : "= 2.1.0",
+		"rimraf"			: "= 2.4.0",
+		"erbridge"			: "= 1.0.0",
+		"accounting"        : "= 0.4.1",
+		"cli-color"         : "= 1.0.0",
+		"ansidiff"			: "= 1.0.0",
+		"urlencode"         : "= 1.0.0",
 		"xbase"				: "git://github.com/Sembiance/xbase.git"
 	}
 }

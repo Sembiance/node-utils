@@ -3,7 +3,6 @@
 var base = require("xbase"),
 	fs = require("fs"),
 	path = require("path"),
-	util = require("util"),
 	uuid = require("node-uuid"),
 	tiptoe = require("tiptoe");
 

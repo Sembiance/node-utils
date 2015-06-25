@@ -6,8 +6,7 @@ var base = require("xbase"),
 	http = require("http"),
 	https = require("https"),
 	urlencode = require("urlencode"),
-	streamBuffers = require("stream-buffers"),
-	tiptoe = require("tiptoe");
+	streamBuffers = require("stream-buffers");
 
 function getHeaders(extraHeaders)
 {
