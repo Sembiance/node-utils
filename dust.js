@@ -19,6 +19,10 @@ function render(basePath, name, data, options, cb)
 	var readDustFile = function(name, cb) { fs.readFile(path.join(basePath, name + (name.endsWith(".dust") ? "" : ".dust")), "utf8", cb); };
 
 	var dust = require("dustjs-linkedin");
+
+	if(options.disableCache)
+		dust.config.cache = false;
+
 	dust.helper = require("dustjs-helpers");
 	dust.onLoad = readDustFile;
 
