@@ -23,6 +23,11 @@ function render(basePath, name, data, options, cb)
 	if(options.disableCache)
 		dust.config.cache = false;
 
+	dust.filters.lowercase = function(value)
+	{
+		return typeof value==="string" ? value.toLowerCase() : value;
+	};
+
 	dust.helper = require("dustjs-helpers");
 	dust.onLoad = readDustFile;
 
