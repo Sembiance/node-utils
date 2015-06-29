@@ -58,7 +58,7 @@ function diffArray(o, n, options)
 			{
 				var subResult = diff(item, n[i], options);
 				if(subResult)
-					result += " ".repeat(options.indent*4) + "[" + i + "]: " + subResult;
+					result += " ".repeat(options.indent*4) + "[" + i + "]" + (options.arrayKey && item.hasOwnProperty(options.arrayKey) ? (" " + item[options.arrayKey]) : "") + ": " + subResult;
 			});
 		}
 	}
