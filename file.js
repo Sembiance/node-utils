@@ -120,7 +120,7 @@ function move(src, dest, cb)
 		{
 			if(!err)
 				return this.finish();
-			base.info("rename failed,, copying and pasting");
+
 			copy(src, dest, this);
 		},
 		function removeFile()
