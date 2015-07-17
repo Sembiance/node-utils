@@ -47,7 +47,7 @@ function httpExecute(targetURL, options, cb)
 	if(options.postData)
 	{
 		requestOptions.headers["Content-Type"] = options.contentType || "application/x-www-form-urlencoded";
-		requestOptions.headers["Content-Length"] = options.postData.length;
+		requestOptions.headers["Content-Length"] = Buffer.byteLength(options.postData, "utf8");
 	}
 
 	var timeoutid = options.timeout ? setTimeout(function() { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
@@ -100,8 +100,8 @@ function httpExecute(targetURL, options, cb)
 	});
 
 	if(options.postData)
-		httpRequest.write(options.postData);
-
+		httpRequest.write(options.postData, "utf8");
+	
 	httpRequest.end();
 }
 

@@ -1,6 +1,6 @@
 {
 	"name"					: "xutil",
-	"version"				: "1.4.7",
+	"version"				: "1.4.8",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
 	"description"			: "common util functions I use in many of my node projects",
 	"private"				: true,
