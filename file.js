@@ -111,8 +111,16 @@ function move(src, dest, cb)
 			else
 				this();
 		},
-		function copyFile()
+		function tryRename()
 		{
+			this.capture();
+			fs.rename(src, dest, this);
+		},
+		function copyFile(err)
+		{
+			if(!err)
+				return this.finish();
+			base.info("rename failed,, copying and pasting");
 			copy(src, dest, this);
 		},
 		function removeFile()
