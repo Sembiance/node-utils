@@ -5,6 +5,7 @@ var base = require("xbase"),
 	url = require("url"),
 	http = require("http"),
 	https = require("https"),
+	querystring = require("querystring"),
 	urlencode = require("urlencode"),
 	streamBuffers = require("stream-buffers");
 
@@ -35,32 +36,43 @@ function httpExecute(targetURL, options, cb)
 		headers  : getHeaders(options.headers)
 	};
 
+	requestOptions.headers.Host = requestOptions.hostname;
+
 	if(options.method==="HEAD")
 		requestOptions.agent = false;
 
+	if(options.username && options.password)
+		requestOptions.headers.Authorization = "Basic " + new Buffer(options.username + ":" + options.password).toString("base64");
+
+	if(options.postData)
+	{
+		requestOptions.headers["Content-Type"] = options.contentType || "application/x-www-form-urlencoded";
+		requestOptions.headers["Content-Length"] = options.postData.length;
+	}
+
 	var timeoutid = options.timeout ? setTimeout(function() { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
 	var httpClearTimeout = function() { if(timeoutid!==undefined) { clearTimeout(timeoutid); timeoutid = undefined; } };
-	var responseData = options.method==="GET" ? new streamBuffers.WritableStreamBuffer() : undefined;
+	var responseData = options.method!=="HEAD" ? new streamBuffers.WritableStreamBuffer() : undefined;
 	var outputFile = options.download ? fs.createWriteStream(options.download) : undefined;
 
 	var httpResponse = function(response)
 	{
-		if(options.download)
-		{
-			response.pipe(outputFile);
-			outputFile.on("finish", function() { httpClearTimeout(); outputFile.close(); setImmediate(function() { cb(undefined, response.headers, response.statusCode); }); });
-		}
-		else if(options.method==="GET")
-		{
-			response.on("data", function(d) { responseData.write(d); });
-			response.on("end", function() { httpClearTimeout(); setImmediate(function() { cb(undefined, responseData.getContents(), response.headers, response.statusCode); }); });
-		}
-		else if(options.method==="HEAD")
+		if(options.method==="HEAD")
 		{
 			setImmediate(function() {
 				httpClearTimeout();
 				cb(undefined, response.headers, response.statusCode);
 			});
+		}
+		else if(options.download)
+		{
+			response.pipe(outputFile);
+			outputFile.on("finish", function() { httpClearTimeout(); outputFile.close(); setImmediate(function() { cb(undefined, response.headers, response.statusCode); }); });
+		}
+		else
+		{
+			response.on("data", function(d) { responseData.write(d); });
+			response.on("end", function() { httpClearTimeout(); setImmediate(function() { cb(undefined, responseData.getContents(), response.headers, response.statusCode); }); });
 		}
 	};
 
@@ -87,13 +99,16 @@ function httpExecute(targetURL, options, cb)
 		}
 	});
 
+	if(options.postData)
+		httpRequest.write(options.postData);
+
 	httpRequest.end();
 }
 
 exports.download = download;
 function download(targetURL, destination, _options, cb)
 {
-	var options = (!cb ? {} : _options);
+	var options = base.clone(!cb ? {} : _options);
 	options.method = "GET";
 	options.download = destination;
 
@@ -103,7 +118,7 @@ function download(targetURL, destination, _options, cb)
 exports.head = head;
 function head(targetURL, _options, cb)
 {
-	var options = (!cb ? {} : _options);
+	var options = base.clone(!cb ? {} : _options);
 	options.method = "HEAD";
 
 	return httpExecute(targetURL, options, cb || _options);
@@ -112,8 +127,28 @@ function head(targetURL, _options, cb)
 exports.get = get;
 function get(targetURL, _options, cb)
 {
-	var options = (!cb ? {} : _options);
+	var options = base.clone(!cb ? {} : _options);
 	options.method = "GET";
+
+	return httpExecute(targetURL, options, cb || _options);
+}
+exports.post = post;
+function post(targetURL, postData, _options, cb)
+{
+	var options = base.clone(!cb ? {} : _options);
+	options.method = "POST";
+	options.postData = querystring.stringify(postData);
+
+	return httpExecute(targetURL, options, cb || _options);
+}
+
+exports.put = put;
+function put(targetURL, putData, _options, cb)
+{
+	var options = base.clone(!cb ? {} : _options);
+	options.method = "PUT";
+	options.contentType = (typeof putData==="string" || putData instanceof Buffer) ? "text/plain" : "application/json";
+	options.postData = typeof putData==="string" ? putData : (putData instanceof Buffer ? putData.toString("utf8") : JSON.stringify(putData));
 
 	return httpExecute(targetURL, options, cb || _options);
 }
