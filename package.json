@@ -1,6 +1,6 @@
 {
 	"name"					: "xutil",
-	"version"				: "1.4.8",
+	"version"				: "1.4.9",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
 	"description"			: "common util functions I use in many of my node projects",
 	"private"				: true,
@@ -11,15 +11,15 @@
 		"tiptoe"			: "= 1.0.0",
 		"node-uuid"			: "= 1.4.3",
 		"dustjs-linkedin"   : "= 2.7.2",
-		"dustjs-helpers"    : "= 1.7.1",
+		"dustjs-helpers"    : "= 1.7.3",
 		"unicode"			: "= 0.6.1",
-		"stream-buffers"    : "= 2.1.0",
-		"rimraf"			: "= 2.4.0",
+		"stream-buffers"    : "= 2.2.0",
+		"rimraf"			: "= 2.4.3",
 		"erbridge"			: "= 1.0.0",
 		"accounting"        : "= 0.4.1",
 		"cli-color"         : "= 1.0.0",
 		"ansidiff"			: "= 1.0.0",
-		"urlencode"         : "= 1.0.0",
+		"urlencode"         : "= 1.1.0",
 		"xbase"				: "git://github.com/Sembiance/xbase.git"
 	}
 }
