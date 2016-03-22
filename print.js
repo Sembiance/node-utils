@@ -50,6 +50,8 @@ exports.columnizeObject = function(o, options)
 		var rowOut = "";
 		row.forEach(function(col, i)
 		{
+			col = "" + col;
+			
 			var a = (options.header && rowNum===0) ? "c" : (options.alignment ? (options.alignment[i] || "l") : "l");
 			var colPadding = maxColSizes[i] - col.length;
 
@@ -98,7 +100,7 @@ exports.columnizeObjects = function(objects, options)
 		var rowOut = "";
 		colNames.forEach(function(colName, i)
 		{
-			var col = row[colName];
+			var col = "" + row[colName];
 			var a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || "l") : "l");
 			var colPadding = maxColSizeMap[colName] - col.length;
 
