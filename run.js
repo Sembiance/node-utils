@@ -15,10 +15,17 @@ exports.run = function run(command, args, options, cb)
 	if(!options.hasOwnProperty("redirect-stderr"))
 		options["redirect-stderr"] = true;
 	
+	var p;
 	if(cb)
-		child_process.execFile(command, args, options, handler);
+		p = child_process.execFile(command, args, options, handler);
 	else
-		child_process.execFile(command, args, handler);
+		p = child_process.execFile(command, args, handler);
+
+	if(options.liveOutput)
+	{
+		p.stdout.pipe(process.stdout);
+		p.stderr.pipe(process.stderr);
+	}
 
 	function handler(err, stdout, stderr)
 	{

@@ -4,6 +4,7 @@ var base = require("xbase"),
 	fs = require("fs"),
 	path = require("path"),
 	uuid = require("node-uuid"),
+	rimraf = require("rimraf"),
 	tiptoe = require("tiptoe");
 
 exports.searchReplace = searchReplace;
@@ -149,11 +150,41 @@ function generateTempFilePath(prefix, suffix)
 exports.exists = exists;
 function exists(target, cb)
 {
-	fs.exists(target, function(exists) { cb(null, exists); });
+	fs.access(target, fs.F_OK, function(err)
+	{
+		return cb(undefined, err ? false : true);
+	});
+}
+
+exports.existsSync = existsSync;
+function existsSync(target)
+{
+	try
+	{
+		fs.accessSync(target, fs.F_OK);
+	}
+	catch(err)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 exports.unlink = unlink;
 function unlink(target, cb)
 {
-	fs.exists(target, function(exists) { if(exists) { fs.unlink(target, cb); } else { return setImmediate(cb); }});
+	fs.exists(target, function(exists)
+	{
+		if(!exists)
+			return setImmediate(cb);
+
+		fs.stat(target, function(err, stats)
+		{
+			if(stats.isDirectory())
+				rimraf(target, cb);
+			else
+				fs.unlink(target, cb);
+		});
+	});
 }
