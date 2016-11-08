@@ -2,8 +2,8 @@
 
 var base = require("xbase"),
 	path = require("path"),
-	fileUtil = require("./file.js"),
-	runUtil = require("./run.js"),
+	fileUtil = require("./fileUtil.js"),
+	runUtil = require("./runUtil.js"),
 	tiptoe = require("tiptoe");
 
 exports.getWidthHeight = getWidthHeight;

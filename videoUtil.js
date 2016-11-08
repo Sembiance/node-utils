@@ -4,9 +4,9 @@ var base = require("xbase"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs"),
-	runUtil = require("./run.js"),
+	runUtil = require("./runUtil.js"),
 	rimraf = require("rimraf"),
-	fileUtil = require("./file.js");
+	fileUtil = require("./fileUtil.js");
 
 var	COMMAND_MPLAYER = "/usr/bin/mplayer";
 var	COMMAND_MOGRIFY = "/usr/bin/mogrify";
