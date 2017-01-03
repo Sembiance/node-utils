@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("xbase"),
+var base = require("@sembiance/xbase"),
 	querystring = require("querystring"),
 	url = require("url");
 

@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("xbase"),
+var base = require("@sembiance/xbase"),
 	accounting = require("accounting");
 
 exports.toSize = function(num, precision)

@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("xbase"),
+var base = require("@sembiance/xbase"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs"),

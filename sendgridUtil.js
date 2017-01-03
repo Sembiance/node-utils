@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("xbase"),
+var base = require("@sembiance/xbase"),
 	helper = require('sendgrid').mail;
 
 exports.send = function(apiKey, msg, cb)

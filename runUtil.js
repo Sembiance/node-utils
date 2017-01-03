@@ -1,7 +1,7 @@
 "use strict";
 /*global setImmediate: true*/
 
-var base = require("xbase"),
+var base = require("@sembiance/xbase"),
 	child_process = require("child_process");
 
 exports.run = function run(command, args, options, cb)

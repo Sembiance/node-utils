@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("xbase"),
+var base = require("@sembiance/xbase"),
 	util = require("util"),
 	ansidiff = require("ansidiff"),
 	color = require("cli-color");

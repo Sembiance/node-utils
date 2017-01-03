@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("xbase"),
+var base = require("@sembiance/xbase"),
 	path = require("path"),
 	fileUtil = require("./fileUtil.js"),
 	runUtil = require("./runUtil.js"),
