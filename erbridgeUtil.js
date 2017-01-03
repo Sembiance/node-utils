@@ -1,6 +1,6 @@
 "use strict";
 
-var uuid = require("node-uuid");
+var uuid = require("uuid/v4");
 
 var requestCallbacks = {};
 var requestHandlers = {};
@@ -25,7 +25,7 @@ exports.registerBridge = function(bridge)
 
 exports.sendRequest = function(bridge, messageName, messageData, cb, socketid)
 {
-	var requestid = uuid.v4();
+	var requestid = uuid();
 	requestCallbacks[requestid] = cb;
 	
 	bridge.send("request", [messageName, messageData, requestid], (socketid || undefined));

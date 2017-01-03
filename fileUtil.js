@@ -3,7 +3,7 @@
 var base = require("xbase"),
 	fs = require("fs"),
 	path = require("path"),
-	uuid = require("node-uuid"),
+	uuid = require("uuid"),
 	rimraf = require("rimraf"),
 	tiptoe = require("tiptoe");
 
@@ -141,7 +141,7 @@ function generateTempFilePath(prefix, suffix)
 
 	do
 	{
-		tempFilePath = path.join(prefix, uuid.v4() + (typeof suffix==="undefined" ? ".tmp" : suffix));
+		tempFilePath = path.join(prefix, uuid() + (typeof suffix==="undefined" ? ".tmp" : suffix));
 	} while(existsSync(tempFilePath));
 
 	return tempFilePath;
