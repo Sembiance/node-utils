@@ -79,7 +79,8 @@ exports.columnizeObjects = function(objects, options)
 	var rows = base.clone(objects, true);
 
 	var colNames = options.colNames || rows.map(function(object) { return Object.keys(object); }).flatten().unique();
-	var colNameMap = options.colNameMap || colNames.mutate(function(colName, r) { r[colName] = colName.toProperCase(); return r; }, {});
+	var colNameMap = Object.merge(colNames.mutate(function(colName, r) { r[colName] = colName.toProperCase(); return r; }, {}), options.colNameMap || {});
+	var alignmentDefault = options.alignmentDefault || "l";
 
 	if(options.sorter)
 		rows.sort(options.sorter);
@@ -101,7 +102,7 @@ exports.columnizeObjects = function(objects, options)
 		colNames.forEach(function(colName, i)
 		{
 			var col = "" + row[colName];
-			var a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || "l") : "l");
+			var a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || alignmentDefault) : alignmentDefault);
 			var colPadding = maxColSizeMap[colName] - col.length;
 
 			if(a==="c" || a==="r")

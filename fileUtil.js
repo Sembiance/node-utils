@@ -132,11 +132,25 @@ function move(src, dest, cb)
 	);
 }
 
+exports.existsSync = existsSync;
+function existsSync(target)
+{
+	try
+	{
+		fs.accessSync(target, fs.F_OK);
+	}
+	catch(err)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 exports.generateTempFilePath = generateTempFilePath;
 function generateTempFilePath(prefix, suffix)
 {
 	var tempFilePath;
-	var existsSync = fs.existsSync ? fs.existsSync : path.existsSync;
 	prefix = prefix || "/tmp";
 
 	do
@@ -154,21 +168,6 @@ function exists(target, cb)
 	{
 		return cb(undefined, err ? false : true);
 	});
-}
-
-exports.existsSync = existsSync;
-function existsSync(target)
-{
-	try
-	{
-		fs.accessSync(target, fs.F_OK);
-	}
-	catch(err)
-	{
-		return false;
-	}
-
-	return true;
 }
 
 exports.unlink = unlink;
