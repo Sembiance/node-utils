@@ -20,8 +20,10 @@ function getWidthHeight(file, cb)
 				return cb(err);
 
 			var matches = result.trim().match(/[^ ]+ [^ ]+ ([0-9]+)x([0-9]+) .*/);
-
-			cb(null, [+matches[1], +matches[2]]);
+			if(!matches || matches.length<3)
+				cb(new Error("Invalid image"))
+			else
+				cb(null, [+matches[1], +matches[2]]);
 		}
 	);
 }
