@@ -29,6 +29,11 @@ exports.run = function run(command, args, options, cb)
 
 	function handler(err, stdout, stderr)
 	{
+		if(options["ignore-errors"])
+			err = null;
+		if(options["ignore-stderr"])
+			stderr = null;
+
 		if(stderr)
 		{
 			stderr = stderr.replace(/Xlib:[ ]+extension \"RANDR\" missing on display \"[^:]*:[^"]+\".\n?/, "");
