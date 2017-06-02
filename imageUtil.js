@@ -21,7 +21,7 @@ function getWidthHeight(file, cb)
 
 			var matches = result.trim().match(/[^ ]+ [^ ]+ ([0-9]+)x([0-9]+) .*/);
 			if(!matches || matches.length<3)
-				cb(new Error("Invalid image"))
+				cb(new Error("Invalid image"));
 			else
 				cb(null, [+matches[1], +matches[2]]);
 		}
