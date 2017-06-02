@@ -57,6 +57,17 @@ function httpExecute(targetURL, options, cb)
 
 	var httpResponse = function(response)
 	{
+		// TODO: Add support for 302 redirect
+		if(response.statusCode===301)
+		{
+			httpClearTimeout();
+
+			if(options.download)
+				outputFile.close();
+
+			return httpExecute((response.headers.location.startsWith("http") ? "" : ("http" + (targetURL.startsWith("https") ? "s" : "") + "://" + uo.host)) + response.headers.location, options, cb);
+		}
+
 		if(options.method==="HEAD")
 		{
 			setImmediate(function() {
