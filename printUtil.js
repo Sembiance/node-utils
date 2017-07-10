@@ -79,14 +79,18 @@ exports.columnizeObjects = function(objects, options)
 	var rows = base.clone(objects, true);
 
 	var colNames = options.colNames || rows.map(function(object) { return Object.keys(object); }).flatten().unique();
-	var colNameMap = Object.merge(colNames.mutate(function(colName, r) { r[colName] = colName.toProperCase(); return r; }, {}), options.colNameMap || {});
+	var colNameMap = Object.merge(colNames.mutate(function(colName, r) { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
 	var alignmentDefault = options.alignmentDefault || "l";
+	var colTypes = colNames.map(function(colName) { var v = rows[0][colName]; return Number.isNumber(v) ? "number" : typeof v; });
+	var booleanValues = options.booleanValues || ["True","False"];
 
 	if(options.sorter)
 		rows.sort(options.sorter);
 
 	if(options.formatter)
-		rows.forEach(function(object) { Object.forEach(object, function(k, v) { object[k] = options.formatter(k, v); }); });
+		rows.forEach(function(object) { colNames.forEach(function(colName) { object[colName] = options.formatter(colName, object[colName]); }); });
+	else
+		rows.forEach(function(object) { colNames.forEach(function(colName, i) { var v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? v.formatWithCommas() : v); }); });
 
 	var maxColSizeMap = {};
 	rows.forEach(function(row) { colNames.forEach(function(colName) { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (""+row[colName]).length, colNameMap[colName].length); } }); });
@@ -102,7 +106,7 @@ exports.columnizeObjects = function(objects, options)
 		colNames.forEach(function(colName, i)
 		{
 			var col = "" + row[colName];
-			var a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || alignmentDefault) : alignmentDefault);
+			var a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || alignmentDefault) : (colTypes[i]==="number" ? "r" : (colTypes[i]==="boolean" ? "c" : alignmentDefault)));
 			var colPadding = maxColSizeMap[colName] - col.length;
 
 			if(a==="c" || a==="r")
