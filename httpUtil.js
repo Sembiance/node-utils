@@ -3,9 +3,12 @@
 var base = require("@sembiance/xbase"),
 	fs = require("fs"),
 	url = require("url"),
+	path = require("path"),
+	fileUtil = require("./fileUtil.js"),
 	http = require("http"),
 	https = require("https"),
 	querystring = require("querystring"),
+	xxhash = require("xxhash"),
 	urlencode = require("urlencode"),
 	streamBuffers = require("stream-buffers");
 
@@ -136,10 +139,34 @@ function head(targetURL, _options, cb)
 }
 
 exports.get = get;
-function get(targetURL, _options, cb)
+function get(targetURL, _options, _cb)
 {
-	var options = base.clone(!cb ? {} : _options);
+	var options = base.clone(!_cb ? {} : _options);
 	options.method = "GET";
+
+	var cb = _cb;
+
+	var cachePath;
+	if(_options.cacheBase)
+	{
+		cachePath = path.join(_options.cacheBase, xxhash.hash64(Buffer.from(targetURL, "utf8"), 0xDEADBEEF, "hex"));
+		if(fileUtil.existsSync(cachePath))
+			return fs.readFile(cachePath, {encoding:"utf8"}, cb);
+	}
+
+	if(cachePath)
+	{
+		if(options.verbose)
+			base.info("Cache miss: %s vs %s", targetURL, cachePath);
+
+		cb = function(err, data, headers, statusCode)
+		{
+			if(err || !data)
+				return _cb(err, data, headers, statusCode);
+
+			fs.writeFile(cachePath, data, {encoding:"utf-8"}, function(fileErr) { return _cb(fileErr, data, headers, statusCode); });
+		};
+	}
 
 	return httpExecute(targetURL, options, cb || _options);
 }
