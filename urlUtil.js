@@ -4,6 +4,16 @@ var base = require("@sembiance/xbase"),
 	querystring = require("querystring"),
 	url = require("url");
 
+exports.setQueryParams = function(targetURL, nameValues)
+{
+	Object.forEach(nameValues, function(name, value)
+	{
+		targetURL = exports.setQueryParam(targetURL, name, value);
+	});
+
+	return targetURL;
+};
+
 exports.setQueryParam = function(targetURL, name, value)
 {
 	var urlObj = url.parse(targetURL);
