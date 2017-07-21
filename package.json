@@ -1,25 +1,25 @@
 {
 	"name"					: "@sembiance/xutil",
-	"version"				: "1.6.1",
+	"version"				: "1.6.2",
 	"author"				: "Robert Schultz <robert@cosmicrealms.com>",
 	"description"			: "common util functions I use in many of my node projects",
 	"main"					: "index.js",
 	"repository"            : { "type" : "git", "url" : "https://github.com/Sembiance/xutil"},
 	"dependencies"			:
 	{
-		"@sembiance/xbase"	: ">=1.0.0",
-		"tiptoe"			: ">=1.0.0",
-		"erbridge"			: ">=1.0.0",
-		"uuid"				: "~3.0.1",
+		"@sembiance/xbase"	: "~1.1.19",
+		"tiptoe"			: "~1.1.0",
+		"erbridge"			: "~1.0.0",
+		"uuid"				: "~3.1.0",
 		"dustjs-linkedin"   : "~2.7.5",
 		"dustjs-helpers"    : "~1.7.3",
-		"unicode"			: "~0.6.1",
+		"unicode"			: "~9.0.1",
 		"stream-buffers"    : "~3.0.1",
-		"rimraf"			: "~2.5.4",
+		"rimraf"			: "~2.6.1",
 		"accounting"        : "~0.4.1",
-		"cli-color"         : "~1.1.0",
+		"cli-color"         : "~1.2.0",
 		"ansidiff"			: "~1.0.0",
 		"urlencode"         : "~1.1.0",
-		"sendgrid"			: "~4.7.1"
+		"sendgrid"			: "~5.2.0"
 	}
 }
