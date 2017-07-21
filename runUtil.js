@@ -57,8 +57,8 @@ exports.run = function run(command, args, options, cb)
 			}
 		}
 
-		if(options["verbose"] && (stderr || (stdout && stdout.length)))
-			base.info("OUTPUT: %s %s\n", command, args.join(" "), (stderr || stdout));
+		if(options["verbose"])
+			base.info("%s %s\n%s %s", command, args.join(" "), stdout || "", stderr || "");
 
 		if(cb)
 		{

@@ -36,7 +36,8 @@ function concat(files, dest, options, cb)
 
 	files = files.slice();
 
-	base.info("Combining to [%s] files: %s", dest, files.join(" "));
+	if(options.verbose)
+		base.info("Combining to [%s] files: %s", dest, files.join(" "));
 
 	var output = fs.createWriteStream(dest);
 
