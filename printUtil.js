@@ -90,7 +90,7 @@ exports.columnizeObjects = function(objects, options)
 	if(options.formatter)
 		rows.forEach(function(object) { colNames.forEach(function(colName) { object[colName] = options.formatter(colName, object[colName]); }); });
 	else
-		rows.forEach(function(object) { colNames.forEach(function(colName, i) { var v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? v.formatWithCommas() : v); }); });
+		rows.forEach(function(object) { colNames.forEach(function(colName, i) { var v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" && typeof v==="number" ? v.formatWithCommas() : v); }); });
 
 	var maxColSizeMap = {};
 	rows.forEach(function(row) { colNames.forEach(function(colName) { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (""+row[colName]).length, colNameMap[colName].length); } }); });
