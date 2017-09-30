@@ -1,19 +1,18 @@
 "use strict";
 
-var base = require("@sembiance/xbase");
+const base = require("@sembiance/xbase");
 
-exports.hmget = function()
+exports.hmget = function hmget(redis, ...args)
 {
-	var args = Array.toArray(arguments);
-	var redisArgs = args.slice(1, args.length-1);
+	const redisArgs = args.slice(0, args.length-1);
 
-	args[0].hmget(redisArgs, function(err, data)
+	redis.hmget(redisArgs, (err, data) =>
 	{
 		if(err)
 			return args.last()(err);
 
-		var r = {};
-		redisArgs.forEach(function(redisArg, i)
+		const r = {};
+		redisArgs.forEach((redisArg, i) =>
 		{
 			if(i===0)
 				return;
