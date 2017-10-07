@@ -1,18 +1,18 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
-	helper = require('sendgrid').mail;
+const base = require("@sembiance/xbase"),
+	mailHelper = require("sendgrid").mail;
 
-exports.send = function(apiKey, msg, cb)
+exports.send = function send(apiKey, msg, cb)
 {
-	var mail = new helper.Mail(new helper.Email(msg.from), msg.subject, new helper.Email(msg.to), new helper.Content("text/plain", msg.text));
+	const mail = new mailHelper.Mail(new mailHelper.Email(msg.from), msg.subject, new mailHelper.Email(msg.to), new mailHelper.Content("text/plain", msg.text));
 
-	var sg = require("sendgrid")(apiKey);
-	var request = sg.emptyRequest({
+	const sg = require("sendgrid")(apiKey);	// eslint-disable-line global-require
+	const request = sg.emptyRequest({
 		method : "POST",
 		path   : "/v3/mail/send",
-		body   : mail.toJSON(),
+		body   : mail.toJSON()
 	});
 
-	sg.API(request, cb);
+	sg.API(request, cb);	// eslint-disable-line new-cap
 };

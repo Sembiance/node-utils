@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	fs = require("fs"),
 	url = require("url"),
 	path = require("path"),
@@ -14,7 +14,7 @@ var base = require("@sembiance/xbase"),
 
 function getHeaders(extraHeaders)
 {
-	var headers =
+	const headers =
 	{
 		"Accept"          : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 		"Accept-Charset"  : "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
@@ -29,13 +29,13 @@ function getHeaders(extraHeaders)
 
 function httpExecute(targetURL, options, cb)
 {
-	var uo = url.parse(targetURL);
-	var requestOptions =
+	const uo = url.parse(targetURL);
+	const requestOptions =
 	{
 		hostname : uo.hostname,
 		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
 		method   : options.method,
-		path     : decodeURIComponent(uo.pathname).split("/").map(function(s) { return !s || !s.length ? "" : urlencode(s); }).join("/") + (uo.search ? uo.search : ""),
+		path     : decodeURIComponent(uo.pathname).split("/").map(s => (!s || !s.length ? "" : urlencode(s))).join("/") + (uo.search ? uo.search : ""),
 		headers  : getHeaders(options.headers)
 	};
 
@@ -45,7 +45,7 @@ function httpExecute(targetURL, options, cb)
 		requestOptions.agent = false;
 
 	if(options.username && options.password)
-		requestOptions.headers.Authorization = "Basic " + new Buffer(options.username + ":" + options.password).toString("base64");
+		requestOptions.headers.Authorization = "Basic " + Buffer.from(options.username + ":" + options.password).toString("base64");
 
 	if(options.postData)
 	{
@@ -53,12 +53,13 @@ function httpExecute(targetURL, options, cb)
 		requestOptions.headers["Content-Length"] = Buffer.byteLength(options.postData, "utf8");
 	}
 
-	var timeoutid = options.timeout ? setTimeout(function() { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
-	var httpClearTimeout = function() { if(timeoutid!==undefined) { clearTimeout(timeoutid); timeoutid = undefined; } };
-	var responseData = options.method!=="HEAD" ? new streamBuffers.WritableStreamBuffer() : undefined;
-	var outputFile = options.download ? fs.createWriteStream(options.download) : undefined;
+	let httpRequest = null;
+	let timeoutid = options.timeout ? setTimeout(() => { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
+	const httpClearTimeout = function() { if(timeoutid!==undefined) { clearTimeout(timeoutid); timeoutid = undefined; } };
+	const responseData = options.method!=="HEAD" ? new streamBuffers.WritableStreamBuffer() : undefined;
+	const outputFile = options.download ? fs.createWriteStream(options.download) : undefined;
 
-	var httpResponse = function(response)
+	const httpResponse = function httpResponse(response)
 	{
 		// TODO: Add support for 302 redirect
 		if(response.statusCode===301)
@@ -73,26 +74,24 @@ function httpExecute(targetURL, options, cb)
 
 		if(options.method==="HEAD")
 		{
-			setImmediate(function() {
-				httpClearTimeout();
-				cb(undefined, response.headers, response.statusCode);
-			});
+			setImmediate(() => { httpClearTimeout(); cb(undefined, response.headers, response.statusCode); });
 		}
 		else if(options.download)
 		{
 			response.pipe(outputFile);
-			outputFile.on("finish", function() { httpClearTimeout(); outputFile.close(); setImmediate(function() { cb(undefined, response.headers, response.statusCode); }); });
+			outputFile.on("finish", () => { httpClearTimeout(); outputFile.close(); setImmediate(() => cb(undefined, response.headers, response.statusCode)); });
 		}
 		else
 		{
-			response.on("data", function(d) { responseData.write(d); });
-			response.on("end", function() { httpClearTimeout(); setImmediate(function() { cb(undefined, responseData.getContents(), response.headers, response.statusCode); }); });
+			response.on("data", d => responseData.write(d));
+			response.on("end", () => { httpClearTimeout(); setImmediate(() => cb(undefined, responseData.getContents(), response.headers, response.statusCode)); });
 		}
 	};
 
-	var httpRequest = (targetURL.startsWith("https") ? https : http).request(requestOptions, httpResponse);
+	httpRequest = (targetURL.startsWith("https") ? https : http).request(requestOptions, httpResponse);
 
-	httpRequest.on("error", function(err) {
+	httpRequest.on("error", err =>
+	{
 		httpClearTimeout();
 		if(outputFile)
 		{
@@ -102,14 +101,14 @@ function httpExecute(targetURL, options, cb)
 
 		if(options.retry && options.retry>=1)
 		{
-			//base.error("RETRYING %s", targetURL);
-			options = base.clone(options);
+			//console.error("RETRYING %s", targetURL);
+			options = base.clone(options);	// eslint-disable-line no-param-reassign
 			options.retry = options.retry-1;
 			httpExecute(targetURL, options, cb);
 		}
 		else
 		{
-			cb(err);
+			cb(err);	// eslint-disable-line callback-return
 		}
 	});
 
@@ -122,7 +121,7 @@ function httpExecute(targetURL, options, cb)
 exports.download = download;
 function download(targetURL, destination, _options, cb)
 {
-	var options = base.clone(!cb ? {} : _options);
+	const options = base.clone(!cb ? {} : _options);
 	options.method = "GET";
 	options.download = destination;
 
@@ -132,7 +131,7 @@ function download(targetURL, destination, _options, cb)
 exports.head = head;
 function head(targetURL, _options, cb)
 {
-	var options = base.clone(!cb ? {} : _options);
+	const options = base.clone(!cb ? {} : _options);
 	options.method = "HEAD";
 
 	return httpExecute(targetURL, options, cb || _options);
@@ -141,30 +140,30 @@ function head(targetURL, _options, cb)
 exports.get = get;
 function get(targetURL, _options, _cb)
 {
-	var options = base.clone(!_cb ? {} : _options);
+	const options = base.clone(!_cb ? {} : _options);
 	options.method = "GET";
 
-	var cb = _cb;
+	let cb = _cb;
 
-	var cachePath;
+	let cachePath = "";
 	if(_options.cacheBase)
 	{
 		cachePath = path.join(_options.cacheBase, xxhash.hash64(Buffer.from(targetURL, "utf8"), 0xDEADBEEF, "hex"));
 		if(fileUtil.existsSync(cachePath))
-			return fs.readFile(cachePath, {encoding:"utf8"}, cb);
+			return fs.readFile(cachePath, base.UTF8, cb);
 	}
 
 	if(cachePath)
 	{
 		if(options.verbose)
-			base.info("Cache miss: %s vs %s", targetURL, cachePath);
+			console.log("Cache miss: %s vs %s", targetURL, cachePath);
 
 		cb = function(err, data, headers, statusCode)
 		{
 			if(err || !data)
 				return _cb(err, data, headers, statusCode);
 
-			fs.writeFile(cachePath, data, {encoding:"utf-8"}, function(fileErr) { return _cb(fileErr, data, headers, statusCode); });
+			fs.writeFile(cachePath, data, base.UTF8, fileErr => _cb(fileErr, data, headers, statusCode));
 		};
 	}
 
@@ -173,7 +172,7 @@ function get(targetURL, _options, _cb)
 exports.post = post;
 function post(targetURL, postData, _options, cb)
 {
-	var options = base.clone(!cb ? {} : _options);
+	const options = base.clone(!cb ? {} : _options);
 	options.method = "POST";
 	options.postData = querystring.stringify(postData);
 
@@ -183,7 +182,7 @@ function post(targetURL, postData, _options, cb)
 exports.put = put;
 function put(targetURL, putData, _options, cb)
 {
-	var options = base.clone(!cb ? {} : _options);
+	const options = base.clone(!cb ? {} : _options);
 	options.method = "PUT";
 	options.contentType = (typeof putData==="string" || putData instanceof Buffer) ? "text/plain" : "application/json";
 	options.postData = typeof putData==="string" ? putData : (putData instanceof Buffer ? putData.toString("utf8") : JSON.stringify(putData));

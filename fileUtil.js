@@ -1,47 +1,49 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	fs = require("fs"),
 	path = require("path"),
 	uuid = require("uuid"),
+	os = require("os"),
 	rimraf = require("rimraf"),
 	tiptoe = require("tiptoe");
 
-exports.searchReplace = searchReplace;
-function searchReplace(file, match, replace, cb)
+exports.searchReplace = function searchReplace(file, match, replace, cb)
 {
 	tiptoe(
 		function loadFile()
 		{
-			fs.readFile(file, {encoding:"utf8"}, this);
+			fs.readFile(file, base.UTF8, this);
 		},
 		function replaceAndSave(data)
 		{
-			fs.writeFile(file, data.replace(new RegExp(match, "g"), replace), {encoding:"utf8"}, this);
+			fs.writeFile(file, data.replace(new RegExp(match, "g"), replace), base.UTF8, this);
 		},
-		function handleErrors(err) { setImmediate(function() { cb(err); }); }
+		cb
 	);
-}
+};
 
-exports.concat = concat;
-function concat(files, dest, options, cb)
+exports.concat = function concat(_files, dest, _options, _cb)
 {
-	if(!cb && typeof(options)==="function")
+	let options = _options;
+	let cb = _cb;
+
+	if(!cb && typeof options==="function")
 	{
 		cb = options;
 		options = {};
 	}
 
-	var writeSeperator = 1;
+	let writeSeperator = 1;
 
-	files = files.slice();
+	const files = _files.slice();
 
 	if(options.verbose)
-		base.info("Combining to [%s] files: %s", dest, files.join(" "));
+		console.log("Combining to [%s] files: %s", dest, files.join(" "));
 
-	var output = fs.createWriteStream(dest);
+	const output = fs.createWriteStream(dest);
 
-	var first = true;
+	let first = true;
 	function concatNext()
 	{
 		if(first && options.prefix)
@@ -66,40 +68,38 @@ function concat(files, dest, options, cb)
 			return cb();
 		}
 
-		var input = fs.createReadStream(files.shift());
+		const input = fs.createReadStream(files.shift());
 		input.pipe(output, { end : false });
 		input.on("end", concatNext);
 	}
 
 	concatNext();
-}
+};
 
-exports.copy = copy;
-function copy(src, dest, cb)
+exports.copy = function copy(src, dest, cb)
 {
-	var cbCalled = false;
+	let cbCalled = false;
 
-	var rd = fs.createReadStream(src);
-	rd.on("error", function(err) { done(err); });
+	const rd = fs.createReadStream(src);
+	rd.on("error", done);
 
-	var wr = fs.createWriteStream(dest);
-	wr.on("error", function(err) { done(err); });
+	const wr = fs.createWriteStream(dest);
+	wr.on("error", done);
 
-	wr.on("close", function(ex) { done(); });
+	wr.on("close", () => done());
 	rd.pipe(wr);
 
 	function done(err)
 	{
 		if(!cbCalled)
 		{
-			cb(err);
 			cbCalled = true;
+			return cb(err);
 		}
 	}
-}
+};
 
-exports.move = move;
-function move(src, dest, cb)
+exports.move = function move(src, dest, cb)
 {
 	tiptoe(
 		function checkExisting()
@@ -123,18 +123,17 @@ function move(src, dest, cb)
 			if(!err)
 				return this.finish();
 
-			copy(src, dest, this);
+			exports.copy(src, dest, this);
 		},
 		function removeFile()
 		{
 			fs.unlink(src, this);
 		},
-		function handleErrors(err) { setImmediate(function() { cb(err); }); }
+		cb
 	);
-}
+};
 
-exports.existsSync = existsSync;
-function existsSync(target)
+exports.existsSync = function existsSync(target)
 {
 	try
 	{
@@ -146,40 +145,35 @@ function existsSync(target)
 	}
 
 	return true;
-}
+};
 
-exports.generateTempFilePath = generateTempFilePath;
-function generateTempFilePath(prefix, suffix)
+exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
 {
-	var tempFilePath;
-	prefix = prefix || "/tmp";
+	let tempFilePath = null;
 
 	do
-	{
-		tempFilePath = path.join(prefix, uuid() + (typeof suffix==="undefined" ? ".tmp" : suffix));
-	} while(existsSync(tempFilePath));
+		tempFilePath = path.join(os.tmpdir(), prefix, uuid() + suffix);
+	while(exports.existsSync(tempFilePath));
+
+	if(!tempFilePath)
+		throw new Error("Failed to create temp file path.");
 
 	return tempFilePath;
-}
+};
 
-exports.exists = exists;
-function exists(target, cb)
+exports.exists = function exists(target, cb)
 {
-	fs.access(target, fs.F_OK, function(err)
-	{
-		return cb(undefined, err ? false : true);
-	});
-}
+	fs.access(target, fs.F_OK, err => cb(undefined, !err));
+};
 
-exports.unlink = unlink;
-function unlink(target, cb)
+exports.unlink = function unlink(target, cb)
 {
-	fs.exists(target, function(exists)
+	exports.exists(target, (na, exists) =>
 	{
 		if(!exists)
 			return setImmediate(cb);
 
-		fs.stat(target, function(err, stats)
+		fs.stat(target, (err, stats) =>
 		{
 			if(stats.isDirectory())
 				rimraf(target, cb);
@@ -187,4 +181,4 @@ function unlink(target, cb)
 				fs.unlink(target, cb);
 		});
 	});
-}
+};

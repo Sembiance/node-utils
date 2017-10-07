@@ -1,13 +1,13 @@
 "use strict";
 
-var assert = require("assert"),
+const assert = require("assert"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs"),
 	videoUtil = require("../index").video;
 
-var VIDEO_PATH = path.join(__dirname, "video.mp4");
-var VIDEO_THUMBNAIL_PATH = path.join(__dirname, "video.mp4.thumb.png");
+const VIDEO_PATH = path.join(__dirname, "video.mp4");
+const VIDEO_THUMBNAIL_PATH = path.join(__dirname, "video.mp4.thumb.png");
 
 tiptoe(
 	function getVideoInfo()

@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	path = require("path"),
 	fileUtil = require("./fileUtil.js"),
 	runUtil = require("./runUtil.js"),
@@ -12,18 +12,18 @@ function getWidthHeight(file, cb)
 	tiptoe(
 		function getSize()
 		{
-			runUtil.run("identify", ["-quiet", file], {silent:true}, this);
+			runUtil.run("identify", ["-quiet", file], runUtil.SILENT, this);
 		},
 		function processSizes(err, result)
 		{
 			if(err)
 				return cb(err);
 
-			var matches = result.trim().match(/[^ ]+ [^ ]+ ([0-9]+)x([0-9]+) .*/);
+			const matches = result.trim().match(/[^ ]+ [^ ]+ ([0-9]+)x([0-9]+) .*/);
 			if(!matches || matches.length<3)
-				cb(new Error("Invalid image"));
-			else
-				cb(null, [+matches[1], +matches[2]]);
+				return cb(new Error("Invalid image"));
+			
+			cb(null, [+matches[1], +matches[2]]);
 		}
 	);
 }
@@ -32,21 +32,21 @@ function getWidthHeight(file, cb)
 exports.compress = compress;
 function compress(input, output, lossy, cb)
 {
-	var extension = path.extname(input).toLowerCase().substring(1);
+	const extension = path.extname(input).toLowerCase().substring(1);
 	if(!(["jpg", "jpeg", "png", "gif"]).contains(extension))
 		throw new Error("Unsupported image extension: " + extension);
 
-	var tmpFile = fileUtil.generateTempFilePath();
-	var deleteInput = false;
+	const tmpFile = fileUtil.generateTempFilePath();
+	let deleteInput = false;
 
 	tiptoe(
 		function checkIfInputOutputMatch()
 		{
 			if(input===output)
 			{
-				var inputTMP = fileUtil.generateTempFilePath();
+				const inputTMP = fileUtil.generateTempFilePath();
 				fileUtil.copy(input, inputTMP, this);
-				input = inputTMP;
+				input = inputTMP;	// eslint-disable-line no-param-reassign
 				deleteInput = true;
 			}
 			else
@@ -73,20 +73,20 @@ function compress(input, output, lossy, cb)
 			if(extension==="png")
 			{
 				if(lossy)
-					runUtil.run("pngquant", ["--speed", "1", tmpFile], {silent:true}, this);
+					runUtil.run("pngquant", ["--speed", "1", tmpFile], runUtil.SILENT, this);
 				else
-					runUtil.run("advpng", ["-z", "-4", output], {silent:true}, this);
+					runUtil.run("advpng", ["-z", "-4", output], runUtil.SILENT, this);
 			}
 			else if(extension==="jpg" || extension==="jpeg")
 			{
 				if(lossy)
-					runUtil.run("convert", [input, "-quality", "80%", output], {silent:true}, this);
+					runUtil.run("convert", [input, "-quality", "80%", output], runUtil.SILENT, this);
 				else
-					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", output, input], {silent:true}, this);
+					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", output, input], runUtil.SILENT, this);
 			}
 			else if(extension==="gif")
 			{
-				runUtil.run("gifsicle", ["-O3", input, "-o", output], {silent:true}, this);
+				runUtil.run("gifsicle", ["-O3", input, "-o", output], runUtil.SILENT, this);
 			}
 			else
 			{
@@ -108,9 +108,6 @@ function compress(input, output, lossy, cb)
 				this();
 			}
 		},
-		function finish(err)
-		{
-			return setImmediate(function() { cb(err); });
-		}
+		cb
 	);
 }

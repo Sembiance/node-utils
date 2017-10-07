@@ -1,13 +1,16 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs");
 
 exports.render = render;
-function render(basePath, name, data, options, cb)
+function render(basePath, name, data, _options, _cb)
 {
+	let options = _options;
+	let cb = _cb;
+
 	if(!cb)
 	{
 		cb = options;
@@ -16,19 +19,16 @@ function render(basePath, name, data, options, cb)
 
 	options = options || {};
 
-	var readDustFile = function(name, cb) { fs.readFile(path.join(basePath, name + (name.endsWith(".dust") ? "" : ".dust")), "utf8", cb); };
+	const readDustFile = function(n, subcb) { fs.readFile(path.join(basePath, n + (n.endsWith(".dust") ? "" : ".dust")), "utf8", subcb); };
 
-	var dust = require("dustjs-linkedin");
+	const dust = require("dustjs-linkedin");	// eslint-disable-line global-require
 
 	if(options.disableCache)
 		dust.config.cache = false;
 
-	dust.filters.lowercase = function(value)
-	{
-		return typeof value==="string" ? value.toLowerCase() : value;
-	};
+	dust.filters.lowercase = value => (typeof value==="string" ? value.toLowerCase() : value);
 
-	dust.helper = require("dustjs-helpers");
+	dust.helper = require("dustjs-helpers");	// eslint-disable-line global-require
 	dust.onLoad = readDustFile;
 
 	tiptoe(
@@ -36,9 +36,13 @@ function render(basePath, name, data, options, cb)
 		{
 			readDustFile(name, this);
 		},
-		function render(template)
+		function performRender(template)
 		{
-			dust.optimizers.format = function(ctx, node) { if(options.keepWhitespace) { return node; } };
+			dust.optimizers.format = function format(ctx, node)
+			{
+				if(options.keepWhitespace)
+					return node;
+			};
 			dust.renderSource(template, data, this);
 		},
 		function returnResult(err, result) { cb(err, result); }

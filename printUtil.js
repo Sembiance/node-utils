@@ -1,12 +1,10 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	accounting = require("accounting");
 
-exports.toSize = function(num, precision)
+exports.toSize = function toSize(num, precision=1)
 {
-	precision = typeof precision==="undefined" ? 1 : precision;
-
 	if(num<base.KB)
 		return accounting.formatNumber(num) + " bytes";
 	else if(num<base.MB)
@@ -19,11 +17,9 @@ exports.toSize = function(num, precision)
 		return accounting.formatNumber((num/base.TB), precision) + "TB";
 };
 
-exports.columnizeObject = function(o, options)
+exports.columnizeObject = function columnizeObject(o, options={})
 {
-	options = options || {};
-
-	var rows = Object.mutate(o, function(k, v, r) { r.push([k, v]); return r; }, []);
+	let rows = Object.mutate(o, (k, v, r) => { r.push([k, v]); return r; }, []);
 	if(options.sorter)
 		rows.sort(options.sorter);
 
@@ -34,26 +30,26 @@ exports.columnizeObject = function(o, options)
 		rows.splice(0, 0, options.header);
 
 	if(options.alignment)
-		options.alignment = options.alignment.map(function(a) { return a.substring(0, 1).toLowerCase(); });
+		options.alignment = options.alignment.map(a => a.substring(0, 1).toLowerCase());
 
-	var maxColSizes = [];
-	rows.forEach(function(row) { row.forEach(function(col, i) { maxColSizes[i] = Math.max((maxColSizes[i] || 0), (""+col).length); }); });
+	const maxColSizes = [];
+	rows.forEach(row => { row.forEach((col, i) => { maxColSizes[i] = Math.max((maxColSizes[i] || 0), (""+col).length); }); });
 
 	if(options.header)
-		rows.splice(1, 0, maxColSizes.map(function(maxColSize) { return "-".repeat(maxColSize); }));
+		rows.splice(1, 0, maxColSizes.map(maxColSize => "-".repeat(maxColSize)));
 
-	var result = "";
+	let result = "";
 
-	var spacing = options.padding || 5;
-	rows.forEach(function(row, rowNum)
+	const spacing = options.padding || 5;
+	rows.forEach((row, rowNum) =>
 	{
-		var rowOut = "";
-		row.forEach(function(col, i)
+		let rowOut = "";
+		row.forEach((_col, i) =>
 		{
-			col = "" + col;
+			const col = "" + _col;
 			
-			var a = (options.header && rowNum===0) ? "c" : (options.alignment ? (options.alignment[i] || "l") : "l");
-			var colPadding = maxColSizes[i] - col.length;
+			const a = (options.header && rowNum===0) ? "c" : (options.alignment ? (options.alignment[i] || "l") : "l");
+			const colPadding = maxColSizes[i] - col.length;
 
 			if(a==="c" || a==="r")
 				rowOut += " ".repeat(Math.floor(colPadding/(a==="c" ? 2 : 1)));
@@ -72,42 +68,40 @@ exports.columnizeObject = function(o, options)
 	return result;
 };
 
-exports.columnizeObjects = function(objects, options)
+exports.columnizeObjects = function columnizeObjects(objects, options={})
 {
-	options = options || {};
+	const rows = base.clone(objects, true);
 
-	var rows = base.clone(objects, true);
-
-	var colNames = options.colNames || rows.map(function(object) { return Object.keys(object); }).flatten().unique();
-	var colNameMap = Object.merge(colNames.mutate(function(colName, r) { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
-	var alignmentDefault = options.alignmentDefault || "l";
-	var colTypes = colNames.map(function(colName) { var v = rows[0][colName]; return Number.isNumber(v) ? "number" : typeof v; });
-	var booleanValues = options.booleanValues || ["True","False"];
+	const colNames = options.colNames || rows.map(object => Object.keys(object)).flatten().unique();
+	const colNameMap = Object.merge(colNames.mutate((colName, r) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
+	const alignmentDefault = options.alignmentDefault || "l";
+	const colTypes = colNames.map(colName => { const v = rows[0][colName]; return Number.isNumber(v) ? "number" : typeof v; });
+	const booleanValues = options.booleanValues || ["True", "False"];
 
 	if(options.sorter)
 		rows.sort(options.sorter);
 
 	if(options.formatter)
-		rows.forEach(function(object) { colNames.forEach(function(colName) { object[colName] = options.formatter(colName, object[colName]); }); });
+		rows.forEach(object => colNames.forEach(colName => { object[colName] = options.formatter(colName, object[colName]); }));
 	else
-		rows.forEach(function(object) { colNames.forEach(function(colName, i) { var v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" && typeof v==="number" ? v.formatWithCommas() : v); }); });
+		rows.forEach(object => colNames.forEach((colName, i) => { const v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? (typeof v==="number" ? v.formatWithCommas() : 0) : v); }));
 
-	var maxColSizeMap = {};
-	rows.forEach(function(row) { colNames.forEach(function(colName) { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (""+row[colName]).length, colNameMap[colName].length); } }); });
+	const maxColSizeMap = {};
+	rows.forEach(row => colNames.forEach(colName => { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (""+row[colName]).length, colNameMap[colName].length); } }));	// eslint-disable-line curly
 
-	rows.splice(0, 0, colNameMap, Object.map(colNameMap, function(k, v) { return [k, "-".repeat(maxColSizeMap[k])]; }));
+	rows.splice(0, 0, colNameMap, Object.map(colNameMap, k => [k, "-".repeat(maxColSizeMap[k])]));
 
-	var result = "";
+	let result = "";
 
-	var spacing = options.padding || 5;
-	rows.forEach(function(row, rowNum)
+	const spacing = options.padding || 5;
+	rows.forEach((row, rowNum) =>
 	{
-		var rowOut = "";
-		colNames.forEach(function(colName, i)
+		let rowOut = "";
+		colNames.forEach((colName, i) =>
 		{
-			var col = "" + row[colName];
-			var a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || alignmentDefault) : (colTypes[i]==="number" ? "r" : (colTypes[i]==="boolean" ? "c" : alignmentDefault)));
-			var colPadding = maxColSizeMap[colName] - col.length;
+			const col = "" + row[colName];
+			const a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || alignmentDefault) : (colTypes[i]==="number" ? "r" : (colTypes[i]==="boolean" ? "c" : alignmentDefault)));
+			const colPadding = maxColSizeMap[colName] - col.length;
 
 			if(a==="c" || a==="r")
 				rowOut += " ".repeat(Math.floor(colPadding/(a==="c" ? 2 : 1)));

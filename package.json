@@ -1,6 +1,6 @@
 {
 	"name": "@sembiance/xutil",
-	"version": "1.6.4",
+	"version": "1.6.5",
 	"author": "Robert Schultz <robert@cosmicrealms.com>",
 	"description": "common util functions I use in many of my node projects",
 	"main": "index.js",
@@ -8,6 +8,9 @@
 		"type": "git",
 		"url": "https://github.com/Sembiance/xutil"
 	},
+	"engines": {
+    "node": ">6.5.0"
+  	},
 	"dependencies": {
 		"@sembiance/xbase": "~1.1.19",
 		"accounting": "~0.4.1",

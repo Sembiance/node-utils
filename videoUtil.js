@@ -1,6 +1,6 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs"),
@@ -8,8 +8,8 @@ var base = require("@sembiance/xbase"),
 	rimraf = require("rimraf"),
 	fileUtil = require("./fileUtil.js");
 
-var	COMMAND_MPLAYER = "/usr/bin/mplayer";
-var	COMMAND_MOGRIFY = "/usr/bin/mogrify";
+const	COMMAND_MPLAYER = "/usr/bin/mplayer";
+const	COMMAND_MOGRIFY = "/usr/bin/mogrify";
 
 exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thumbnailPath, thumbnailWidth, thumbnailHeight, cb)
 {
@@ -21,11 +21,11 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 		},
 		function grabFrames()
 		{
-			runUtil.run(COMMAND_MPLAYER, ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "png", "--", videoPath], {silent:true, cwd:this.data.tempDir}, this);
+			runUtil.run(COMMAND_MPLAYER, ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "png", "--", videoPath], {silent : true, cwd : this.data.tempDir}, this);
 		},
 		function generateImage()
 		{
-			runUtil.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.png")], {silent:true}, this);
+			runUtil.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.png")], runUtil.SILENT, this);
 		},
 		function moveImage()
 		{
@@ -35,10 +35,7 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 		{
 			rimraf(this.data.tempDir, this);
 		},
-		function finish(err)
-		{
-			cb(err);
-		}
+		cb
 	);
 };
 
@@ -47,19 +44,19 @@ exports.getInfo = function getInfo(videoPath, cb)
 	tiptoe(
 		function runIdentify()
 		{
-			runUtil.run(COMMAND_MPLAYER, ["-frames", "0", "-identify", "--", videoPath], {silent:true}, this);
+			runUtil.run(COMMAND_MPLAYER, ["-frames", "0", "-identify", "--", videoPath], runUtil.SILENT, this);
 		},
 		function processData(data)
 		{
-			var info = {};
+			const info = {};
 
-			var lines = data.split("\n");
-			lines.forEach(function(line)
+			const lines = data.split("\n");
+			lines.forEach(line =>
 			{
 				if(!line.contains("="))
 					return;
 
-				var parts = line.split("=");
+				const parts = line.split("=");
 				if(parts.length!==2)
 					return;
 
@@ -82,7 +79,7 @@ exports.getInfo = function getInfo(videoPath, cb)
 			info.mimeType = "video/avi";
 			if(info.format)
 			{
-				var formatLow = info.format.toLowerCase();
+				const formatLow = info.format.toLowerCase();
 				
 				if(formatLow==="h264")
 					info.mimeType = "video/h264";
@@ -94,6 +91,6 @@ exports.getInfo = function getInfo(videoPath, cb)
 
 			return info;
 		},
-		function finish(err, info) { cb(err, info); }
+		cb
 	);
 };

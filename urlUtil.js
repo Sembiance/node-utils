@@ -1,24 +1,20 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	querystring = require("querystring"),
 	url = require("url");
 
-exports.setQueryParams = function(targetURL, nameValues)
+exports.setQueryParams = function setQueryParams(targetURL, nameValues)
 {
-	Object.forEach(nameValues, function(name, value)
-	{
-		targetURL = exports.setQueryParam(targetURL, name, value);
-	});
-
+	Object.forEach(nameValues, (name, value) => { targetURL = exports.setQueryParam(targetURL, name, value); });	// eslint-disable-line no-param-reassign
 	return targetURL;
 };
 
-exports.setQueryParam = function(targetURL, name, value)
+exports.setQueryParam = function setQueryParam(targetURL, name, value)
 {
-	var urlObj = url.parse(targetURL);
+	const urlObj = url.parse(targetURL);
 	
-	var queryObj = querystring.parse(urlObj.search.substring(1));
+	const queryObj = querystring.parse(urlObj.search.substring(1));
 	queryObj[name] = value;
 
 	urlObj.search = "?" + querystring.stringify(queryObj);
@@ -27,9 +23,9 @@ exports.setQueryParam = function(targetURL, name, value)
 	return url.format(urlObj);
 };
 
-exports.stripQuery = function(targetURL)
+exports.stripQuery = function stripQuery(targetURL)
 {
-	var urlObj = url.parse(targetURL);
+	const urlObj = url.parse(targetURL);
 	urlObj.query = null;
 	urlObj.search = null;
 	urlObj.path = urlObj.pathname;

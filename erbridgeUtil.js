@@ -1,9 +1,9 @@
 "use strict";
 
-var uuid = require("uuid/v4");
+const uuid = require("uuid/v4");
 
-var requestCallbacks = {};
-var requestHandlers = {};
+const requestCallbacks = {};
+const requestHandlers = {};
 
 function messageHandler(bridge, messageName, messageData, requestid, socketid)
 {
@@ -14,24 +14,24 @@ function messageHandler(bridge, messageName, messageData, requestid, socketid)
 	}
 	else if(requestHandlers.hasOwnProperty(messageName))
 	{
-		requestHandlers[messageName](undefined, messageData, function(responseName, responseData) { bridge.send("request", [responseName, responseData, requestid], socketid); });
+		requestHandlers[messageName](undefined, messageData, (responseName, responseData) => bridge.send("request", [responseName, responseData, requestid], socketid));
 	}
 }
 
-exports.registerBridge = function(bridge)
+exports.registerBridge = function registerBridge(bridge)
 {
-	bridge.on("message_request", function(message, socketid) { messageHandler(bridge, message[0], message[1], message[2], socketid); });
+	bridge.on("message_request", (message, socketid) => messageHandler(bridge, message[0], message[1], message[2], socketid));
 };
 
-exports.sendRequest = function(bridge, messageName, messageData, cb, socketid)
+exports.sendRequest = function sendRequest(bridge, messageName, messageData, cb, socketid)
 {
-	var requestid = uuid();
+	const requestid = uuid();
 	requestCallbacks[requestid] = cb;
 	
 	bridge.send("request", [messageName, messageData, requestid], (socketid || undefined));
 };
 
-exports.handleRequest = function(messageName, cb)
+exports.handleRequest = function handleRequest(messageName, cb)
 {
 	requestHandlers[messageName] = cb;
 };

@@ -1,40 +1,40 @@
 "use strict";
 
-var base = require("@sembiance/xbase"),
+const base = require("@sembiance/xbase"),
 	util = require("util"),
 	ansidiff = require("ansidiff"),
 	color = require("cli-color");
 
 exports.diff = diff;
-function diff(o, n, options)
+function diff(o, n, _options={})
 {
-	options = base.clone((options || {}));
+	const options = base.clone(_options);
 	options.indent = (options.indent || 0) + 1;
 
 	if(Object.isObject(o))
 		return diffObjects(o, n, options);
 	else if(Array.isArray(o))
 		return diffArray(o, n, options);
-	else
-		return diffValues(o, n, options);
+	
+	return diffValues(o, n, options);
 }
 
 function diffObjects(o, n, options)
 {
-	var result = "";
+	let result = "";
 
-	var oKeys = Object.keys(o);
-	var nKeys = Object.keys(n);
+	const oKeys = Object.keys(o);
+	const nKeys = Object.keys(n);
 
-	var keysAdded = nKeys.subtract(oKeys);
-	keysAdded.forEach(function(keyAdded) { result += " ".repeat(options.indent*4) + color.green(util.format("%s : %j\n", keyAdded, n[keyAdded])); });
+	const keysAdded = nKeys.subtract(oKeys);
+	keysAdded.forEach(keyAdded => { result += " ".repeat(options.indent*4) + color.green(util.format("%s : %j\n", keyAdded, n[keyAdded])); });
 
-	var keysRemoved = oKeys.subtract(nKeys);
-	keysRemoved.forEach(function(keyRemoved) { result += " ".repeat(options.indent*4) + color.red(util.format("%s : %j\n", keyRemoved, o[keyRemoved])); });
+	const keysRemoved = oKeys.subtract(nKeys);
+	keysRemoved.forEach(keyRemoved => { result += " ".repeat(options.indent*4) + color.red(util.format("%s : %j\n", keyRemoved, o[keyRemoved])); });
 
-	oKeys.subtract(keysAdded).subtract(keysRemoved).forEach(function(key)
+	oKeys.subtract(keysAdded).subtract(keysRemoved).forEach(key =>
 	{
-		var subResult = diff(o[key], n[key], options);
+		const subResult = diff(o[key], n[key], options);
 		if(subResult)
 			result += " ".repeat(options.indent*4) + color.yellow(key) + color.white(" : ") + subResult;
 	});
@@ -44,19 +44,19 @@ function diffObjects(o, n, options)
 
 function diffArray(o, n, options)
 {
-	var result = "";
+	let result = "";
 
 	if(options.compareArraysDirectly)
 	{
 		if(o.length!==n.length)
 		{
-			result += "Arrays are not equal length, cannot compare them directly: old [" + o.length + "] vs new [" + n.length + "]";	
+			result += "Arrays are not equal length, cannot compare them directly: old [" + o.length + "] vs new [" + n.length + "]";
 		}
 		else
 		{
-			o.forEach(function(item, i)
+			o.forEach((item, i) =>
 			{
-				var subResult = diff(item, n[i], options);
+				const subResult = diff(item, n[i], options);
 				if(subResult)
 					result += " ".repeat(options.indent*4) + "[" + i + "]" + (options.arrayKey && item.hasOwnProperty(options.arrayKey) ? (" " + item[options.arrayKey]) : "") + ": " + subResult;
 			});
@@ -64,20 +64,22 @@ function diffArray(o, n, options)
 	}
 	else
 	{
-		n.map(function(v) { return JSON.stringify(v); }).subtract(o.map(function(v) { return JSON.stringify(v); })).forEach(function(added) { result += (result.length ? ", " : "") + color.green(added); });
-		o.map(function(v) { return JSON.stringify(v); }).subtract(n.map(function(v) { return JSON.stringify(v); })).forEach(function(removed) { result += (result.length ? ", " : "") + color.red(removed); });
+		n.map(v => JSON.stringify(v)).subtract(o.map(v => JSON.stringify(v))).forEach(added => { result += (result.length ? ", " : "") + color.green(added); });
+		o.map(v => JSON.stringify(v)).subtract(n.map(v => JSON.stringify(v))).forEach(removed => { result += (result.length ? ", " : "") + color.red(removed); });
 	}
 
 	return (result.length ? "[ " : "") + result + (result.length ? " ]\n" : "");
 }
 
-function diffValues(o, n, options)
+function diffValues(o, n)
 {
 	if(o!==n)
 	{
 		if(typeof o==="string")
 			return ansidiff.words(JSON.stringify(o), JSON.stringify(n), ansidiff.subtle) + "\n";
-		else
-			return color.whiteBright(JSON.stringify(o)) + color.yellow(" => ") + color.whiteBright(JSON.stringify(n)) + "\n";
+
+		return color.whiteBright(JSON.stringify(o)) + color.yellow(" => ") + color.whiteBright(JSON.stringify(n)) + "\n";
 	}
+
+	return "";
 }

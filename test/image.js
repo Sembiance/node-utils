@@ -1,7 +1,6 @@
 "use strict";
 
-var assert = require("assert"),
-	tiptoe = require("tiptoe"),
+const tiptoe = require("tiptoe"),
 	path = require("path"),
 	fileUtil = require("../index").file,
 	imageUtil = require("../index").image;
