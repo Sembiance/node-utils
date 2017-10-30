@@ -6,8 +6,7 @@ const base = require("@sembiance/xbase"),
 	runUtil = require("./runUtil.js"),
 	tiptoe = require("tiptoe");
 
-exports.getWidthHeight = getWidthHeight;
-function getWidthHeight(file, cb)
+exports.getWidthHeight = function getWidthHeight(file, cb)
 {
 	tiptoe(
 		function getSize()
@@ -21,16 +20,35 @@ function getWidthHeight(file, cb)
 
 			const matches = result.trim().match(/[^ ]+ [^ ]+ ([0-9]+)x([0-9]+) .*/);
 			if(!matches || matches.length<3)
-				return cb(new Error("Invalid image"));
+				return cb(new Error("Invalid image: " + file));
 			
 			cb(null, [+matches[1], +matches[2]]);
 		}
 	);
-}
+};
 
+exports.randomCrop = function randomCrop(inputPath, outputPath, targetWidth, targetHeight, cb)
+{
+	tiptoe(
+		function measure()
+		{
+			exports.getWidthHeight(inputPath, this);
+		},
+		function calcOffsetsAndCrop(dimensions)
+		{
+			if(targetWidth===dimensions[0] && targetHeight===dimensions[1])
+				return fileUtil.copy(inputPath, outputPath, this), undefined;
+				
+			const xOffset = (targetWidth<dimensions[0]) ? Math.randomInt(0, (dimensions[0]-targetWidth)) : 0;
+			const yOffset = (targetHeight<dimensions[1]) ? Math.randomInt(0, (dimensions[1]-targetHeight)) : 0;
 
-exports.compress = compress;
-function compress(input, output, lossy, cb)
+			runUtil.run("convert", [inputPath, "-crop", targetWidth + "x" + targetHeight + "+" + xOffset + "+" + yOffset, "+repage", outputPath], runUtil.SILENT, this);
+		},
+		cb
+	);
+};
+
+exports.compress = function compress(input, output, lossy, cb)
 {
 	const extension = path.extname(input).toLowerCase().substring(1);
 	if(!(["jpg", "jpeg", "png", "gif"]).contains(extension))
@@ -110,4 +128,4 @@ function compress(input, output, lossy, cb)
 		},
 		cb
 	);
-}
+};

@@ -1,6 +1,7 @@
 "use strict";
 
-const assert = require("assert"),
+const base = require("@sembiance/xbase"),
+	assert = require("assert"),
 	fs = require("fs"),
 	path = require("path"),
 	httpUtil = require("../index").http;
@@ -11,6 +12,9 @@ const assert = require("assert"),
 });*/
 
 
+httpUtil.download("http://movietrailers.apple.com/movies/independent/11-8-16/11-8-16-trailer-1_h1080p.mov", "/tmp/out", {headers : {"user-agent" : "QuickTime/7.6.2"}}, base.FINISH);
+
+/*
 httpUtil.head("http://httpbin.org/delay/10", {timeout : 5000}, err => assert(err));
 
 httpUtil.get("http://httpbin.org/delay/10", {timeout : 5000}, err => assert(err));
@@ -42,3 +46,4 @@ httpUtil.put("http://httpbin.org/put", {abc : 123, love : true}, (err, responseD
 httpUtil.put("http://httpbin.org/put", "hello world!", (err, responseData) => assert.strictEqual(JSON.parse(responseData.toString("utf8")).data, "hello world!"));
 
 httpUtil.put("http://httpbin.org/put", fs.readFileSync(path.join(__dirname, "testPUTData")), (err, responseData) => assert.strictEqual(JSON.parse(responseData.toString("utf8")).data, "hello world!\n"));
+*/

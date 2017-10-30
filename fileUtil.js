@@ -8,6 +8,20 @@ const base = require("@sembiance/xbase"),
 	rimraf = require("rimraf"),
 	tiptoe = require("tiptoe");
 
+exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
+{
+	let tempFilePath = null;
+
+	do
+		tempFilePath = path.join(prefix.startsWith("/") ? "" : os.tmpdir(), prefix, uuid() + suffix);
+	while(exports.existsSync(tempFilePath));
+
+	if(!tempFilePath)
+		throw new Error("Failed to create temp file path.");
+
+	return tempFilePath;
+};
+
 exports.searchReplace = function searchReplace(file, match, replace, cb)
 {
 	tiptoe(
@@ -145,20 +159,6 @@ exports.existsSync = function existsSync(target)
 	}
 
 	return true;
-};
-
-exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
-{
-	let tempFilePath = null;
-
-	do
-		tempFilePath = path.join(os.tmpdir(), prefix, uuid() + suffix);
-	while(exports.existsSync(tempFilePath));
-
-	if(!tempFilePath)
-		throw new Error("Failed to create temp file path.");
-
-	return tempFilePath;
 };
 
 exports.exists = function exists(target, cb)
