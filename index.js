@@ -12,5 +12,6 @@ exports.http = require("./httpUtil.js");
 exports.image = require("./imageUtil.js");
 exports.url = require("./urlUtil.js");
 exports.diff = require("./diffUtil.js");
+exports.web = require("./webUtil.js");
 exports.sendgrid = require("./sendgridUtil.js");
 exports.redis = require("./redisUtil.js");
