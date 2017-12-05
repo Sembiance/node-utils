@@ -71,6 +71,8 @@ exports.run = function run(command, args, options={}, cb)
 			options(err || stderr, stdout, stderr);
 		}
 	}
+
+	return p;
 };
 
 exports.SILENT = {silent : true};

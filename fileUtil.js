@@ -31,7 +31,7 @@ exports.searchReplace = function searchReplace(file, match, replace, cb)
 		},
 		function replaceAndSave(data)
 		{
-			fs.writeFile(file, data.replace(new RegExp(match, "g"), replace), base.UTF8, this);
+			fs.writeFile(file, data.toString("utf8").replace(new RegExp(match, "g"), replace), base.UTF8, this);
 		},
 		cb
 	);

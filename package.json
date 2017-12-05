@@ -1,6 +1,6 @@
 {
 	"name": "@sembiance/xutil",
-	"version": "1.7.0",
+	"version": "1.7.1",
 	"author": "Robert Schultz <robert@cosmicrealms.com>",
 	"description": "common util functions I use in many of my node projects",
 	"main": "index.js",
@@ -12,7 +12,8 @@
     "node": ">6.5.0"
   	},
 	"dependencies": {
-		"@sembiance/xbase": "~1.1.19",
+		"@sembiance/xbase": "file:/mnt/compendium/DevLab/node-modules/xbase",
+		"tiptoe": "file:/mnt/compendium/DevLab/node-modules/tiptoe",
 		"accounting": "~0.4.1",
 		"ansidiff": "~1.0.0",
 		"cli-color": "~1.2.0",
@@ -22,8 +23,7 @@
 		"rimraf": "~2.6.1",
 		"sendgrid": "~5.2.0",
 		"stream-buffers": "~3.0.1",
-		"tiptoe": "~1.1.0",
-		"unicode": "~9.0.1",
+		"unicode": "~10.0.0",
 		"urlencode": "~1.1.0",
 		"uuid": "~3.1.0",
 		"xxhash": "^0.2.4",

@@ -79,7 +79,7 @@ function httpExecute(targetURL, options, cb)
 		else if(options.download)
 		{
 			response.pipe(outputFile);
-			outputFile.on("finish", () => { httpClearTimeout(); outputFile.close(); setImmediate(() => cb(undefined, response.headers, response.statusCode)); });
+			outputFile.on("finish", () => { httpClearTimeout(); setImmediate(() => cb(undefined, response.headers, response.statusCode)); });
 		}
 		else
 		{
@@ -95,7 +95,7 @@ function httpExecute(targetURL, options, cb)
 		httpClearTimeout();
 		if(outputFile)
 		{
-			outputFile.close();
+			outputFile.end();
 			fs.unlinkSync(options.download);
 		}
 
