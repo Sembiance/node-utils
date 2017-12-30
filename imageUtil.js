@@ -75,30 +75,23 @@ exports.compress = function compress(input, output, lossy, cb)
 		function prepare()
 		{
 			if(extension==="png")
-			{
-				if(lossy)
-					fileUtil.copy(input, tmpFile, this);
-				else
-					fileUtil.copy(input, output, this);
-			}
+				fileUtil.copy(input, tmpFile, this);
 			else
-			{
 				this();
-			}
 		},
 		function convert()
 		{
 			if(extension==="png")
 			{
 				if(lossy)
-					runUtil.run("pngquant", ["--speed", "1", tmpFile], runUtil.SILENT, this);
+					runUtil.run("pngquant", ["--speed=1", "--strip", "--output", output, input], runUtil.SILENT, this);
 				else
-					runUtil.run("advpng", ["-z", "-4", output], runUtil.SILENT, this);
+					runUtil.run("zopflipng", ["-y", "--splitting=3", "--filters=01234mepb", tmpFile, output], runUtil.SILENT, this);
 			}
 			else if(extension==="jpg" || extension==="jpeg")
 			{
 				if(lossy)
-					runUtil.run("convert", [input, "-quality", "80%", output], runUtil.SILENT, this);
+					runUtil.run("guetzli", ["-quality", "95%", input, output], runUtil.SILENT, this);
 				else
 					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", output, input], runUtil.SILENT, this);
 			}
@@ -116,15 +109,7 @@ exports.compress = function compress(input, output, lossy, cb)
 			if(deleteInput)
 				fileUtil.unlink(input, this.parallel());
 			
-			if(extension==="png" && lossy)
-			{
-				fileUtil.unlink(tmpFile, this.parallel());
-				fileUtil.move(tmpFile + "-fs8.png", output, this.parallel());
-			}
-			else
-			{
-				this();
-			}
+			this();
 		},
 		cb
 	);
