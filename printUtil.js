@@ -1,6 +1,7 @@
 "use strict";
 
 const base = require("@sembiance/xbase"),
+	clc = require("cli-color"),
 	accounting = require("accounting");
 
 exports.toSize = function toSize(num, precision=1)
@@ -84,7 +85,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	if(options.formatter)
 		rows.forEach(object => colNames.forEach(colName => { object[colName] = options.formatter(colName, object[colName]); }));
 	else
-		rows.forEach(object => colNames.forEach((colName, i) => { const v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? (typeof v==="number" ? v.formatWithCommas() : 0) : v); }));
+		rows.forEach(object => colNames.forEach((colName, i) => { const v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? (typeof v==="number" ? v.toLocaleString() : 0) : v); }));
 
 	const maxColSizeMap = {};
 	rows.forEach(row => colNames.forEach(colName => { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (""+row[colName]).length, colNameMap[colName].length); } }));	// eslint-disable-line curly
@@ -118,4 +119,54 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	});
 
 	return result;
+};
+
+exports.singleLineBooleanPie = function singleLineBooleanPie(o, label="Label", lineLength=120)
+{
+	const COLORS = [202, 134, 190, 27];
+	const barLength = lineLength-(label.length+2);
+	const keys = Object.keys(o);
+	const values = Object.values(o);
+	const TOTAL = Object.values(o).sum();
+
+	// Labels
+	process.stdout.write(clc.whiteBright(label) + ": ");
+	process.stdout.write(clc.xterm(11)(keys[0]));
+	const firstValue = " " + values[0].toLocaleString() + " (" + Math.round((values[0]/TOTAL)*100) + "%)";
+	process.stdout.write(firstValue);
+	const secondValue = " " + values[1].toLocaleString() + " (" + Math.round((values[1]/TOTAL)*100) + "%)";
+	process.stdout.write(" ".repeat(barLength-((keys[0].length+keys[1].length+firstValue.length+secondValue.length)-1)));
+	process.stdout.write(clc.xterm(11)(keys[1]));
+	process.stdout.write(secondValue);
+	process.stdout.write("\n");
+
+	// Pie
+	process.stdout.write(" ".repeat(label.length+1) + clc.cyanBright("["));
+	values.forEach((v, i) => process.stdout.write(clc.xterm(COLORS[i])("█".repeat(barLength*(v/TOTAL)))));
+	process.stdout.write(clc.cyanBright("]"));
+
+	process.stdout.write("\n\n");
+};
+
+exports.multiLineBarChart = function multiLineBarChart(o, label="Label", lineLength=120)
+{
+	const COLORS = [208, 134, 47, 190, 162, 27, 250].pushCopyInPlace(10);
+	const LINES = Object.entries(o).sort((a, b) => b[1]-a[1]);
+	const TOTAL = Object.values(o).sum();
+	const VALUES = LINES.map(line => line[1].toLocaleString() + " (" + Math.round((line[1]/TOTAL)*100) + "%)");
+	const longestKey = LINES.map(line => line[0].length).sort((a, b) => b-a)[0];
+	const barLength = lineLength-(longestKey+2);
+
+	process.stdout.write(" ".repeat(Math.round((lineLength-label.length)/2)) + clc.yellowBright(label) + "\n");
+	process.stdout.write(clc.cyanBright("=").repeat(lineLength) + "\n");
+
+	LINES.forEach((LINE, i) =>
+	{
+		process.stdout.write(clc.whiteBright(LINE[0].padStart(longestKey)) + ": ");
+		process.stdout.write(clc.xterm(COLORS[i])("█".repeat(Math.max((LINE[1] > 0 ? 1 : 0), Math.round(barLength*(LINE[1]/TOTAL))))));
+		process.stdout.write(" " + VALUES[i]);
+		process.stdout.write("\n");
+	});
+
+	process.stdout.write("\n");
 };
