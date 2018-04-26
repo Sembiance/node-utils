@@ -20,7 +20,7 @@ exports.toSize = function toSize(num, precision=1)
 
 exports.columnizeObject = function columnizeObject(o, options={})
 {
-	let rows = Object.mutate(o, (k, v, r) => { r.push([k, v]); return r; }, []);
+	let rows = Object.reduce(o, (k, v, r) => { r.push([k, v]); return r; }, []);
 	if(options.sorter)
 		rows.sort(options.sorter);
 
@@ -74,7 +74,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	const rows = base.clone(objects);
 
 	const colNames = options.colNames || rows.map(object => Object.keys(object)).flatten().unique();
-	const colNameMap = Object.merge(colNames.mutate((colName, r) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
+	const colNameMap = Object.merge(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
 	const alignmentDefault = options.alignmentDefault || "l";
 	const colTypes = colNames.map(colName => { const v = rows[0][colName]; return Number.isNumber(v) ? "number" : typeof v; });
 	const booleanValues = options.booleanValues || ["True", "False"];

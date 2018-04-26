@@ -13,7 +13,7 @@ const categories =
 	other       : ["Cc", "Cf", "Co", "Cs"]	// Cn
 };
 
-const categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.mutate((categorySymbol, r) => Object.merge(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line global-require
+const categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.merge(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line global-require
 
 // letter, number, punctuation, mark, symbol, space, other, unknown
 exports.getCategories = function getCategories(s)
