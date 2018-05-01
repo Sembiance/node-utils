@@ -26,6 +26,8 @@ exports.columnizeObject = function columnizeObject(o, options={})
 
 	if(options.formatter)
 		rows = rows.map(options.formatter);
+	else
+		rows = rows.map(row => { row[1] = (typeof row[1]==="number" ? row[1].toLocaleString() : row[1]); return row; });
 
 	if(options.header)
 		rows.splice(0, 0, options.header);
