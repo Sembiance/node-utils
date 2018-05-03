@@ -131,6 +131,11 @@ exports.singleLineBooleanPie = function singleLineBooleanPie(o, label="Label", l
 	const values = Object.values(o);
 	const TOTAL = Object.values(o).sum();
 
+	if(keys.length===1)
+		keys.push(keys[0]==="true" ? "false" : "true");
+	if(values.length===1)
+		values.push(0);
+
 	// Labels
 	process.stdout.write(clc.whiteBright(label) + ": ");
 	process.stdout.write(clc.xterm(11)(keys[0]));
