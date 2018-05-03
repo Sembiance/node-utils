@@ -19,7 +19,7 @@ function diff(o, n, _options={})
 	return diffValues(o, n, options);
 }
 
-function diffObjects(o, n, options)
+function diffObjects(o, n, options={})
 {
 	let result = "";
 
@@ -30,7 +30,8 @@ function diffObjects(o, n, options)
 	keysAdded.forEach(keyAdded => { result += " ".repeat(options.indent*4) + color.green(util.format("%s : %j\n", keyAdded, n[keyAdded])); });
 
 	const keysRemoved = oKeys.subtract(nKeys);
-	keysRemoved.forEach(keyRemoved => { result += " ".repeat(options.indent*4) + color.red(util.format("%s : %j\n", keyRemoved, o[keyRemoved])); });
+	if(!options.ignoreRemovedKeys)
+		keysRemoved.forEach(keyRemoved => { result += " ".repeat(options.indent*4) + color.red(util.format("%s : %j\n", keyRemoved, o[keyRemoved])); });
 
 	oKeys.subtract(keysAdded).subtract(keysRemoved).forEach(key =>
 	{
