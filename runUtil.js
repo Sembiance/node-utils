@@ -76,3 +76,4 @@ exports.run = function run(command, args, options={}, cb)
 };
 
 exports.SILENT = {silent : true};
+exports.VERBOSE = {verbose : true};

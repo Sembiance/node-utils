@@ -4,6 +4,8 @@ const base = require("@sembiance/xbase"),
 	cdp = require("chrome-remote-interface"),
 	tiptoe = require("tiptoe");
 
+// Alternative NodeJS package for controlling chromium headless: https://github.com/GoogleChrome/puppeteer
+
 // This requires chromium to be running in headless
 // 		chromium --headless --hide-scrollbars --remote-debugging-port=9222 --disable-gpu
 exports.captureScreenshot = function captureScreenshot(url, _options, _cb)
