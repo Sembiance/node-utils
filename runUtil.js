@@ -15,6 +15,12 @@ exports.run = function run(command, args, options={}, cb)
 		options["redirect-stderr"] = true;
 	
 	let p = null;
+	if(options.detached)
+	{
+		childProcess.spawn(command, args, options);
+		return setImmediate(cb);
+	}
+
 	if(cb)
 		p = childProcess.execFile(command, args, options, handler);
 	else
@@ -25,6 +31,9 @@ exports.run = function run(command, args, options={}, cb)
 		p.stdout.pipe(process.stdout);
 		p.stderr.pipe(process.stderr);
 	}
+
+	if(options.inputData)
+		p.stdin.end(options.inputData);
 
 	function handler(err, stdout, stderr)
 	{
