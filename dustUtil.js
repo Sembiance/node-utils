@@ -45,6 +45,6 @@ function render(basePath, name, data, _options, _cb)
 			};
 			dust.renderSource(template, data, this);
 		},
-		function returnResult(err, result) { cb(err, result); }
+		cb
 	);
 }

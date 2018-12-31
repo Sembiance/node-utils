@@ -168,7 +168,7 @@ exports.exists = function exists(target, cb)
 
 exports.unlink = function unlink(target, cb)
 {
-	exports.exists(target, (na, exists) =>
+	exports.exists(target, (ignored, exists) =>
 	{
 		if(!exists)
 			return setImmediate(cb);
