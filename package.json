@@ -1,32 +1,32 @@
 {
-	"name": "@sembiance/xutil",
-	"version": "1.8.3",
-	"author": "Robert Schultz <robert@cosmicrealms.com>",
-	"description": "common util functions I use in many of my node projects",
-	"main": "index.js",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Sembiance/xutil"
+	"name"        : "@sembiance/xutil",
+	"version"     : "1.8.4",
+	"author"      : "Robert Schultz <robert@cosmicrealms.com>",
+	"description" : "common util functions I use in many of my node projects",
+	"main"        : "index.js",
+	"engines"     : { "node": ">6.5.0" },
+	"repository"  :
+	{
+		"type" : "git",
+		"url"  : "https://github.com/Sembiance/xutil"
 	},
-	"engines": {
-    "node": ">6.5.0"
-  	},
-	"dependencies": {
-		"@sembiance/xbase": "*",
-		"tiptoe": "*",
-		"accounting": "~0.4.1",
-		"ansidiff": "~1.0.0",
-		"cli-color": "~1.2.0",
-		"dustjs-helpers": "~1.7.3",
-		"dustjs-linkedin": "~2.7.5",
-		"erbridge": "~1.0.0",
-		"rimraf": "~2.6.1",
-		"sendgrid": "~5.2.0",
-		"stream-buffers": "~3.0.1",
-		"unicode": "~10.0.0",
-		"urlencode": "~1.1.0",
-		"uuid": "~3.1.0",
-		"xxhash": "^0.2.4",
-		"chrome-remote-interface" : "~0.25.2"
+	"dependencies" :
+	{
+		"@sembiance/xbase"        : "file:/mnt/compendium/DevLab/node-modules/xbase",
+		"tiptoe"                  : "file:/mnt/compendium/DevLab/node-modules/tiptoe",
+		"accounting"              : "~0.4.1",
+		"ansidiff"                : "~1.0.0",
+		"cli-color"               : "~1.4.0",
+		"dustjs-helpers"          : "~1.7.3",
+		"dustjs-linkedin"         : "~2.7.5",
+		"erbridge"                : "~1.0.0",
+		"rimraf"                  : "~2.6.1",
+		"sendgrid"                : "~5.2.0",
+		"stream-buffers"          : "~3.0.1",
+		"unicode"                 : "~11.0.1",
+		"urlencode"               : "~1.1.0",
+		"uuid"                    : "~3.3.2",
+		"xxhash"                  : "^0.2.4",
+		"chrome-remote-interface" : "~0.27.0"
 	}
 }
