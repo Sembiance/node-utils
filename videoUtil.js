@@ -53,7 +53,7 @@ exports.getInfo = function getInfo(videoPath, cb)
 			const lines = data.split("\n");
 			lines.forEach(line =>
 			{
-				if(!line.contains("="))
+				if(!line.includes("="))
 					return;
 
 				const parts = line.split("=");

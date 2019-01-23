@@ -56,7 +56,7 @@ function categorySymbolToName(categorySymbol)
 		if(result)
 			return;
 
-		if(categorySymbols.contains(categorySymbol))
+		if(categorySymbols.includes(categorySymbol))
 			result = categoryName;
 	});
 

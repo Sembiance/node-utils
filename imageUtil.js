@@ -51,7 +51,7 @@ exports.randomCrop = function randomCrop(inputPath, outputPath, targetWidth, tar
 exports.compress = function compress(input, output, lossy, cb)
 {
 	const extension = path.extname(input).toLowerCase().substring(1);
-	if(!(["jpg", "jpeg", "png", "gif"]).contains(extension))
+	if(!(["jpg", "jpeg", "png", "gif"]).includes(extension))
 		throw new Error("Unsupported image extension: " + extension);
 
 	const tmpFile = fileUtil.generateTempFilePath();
