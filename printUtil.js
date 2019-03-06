@@ -1,21 +1,20 @@
 "use strict";
 
 const base = require("@sembiance/xbase"),
-	clc = require("cli-color"),
-	accounting = require("accounting");
+	clc = require("cli-color");
 
 exports.toSize = function toSize(num, precision=1)
 {
 	if(num<base.KB)
-		return accounting.formatNumber(num) + " bytes";
+		return num.toLocaleString() + " bytes";
 	else if(num<base.MB)
-		return accounting.formatNumber((num/base.KB), precision) + "KB";
+		return (num/base.KB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "KB";
 	else if(num<base.GB)
-		return accounting.formatNumber((num/base.MB), precision) + "MB";
+		return (num/base.MB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "MB";
 	else if(num<base.TB)
-		return accounting.formatNumber((num/base.GB), precision) + "GB";
+		return (num/base.GB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "GB";
 	else if(num<base.PB)
-		return accounting.formatNumber((num/base.TB), precision) + "TB";
+		return (num/base.TB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "TB";
 };
 
 exports.columnizeObject = function columnizeObject(o, options={})

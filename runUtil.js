@@ -17,8 +17,8 @@ exports.run = function run(command, args, options={}, cb)
 	let p = null;
 	if(options.detached)
 	{
-		childProcess.spawn(command, args, options);
-		return setImmediate(cb);
+		const cp = childProcess.spawn(command, args, options);
+		return setImmediate(() => cb(undefined, cp));
 	}
 
 	if(cb)

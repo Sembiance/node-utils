@@ -14,7 +14,6 @@ webUtil.captureScreenshot("http://worldofsolitaire.com", {width : 1024, height :
 {
 	if(err)
 	{
-		console.error("Run first: chromium --headless --hide-scrollbars --remote-debugging-port=9222 --disable-gpu");
 		console.error(err);
 		process.exit(1);
 	}

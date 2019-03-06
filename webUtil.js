@@ -1,63 +1,40 @@
 "use strict";
 
 const base = require("@sembiance/xbase"),
-	cdp = require("chrome-remote-interface"),
+	CDPW = require("@sembiance/cdpw"),
 	tiptoe = require("tiptoe");
 
-// Alternative NodeJS package for controlling chromium headless: https://github.com/GoogleChrome/puppeteer
-
-// This requires chromium to be running in headless
-// 		chromium --headless --hide-scrollbars --remote-debugging-port=9222 --disable-gpu
 exports.captureScreenshot = function captureScreenshot(url, _options, _cb)
 {
 	const options = _cb ? _options : {};
 	const cb = (_cb || _options);
 
-	const deviceMetrics = {
-		width             : options.width || 1280,
-		height            : options.height || 1024,
-		deviceScaleFactor : 0,
-		mobile            : false,
-		fitWindow         : false
-	};
-
-	cdp(client =>
+	const cdpw = new CDPW(true, (cdpwErr, client) =>
 	{
+		if(cdpwErr)
+			return cb(cdpwErr);
+		
 		tiptoe(
-			function enableParts()
+			function openSite()
 			{
-				client.Page.enable(this.parallel());
-				client.DOM.enable(this.parallel());
-				client.Network.enable(this.parallel());
-			},
-			function setDeviceMetrics()
-			{
-				client.Emulation.setDeviceMetricsOverride(deviceMetrics, this);
-			},
-			function setVisibleSize()
-			{
-				client.Emulation.setVisibleSize({width : deviceMetrics.width, height : deviceMetrics.height}, this);
-			},
-			function navigate()
-			{
-				client.Page.navigate({url}, this);
-			},
-			function waitForPageToFinish()
-			{
-				const self=this;
-				client.Page.loadEventFired(() => setTimeout(self, (options.delay || base.SECOND)));
+				cdpw.openURL(url, this, {delay : (options.delay || base.SECOND), width : (options.width || 1280), height : (options.height || 1024)});
 			},
 			function capture()
 			{
 				client.Page.captureScreenshot({format : "png"}, this);
 			},
-			function resturnResult(err, ss)
+			function cleanup(ss)
+			{
+				this.data.ssData = Buffer.from(ss.data, "base64");
+				cdpw.destroy(this);
+			},
+			function resturnResult(err)
 			{
 				if(err)
 					return cb(err);
 
-				cb(undefined, Buffer.from(ss.data, "base64"));
+				cb(undefined, this.data.ssData);
 			}
 		);
-	}).on("error", cb);
+	});
 };
