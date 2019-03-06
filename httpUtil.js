@@ -61,7 +61,7 @@ function httpExecute(targetURL, options, cb)
 
 	const httpResponse = function httpResponse(response)
 	{
-		// TODO: Add support for 302 redirect
+		// DO: Add support for 302 redirect
 		if(response.statusCode===301)
 		{
 			httpClearTimeout();
