@@ -1,6 +1,6 @@
 {
 	"name"        : "@sembiance/xutil",
-	"version"     : "1.10.0",
+	"version"     : "1.10.1",
 	"author"      : "Robert Schultz <robert@cosmicrealms.com>",
 	"description" : "common util functions I use in many of my node projects",
 	"main"        : "index.js",
@@ -12,7 +12,7 @@
 	},
 	"dependencies" :
 	{
-		"@sembiance/xbase"        : "file:/mnt/compendium/DevLab/node-modules/xbase",
+		"@sembiance/xu"        : "file:/mnt/compendium/DevLab/node-modules/xu",
 		"tiptoe"                  : "file:/mnt/compendium/DevLab/node-modules/tiptoe",
 		"@sembiance/cdpw"         : "file:/mnt/compendium/DevLab/node-modules/cdpw",
 		"ansidiff"                : "~1.0.0",

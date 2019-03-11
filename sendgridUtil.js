@@ -1,6 +1,6 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	mailHelper = require("sendgrid").mail;
 
 exports.send = function send(apiKey, msg, cb)

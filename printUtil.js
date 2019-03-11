@@ -1,20 +1,20 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	clc = require("cli-color");
 
 exports.toSize = function toSize(num, precision=1)
 {
-	if(num<base.KB)
+	if(num<XU.KB)
 		return num.toLocaleString() + " bytes";
-	else if(num<base.MB)
-		return (num/base.KB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "KB";
-	else if(num<base.GB)
-		return (num/base.MB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "MB";
-	else if(num<base.TB)
-		return (num/base.GB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "GB";
-	else if(num<base.PB)
-		return (num/base.TB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "TB";
+	else if(num<XU.MB)
+		return (num/XU.KB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "KB";
+	else if(num<XU.GB)
+		return (num/XU.MB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "MB";
+	else if(num<XU.TB)
+		return (num/XU.GB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "GB";
+	else if(num<XU.PB)
+		return (num/XU.TB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "TB";
 };
 
 exports.columnizeObject = function columnizeObject(o, options={})
@@ -72,7 +72,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 
 exports.columnizeObjects = function columnizeObjects(objects, options={})
 {
-	const rows = base.clone(objects);
+	const rows = XU.clone(objects);
 
 	const colNames = options.colNames || rows.map(object => Object.keys(object)).flatten().unique();
 	const colNameMap = Object.merge(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});

@@ -1,12 +1,12 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	assert = require("assert"),
 	fs = require("fs"),
 	path = require("path"),
 	httpUtil = require("../index").http;
 
-httpUtil.download("http://movietrailers.apple.com/movies/independent/11-8-16/11-8-16-trailer-1_h1080p.mov", "/tmp/out", {headers : {"user-agent" : "QuickTime/7.6.2"}}, base.FINISH);
+httpUtil.download("http://movietrailers.apple.com/movies/independent/11-8-16/11-8-16-trailer-1_h1080p.mov", "/tmp/out", {headers : {"user-agent" : "QuickTime/7.6.2"}}, XU.FINISH);
 
 httpUtil.head("http://httpbin.org/delay/10", {timeout : 5000}, err => assert(err));
 

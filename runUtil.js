@@ -2,7 +2,7 @@
 /*global setImmediate: true*/
 /* eslint-disable no-param-reassign */
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	childProcess = require("child_process");
 
 exports.run = function run(command, args, options={}, cb)

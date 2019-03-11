@@ -1,6 +1,6 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	path = require("path"),
 	uuid = require("uuid"),
@@ -27,11 +27,11 @@ exports.searchReplace = function searchReplace(file, match, replace, cb)
 	tiptoe(
 		function loadFile()
 		{
-			fs.readFile(file, base.UTF8, this);
+			fs.readFile(file, XU.UTF8, this);
 		},
 		function replaceAndSave(data)
 		{
-			fs.writeFile(file, data.toString("utf8").replace(new RegExp(match, "g"), replace), base.UTF8, this);
+			fs.writeFile(file, data.toString("utf8").replace(new RegExp(match, "g"), replace), XU.UTF8, this);
 		},
 		cb
 	);

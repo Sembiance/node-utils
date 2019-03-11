@@ -1,6 +1,6 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	net = require("net");
 
 exports.waitForConnection = function waitForConnection(host, port, cb)

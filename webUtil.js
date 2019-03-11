@@ -1,6 +1,6 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	CDPW = require("@sembiance/cdpw"),
 	tiptoe = require("tiptoe");
 
@@ -17,7 +17,7 @@ exports.captureScreenshot = function captureScreenshot(url, _options, _cb)
 		tiptoe(
 			function openSite()
 			{
-				cdpw.openURL(url, this, {delay : (options.delay || base.SECOND), width : (options.width || 1280), height : (options.height || 1024)});
+				cdpw.openURL(url, this, {delay : (options.delay || XU.SECOND), width : (options.width || 1280), height : (options.height || 1024)});
 			},
 			function capture()
 			{

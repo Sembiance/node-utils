@@ -1,6 +1,6 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	util = require("util"),
 	ansidiff = require("ansidiff"),
 	color = require("cli-color");
@@ -8,7 +8,7 @@ const base = require("@sembiance/xbase"),
 exports.diff = diff;
 function diff(o, n, _options={})
 {
-	const options = base.clone(_options);
+	const options = XU.clone(_options);
 	options.indent = (options.indent || 0) + 1;
 
 	if(Object.isObject(o))

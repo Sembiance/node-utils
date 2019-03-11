@@ -1,6 +1,6 @@
 "use strict";
 
-const base = require("@sembiance/xbase"),
+const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	url = require("url"),
 	path = require("path"),
@@ -102,7 +102,7 @@ function httpExecute(targetURL, options, cb)
 		if(options.retry && options.retry>=1)
 		{
 			//console.error("RETRYING %s", targetURL);
-			options = base.clone(options);	// eslint-disable-line no-param-reassign
+			options = XU.clone(options);	// eslint-disable-line no-param-reassign
 			options.retry = options.retry-1;
 			httpExecute(targetURL, options, cb);
 		}
@@ -121,7 +121,7 @@ function httpExecute(targetURL, options, cb)
 exports.download = download;
 function download(targetURL, destination, _options, cb)
 {
-	const options = base.clone(!cb ? {} : _options);
+	const options = XU.clone(!cb ? {} : _options);
 	options.method = "GET";
 	options.download = destination;
 
@@ -131,7 +131,7 @@ function download(targetURL, destination, _options, cb)
 exports.head = head;
 function head(targetURL, _options, cb)
 {
-	const options = base.clone(!cb ? {} : _options);
+	const options = XU.clone(!cb ? {} : _options);
 	options.method = "HEAD";
 
 	return httpExecute(targetURL, options, cb || _options);
@@ -140,7 +140,7 @@ function head(targetURL, _options, cb)
 exports.get = get;
 function get(targetURL, _options, _cb)
 {
-	const options = base.clone(!_cb ? {} : _options);
+	const options = XU.clone(!_cb ? {} : _options);
 	options.method = "GET";
 
 	let cb = _cb;
@@ -150,7 +150,7 @@ function get(targetURL, _options, _cb)
 	{
 		cachePath = path.join(_options.cacheBase, xxhash.hash64(Buffer.from(targetURL, "utf8"), 0xDEADBEEF, "hex"));
 		if(fileUtil.existsSync(cachePath))
-			return fs.readFile(cachePath, base.UTF8, cb);
+			return fs.readFile(cachePath, XU.UTF8, cb);
 	}
 
 	if(cachePath)
@@ -163,7 +163,7 @@ function get(targetURL, _options, _cb)
 			if(err || !data)
 				return _cb(err, data, headers, statusCode);
 
-			fs.writeFile(cachePath, data, base.UTF8, fileErr => _cb(fileErr, data, headers, statusCode));
+			fs.writeFile(cachePath, data, XU.UTF8, fileErr => _cb(fileErr, data, headers, statusCode));
 		};
 	}
 
@@ -172,7 +172,7 @@ function get(targetURL, _options, _cb)
 exports.post = post;
 function post(targetURL, postData, _options, cb)
 {
-	const options = base.clone(!cb ? {} : _options);
+	const options = XU.clone(!cb ? {} : _options);
 	options.method = "POST";
 	options.postData = querystring.stringify(postData);
 
@@ -182,7 +182,7 @@ function post(targetURL, postData, _options, cb)
 exports.put = put;
 function put(targetURL, putData, _options, cb)
 {
-	const options = base.clone(!cb ? {} : _options);
+	const options = XU.clone(!cb ? {} : _options);
 	options.method = "PUT";
 	options.contentType = (typeof putData==="string" || putData instanceof Buffer) ? "text/plain" : "application/json";
 	options.postData = typeof putData==="string" ? putData : (putData instanceof Buffer ? putData.toString("utf8") : JSON.stringify(putData));
