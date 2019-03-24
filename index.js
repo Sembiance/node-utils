@@ -14,4 +14,3 @@ exports.diff = require("./diffUtil.js");
 exports.net = require("./netUtil.js");
 exports.sendgrid = require("./sendgridUtil.js");
 exports.redis = require("./redisUtil.js");
-exports.web = require("./webUtil.js");
