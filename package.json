@@ -1,30 +1,30 @@
 {
-	"name"        : "@sembiance/xutil",
-	"version"     : "1.10.1",
-	"author"      : "Robert Schultz <robert@cosmicrealms.com>",
-	"description" : "common util functions I use in many of my node projects",
-	"main"        : "index.js",
-	"engines"     : { "node": ">6.5.0" },
-	"repository"  :
+	"name"         : "@sembiance/xutil",
+	"version"      : "1.10.1",
+	"author"       : "Robert Schultz <robert@cosmicrealms.com>",
+	"description"  : "common util functions I use in many of my node projects",
+	"main"         : "index.js",
+	"engines"      : {"node" : ">6.5.0"},
+	"repository"   :
 	{
 		"type" : "git",
 		"url"  : "https://github.com/Sembiance/xutil"
 	},
 	"dependencies" :
 	{
-		"@sembiance/xu"        : "file:/mnt/compendium/DevLab/node-modules/xu",
-		"tiptoe"                  : "file:/mnt/compendium/DevLab/node-modules/tiptoe",
-		"@sembiance/cdpw"         : "file:/mnt/compendium/DevLab/node-modules/cdpw",
-		"ansidiff"                : "~1.0.0",
-		"cli-color"               : "~1.4.0",
-		"dustjs-helpers"          : "~1.7.3",
-		"dustjs-linkedin"         : "~2.7.5",
-		"rimraf"                  : "~2.6.1",
-		"sendgrid"                : "~5.2.0",
-		"stream-buffers"          : "~3.0.1",
-		"unicode"                 : "~11.0.1",
-		"urlencode"               : "~1.1.0",
-		"uuid"                    : "~3.3.2",
-		"xxhash"                  : "^0.2.4"
+		"@sembiance/xu"   : "file:/mnt/compendium/DevLab/node-modules/xu",
+		"tiptoe"          : "file:/mnt/compendium/DevLab/node-modules/tiptoe",
+		"@sembiance/cdpw" : "file:/mnt/compendium/DevLab/node-modules/cdpw",
+		"ansidiff"        : "~1.0.0",
+		"cli-color"       : "~1.4.0",
+		"dustjs-helpers"  : "~1.7.3",
+		"dustjs-linkedin" : "~2.7.5",
+		"rimraf"          : "~2.6.1",
+		"sendgrid"        : "~5.2.0",
+		"stream-buffers"  : "~3.0.1",
+		"unicode"         : "~11.0.1",
+		"urlencode"       : "~1.1.0",
+		"uuid"            : "~3.3.2",
+		"xxhash"          : "^0.2.4"
 	}
 }
