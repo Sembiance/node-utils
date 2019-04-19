@@ -74,7 +74,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 {
 	const rows = XU.clone(objects);
 
-	const colNames = options.colNames || rows.map(object => Object.keys(object)).flatten().unique();
+	const colNames = options.colNames || rows.map(object => Object.keys(object)).flat().unique();
 	const colNameMap = Object.merge(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
 	const alignmentDefault = options.alignmentDefault || "l";
 	const colTypes = colNames.map(colName => { const v = rows[0][colName]; return Number.isNumber(v) ? "number" : typeof v; });
