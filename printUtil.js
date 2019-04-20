@@ -113,7 +113,10 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 			if(a==="c" || a==="r")
 				rowOut += " ".repeat(Math.floor(colPadding/(a==="c" ? 2 : 1)));
 
-			rowOut += (rowNum===0 ? chalk.hex("#FFFFFF")(col) : col);
+			if(rowNum===0)
+				rowOut += chalk.hex("#FFFFFF")(col);
+			else
+				rowOut += (options.color && options.color[colName] ? chalk.hex((typeof options.color[colName]==="function" ? options.color[colName](objects[(rowNum<=1 ? rowNum : (rowNum-2))][colName]) : options.color[colName]))(col) : col);
 
 			if(a==="c" || a==="l")
 				rowOut += " ".repeat(Math.round(colPadding/(a==="c" ? 2 : 1)));
