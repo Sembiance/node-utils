@@ -188,37 +188,42 @@ exports.multiLineBarChart = function multiLineBarChart(o, label="Label", lineLen
 // An advanced log function that supports padded length strings and numbers and color
 // %10s : Will pad the left side of the string with spaces to at least 10 length. Can also pad all other values such as %7d
 // %D   : Auto formats the string with .toLocaleString()
-// %j   : Outputs colorized JSON
+// %j   : Outputs colorized JSON on 1 line
+// %J	: Outputs colorized JSON over multiple lines
 // %#FFFFFFs : Outputs the string (or digit or whatever) in the given hex color.
 // %#FFFFFF[bdiuvsh] : Outputs the string in the given color with the letter modifier, see MODIFIERS map below
+// %0.2f : Output a float formatted value
 exports.log = function log(s, ...args)
 {
 	const MODIFIERS =
 	{
-		b : "bold",
-		d : "dim",
-		i : "italic",
-		u : "underline",
-		v : "inverse",
-		s : "strikethrough",
-		h : "hidden"
+		b   : "bold",
+		m   : "dim",
+		i   : "italic",
+		u   : "underline",
+		v   : "inverse",
+		"-" : "strikethrough",
+		h   : "hidden"
 	};
 	let codeNum = 0;
 
 	for(let i=0;i<s.length;i++)
 	{
 		const part = s.substring(i);
-		const code = part.match(/^%(#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])?([bdiuvsh])?([0-9]+)?([sdDj%])/);
+		const code = part.match(/^%(#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])?([bmiuvh-])?([0-9]+)?[.]?([0-9]+)?([sdDjJf%])/);
 		if(code)
 		{
 			let v = "";
-			switch(code[4])
+			switch(code[5])
 			{
 				case "%":
 					v = "%";
 					break;
 				case "d":
 					v = +args[codeNum++];
+					break;
+				case "f":
+					v = args[codeNum++].toFixed(+code[4]);
 					break;
 				case "D":
 					v = (+args[codeNum++]).toLocaleString();
@@ -228,6 +233,9 @@ exports.log = function log(s, ...args)
 					break;
 				case "j":
 					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity, breakLength : Infinity});
+					break;
+				case "J":
+					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity});
 					break;
 			}
 
@@ -278,6 +286,21 @@ exports.minorHeader = function minorHeader(text, options={})
 
 	exports.log("%" + (options.color || "#FFFFFF") + "s", text);
 	exports.log("%#00FFFFs", "-".repeat(text.length));
+
+	if(options.suffix)
+		process.stdout.write(options.suffix);
+};
+
+// Prints out a list of items with an optional "header" in options
+exports.list = function list(items, options={})
+{
+	if(options.prefix)
+		process.stdout.write(options.prefix);
+
+	if(options.header)
+		exports[(options.headerType==="major" ? "major" : "minor") + "Header"](options.header, (options.headerColor ? { color : options.headerColor } : undefined));
+
+	items.forEach(item => process.stdout.write(" ".repeat(options.indent || 2) + "* " + item + "\n"));
 
 	if(options.suffix)
 		process.stdout.write(options.suffix);
