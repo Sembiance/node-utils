@@ -37,6 +37,7 @@ exports.searchReplace = function searchReplace(file, match, replace, cb)
 	);
 };
 
+// Concatenates the _files array to dest
 exports.concat = function concat(_files, dest, _options, _cb)
 {
 	let options = _options;
@@ -90,6 +91,7 @@ exports.concat = function concat(_files, dest, _options, _cb)
 	concatNext();
 };
 
+// Copies a file from src to dest
 exports.copy = function copy(src, dest, cb)
 {
 	let cbCalled = false;
@@ -113,6 +115,7 @@ exports.copy = function copy(src, dest, cb)
 	}
 };
 
+// Moves a file from src to dest, works even across disks
 exports.move = function move(src, dest, cb)
 {
 	tiptoe(
@@ -147,6 +150,7 @@ exports.move = function move(src, dest, cb)
 	);
 };
 
+// Returns true if the target exists
 exports.existsSync = function existsSync(target)
 {
 	try
@@ -161,11 +165,13 @@ exports.existsSync = function existsSync(target)
 	return true;
 };
 
+// Calls cb(err, true) if the target exists
 exports.exists = function exists(target, cb)
 {
 	fs.access(target, fs.F_OK, err => cb(undefined, !err));
 };
 
+// Deletes the target from disk, if it's a directory, will remove the entire directory and all sub directories and files
 exports.unlink = function unlink(target, cb)
 {
 	exports.exists(target, (ignored, exists) =>
@@ -181,4 +187,21 @@ exports.unlink = function unlink(target, cb)
 				fs.unlink(target, cb);
 		});
 	});
+};
+
+// Returns the first letter of a file that can be used for dir breaking up
+exports.getFirstLetterDir = function getFirstLetterDir(filePath)
+{
+	const firstLetter = filePath.charAt(0).toLowerCase();
+
+	// Return the first letter if it's 'a' through 'z'
+	if([].pushSequence(97, 122).map(v => String.fromCharCode(v)).includes(firstLetter))
+		return firstLetter;
+	
+	// If the first letter is a number, return '0'
+	if([].pushSequence(0, 9).map(v => ("" + v)).includes(firstLetter))
+		return "0";
+	
+	// Otherwise return underscore
+	return "_";
 };
