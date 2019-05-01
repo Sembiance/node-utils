@@ -51,8 +51,9 @@ tiptoe(
 	{
 		test_readZipEntries(path.join(__dirname, "test.zip"), this);
 	},
-	function createZipFile()
+	function createZipFileAndUnzipTempDir()
 	{
+		fs.mkdir("/tmp/unzip_test", this.parallel());
 		zipUtil.zipFiles(["pewpewpew.flac", "subdir", "zip_hello.txt"], "/tmp/zip_test_test.zip", {cwd : path.join(__dirname, "zip_dir")}, this.parallel());
 		zipUtil.zipFiles(["pewpewpew.flac", "subdir", "zip_hello.txt"], "/tmp/zip_test_test_renamed.zip", {junkPaths : true, renameMap : { "zip_hello.txt" : "renamed_hellow.txt" }, cwd : path.join(__dirname, "zip_dir")}, this.parallel());
 	},
@@ -71,10 +72,23 @@ tiptoe(
 	{
 		setTimeout(this, XU.SECOND*3);
 	},
-	function removeZipFile()
+	function testUnzip()
+	{
+		zipUtil.unzip("/tmp/zip_test_test.zip", "/tmp/unzip_test", this);
+	},
+	function verifyUnzippedFiles()
+	{
+		assert(fileUtil.existsSync("/tmp/unzip_test/pewpewpew.flac"));
+		assert(fileUtil.existsSync("/tmp/unzip_test/subdir/zip_smile.png"));
+		assert.strictEqual(fs.readFileSync("/tmp/unzip_test/zip_hello.txt", XU.UTF8), "This is just a text file");
+
+		this();
+	},
+	function removeZipFilesAndTempDir()
 	{
 		fileUtil.unlink("/tmp/zip_test_test.zip", this.parallel());
 		fileUtil.unlink("/tmp/zip_test_test_renamed.zip", this.parallel());
+		fileUtil.unlink("/tmp/unzip_test", this.parallel());
 	},
 	function handleErrors(err)
 	{

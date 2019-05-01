@@ -3,6 +3,7 @@
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	fs = require("fs"),
+	mkdirp = require("mkdirp"),
 	fileUtil = require("./fileUtil.js"),
 	runUtil = require("./runUtil.js"),
 	path = require("path"),
@@ -57,6 +58,46 @@ exports.readZipEntries = function readZipEntries(zipPath, entryChecker, fileHand
 		{
 			cb(err, zipEntries, zipEntriesData);
 		}
+	);
+};
+
+// Unzip a given zip file into the given unzipPath
+exports.unzip = function unzip(zipPath, unzipPath, cb)
+{
+	tiptoe(
+		function openZip()
+		{
+			yauzl[(typeof zipPath==="string" ? "open" : "fromBuffer")](zipPath, { lazyEntries : true }, this);
+		},
+		function readEntries(zipFile)
+		{
+			zipFile.once("end", this);
+			zipFile.on("entry", entry =>
+			{
+				zipFile.openReadStream(entry, (err, readStream) =>
+				{
+					if(err)
+						return this(err);
+					
+					readStream.once("end", () => zipFile.readEntry());
+
+					const entryOutFilePath = path.join(unzipPath, entry.fileName);
+					if(entry.uncompressedSize===0)
+						return zipFile.readEntry();
+						
+					mkdirp(path.dirname(entryOutFilePath), suberr =>
+					{
+						if(suberr)
+							this(suberr);
+						
+						readStream.pipe(fs.createWriteStream(entryOutFilePath, { flags : "w", encoding : "binary" }));
+					});
+				});
+			});
+
+			zipFile.readEntry();
+		},
+		cb
 	);
 };
 
