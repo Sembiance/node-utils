@@ -94,6 +94,9 @@ exports.concat = function concat(_files, dest, _options, _cb)
 // Copies a file from src to dest
 exports.copy = function copy(src, dest, cb)
 {
+	if(src===dest)
+		return cb(new Error("src and dest are identical: " + src));
+
 	let cbCalled = false;
 
 	const rd = fs.createReadStream(src);
@@ -118,6 +121,9 @@ exports.copy = function copy(src, dest, cb)
 // Moves a file from src to dest, works even across disks
 exports.move = function move(src, dest, cb)
 {
+	if(src===dest)
+		return cb(new Error("src and dest are identical: " + src));
+
 	tiptoe(
 		function checkExisting()
 		{
