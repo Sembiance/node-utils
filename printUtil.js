@@ -81,14 +81,14 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	const colNames = options.colNames || rows.map(object => Object.keys(object)).flat().unique();
 	const colNameMap = Object.merge(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
 	const alignmentDefault = options.alignmentDefault || "l";
-	const colTypes = colNames.map(colName => { const v = rows[0][colName]; return Number.isNumber(v) ? "number" : typeof v; });
+	const colTypes = colNames.map(colName => (typeof rows[0][colName]));
 	const booleanValues = options.booleanValues || ["True", "False"];
 
 	if(options.sorter)
 		rows.sort(options.sorter);
 
 	if(options.formatter)
-		rows.forEach(object => colNames.forEach(colName => { object[colName] = options.formatter(colName, object[colName]); }));
+		rows.forEach(object => colNames.forEach(colName => { object[colName] = options.formatter(colName, object[colName], object); }));
 	else
 		rows.forEach(object => colNames.forEach((colName, i) => { const v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? (typeof v==="number" ? v.toLocaleString() : 0) : v); }));
 
@@ -100,7 +100,6 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 
 	let result = "";
 
-	const spacing = options.padding || 5;
 	rows.forEach((row, rowNum) =>
 	{
 		let rowOut = "";
@@ -113,15 +112,21 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 			if(a==="c" || a==="r")
 				rowOut += " ".repeat(Math.floor(colPadding/(a==="c" ? 2 : 1)));
 
-			if(rowNum===0)
-				rowOut += chalk.hex("#FFFFFF")(col);
-			else
-				rowOut += (options.color && options.color[colName] ? chalk.hex((typeof options.color[colName]==="function" ? options.color[colName](objects[(rowNum<=1 ? rowNum : (rowNum-2))][colName]) : options.color[colName]))(col) : col);
+			let color = rowNum===0 ? "#FFFFFF" : null;
+			if(rowNum>1 && options && options.color && options.color[colName])
+			{
+				if((typeof options.color[colName]==="function"))
+					color = options.color[colName](objects[rowNum-2][colName], objects[rowNum-2]);
+				else
+					color = options.color[colName];
+			}
+
+			rowOut += (color ? chalk.hex(color)(col) : col);
 
 			if(a==="c" || a==="l")
 				rowOut += " ".repeat(Math.round(colPadding/(a==="c" ? 2 : 1)));
 
-			rowOut += " ".repeat(spacing);
+			rowOut += " ".repeat((options.padding ? (typeof options.padding==="function" ? options.padding(colName) : (Object.isObject(options.padding) ? (options.padding[colName] || 5) : options.padding)) : 5));
 		});
 
 		result += rowOut + "\n";
