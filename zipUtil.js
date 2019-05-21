@@ -3,101 +3,33 @@
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	fs = require("fs"),
-	mkdirp = require("mkdirp"),
 	fileUtil = require("./fileUtil.js"),
 	runUtil = require("./runUtil.js"),
-	path = require("path"),
-	yauzl = require("yauzl");
-
-// Will read the entries in the given zipFile (Buffer or string path) and call entryChecker(entry) and every time it returns true it will call fileHandler(entry, entryData) and call cb(err, allEntries) when all done
-// entryChecker and fileHandler can be null if you don't want to filter out entries or be called for ever file
-exports.readZipEntries = function readZipEntries(zipPath, entryChecker, fileHandler, cb)
-{
-	const zipEntries = [];
-	const zipEntriesData = [];
-
-	tiptoe(
-		function openZip()
-		{
-			yauzl[(typeof zipPath==="string" ? "open" : "fromBuffer")](zipPath, { lazyEntries : true }, this);
-		},
-		function readEntries(zipFile)
-		{
-			zipFile.once("end", this);
-			zipFile.on("entry", entry =>
-			{
-				if(typeof entryChecker==="function" && !entryChecker(entry))
-					return setImmediate(() => zipFile.readEntry());
-				
-				const chunks = [];
-				zipFile.openReadStream(entry, (err, readStream) =>
-				{
-					if(err)
-						return this(err);
-
-					zipEntries.push(entry);
-					
-					readStream.on("error", readStreamErr => this(readStreamErr));
-					readStream.on("data", chunk => chunks.push(chunk));
-					readStream.once("end", () =>
-					{
-						const entryData = Buffer.concat(chunks);
-						zipEntriesData.push(entryData);
-
-						if(typeof fileHandler==="function")
-							fileHandler(entry, entryData);
-						zipFile.readEntry();
-					});
-					readStream.read(entry.uncompressedSize);
-				});
-			});
-
-			zipFile.readEntry();
-		},
-		function returnResult(err)
-		{
-			cb(err, zipEntries, zipEntriesData);
-		}
-	);
-};
+	path = require("path");
 
 // Unzip a given zip file into the given unzipPath
 exports.unzip = function unzip(zipPath, unzipPath, cb)
 {
 	tiptoe(
-		function openZip()
+		function unzipFiles()
 		{
-			yauzl[(typeof zipPath==="string" ? "open" : "fromBuffer")](zipPath, { lazyEntries : true }, this);
+			runUtil.run("unzip", ["-od", unzipPath, zipPath], runUtil.SILENT, this);
 		},
-		function readEntries(zipFile)
+		function returnResults(err, output)
 		{
-			zipFile.once("end", this);
-			zipFile.on("entry", entry =>
+			if(err)
+				return cb(err);
+			
+			const extractedFiles = [];
+			output.trim().split("\n").forEach(line =>
 			{
-				zipFile.openReadStream(entry, (err, readStream) =>
-				{
-					if(err)
-						return this(err);
-					
-					readStream.once("end", () => zipFile.readEntry());
-
-					const entryOutFilePath = path.join(unzipPath, entry.fileName);
-					if(entry.uncompressedSize===0)
-						return zipFile.readEntry();
-						
-					mkdirp(path.dirname(entryOutFilePath), suberr =>
-					{
-						if(suberr)
-							this(suberr);
-						
-						readStream.pipe(fs.createWriteStream(entryOutFilePath, { flags : "w", encoding : "binary" }));
-					});
-				});
+				const extractMatch = line.trim().match(/^(inflating|extracting|unshrinking|unreducing): (.+)$/);
+				if(extractMatch)
+					extractedFiles.push(path.relative(unzipPath, extractMatch[2]));
 			});
 
-			zipFile.readEntry();
-		},
-		cb
+			cb(undefined, extractedFiles);
+		}
 	);
 };
 

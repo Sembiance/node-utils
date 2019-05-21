@@ -1,6 +1,6 @@
 {
 	"name"         : "@sembiance/xutil",
-	"version"      : "1.15.1",
+	"version"      : "1.15.2",
 	"author"       : "Robert Schultz <robert@cosmicrealms.com>",
 	"description"  : "common util functions I use in many of my node projects",
 	"main"         : "index.js",
@@ -25,7 +25,6 @@
 		"unicode"         : "~11.0.1",
 		"urlencode"       : "~1.1.0",
 		"uuid"            : "~3.3.2",
-		"xxhash"          : "~0.2.4",
-		"yauzl"           : "~2.10.0"
+		"xxhash"          : "~0.2.4"
 	}
 }
