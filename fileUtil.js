@@ -3,7 +3,7 @@
 const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	path = require("path"),
-	uuid = require("uuid"),
+	uuid = require("uuid/v4"),
 	os = require("os"),
 	rimraf = require("rimraf"),
 	tiptoe = require("tiptoe");
