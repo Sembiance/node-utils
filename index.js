@@ -1,6 +1,7 @@
 "use strict";
 /* eslint global-require: 0 */
-exports =
+
+module.exports =
 {
 	get run() { return require("./runUtil.js"); },
 	get file() { return require("./fileUtil.js"); },
