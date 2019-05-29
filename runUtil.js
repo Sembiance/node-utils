@@ -86,3 +86,4 @@ exports.run = function run(command, args, options={}, cb)
 
 exports.SILENT = {silent : true};
 exports.VERBOSE = {verbose : true};
+exports.SILENTX = { silent : true, env : { HOME : "/home/sembiance", LOGNAME : "sembiance", USER : "sembiance", DISPLAY : ":0" } };

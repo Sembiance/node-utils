@@ -1,17 +1,20 @@
 "use strict";
-
-exports.run = require("./runUtil.js");
-exports.file = require("./fileUtil.js");
-exports.dust = require("./dustUtil.js");
-exports.unicode = require("./unicodeUtil.js");
-exports.crypto = require("./cryptoUtil.js");
-exports.print = require("./printUtil.js");
-exports.video = require("./videoUtil.js");
-exports.http = require("./httpUtil.js");
-exports.image = require("./imageUtil.js");
-exports.url = require("./urlUtil.js");
-exports.diff = require("./diffUtil.js");
-exports.net = require("./netUtil.js");
-exports.sendgrid = require("./sendgridUtil.js");
-exports.redis = require("./redisUtil.js");
-exports.zip = require("./zipUtil.js");
+/* eslint global-require: 0 */
+exports =
+{
+	get run() { return require("./runUtil.js"); },
+	get file() { return require("./fileUtil.js"); },
+	get dust() { return require("./dustUtil.js"); },
+	get unicode() { return require("./unicodeUtil.js"); },
+	get crypto() { return require("./cryptoUtil.js"); },
+	get print() { return require("./printUtil.js"); },
+	get video() { return require("./videoUtil.js"); },
+	get http() { return require("./httpUtil.js"); },
+	get image() { return require("./imageUtil.js"); },
+	get url() { return require("./urlUtil.js"); },
+	get diff() { return require("./diffUtil.js"); },
+	get net() { return require("./netUtil.js"); },
+	get sendgrid() { return require("./sendgridUtil.js"); },
+	get redis() { return require("./redisUtil.js"); },
+	get zip() { return require("./zipUtil.js"); }
+};
