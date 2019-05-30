@@ -8,7 +8,7 @@ const XU = require("@sembiance/xu"),
 	http = require("http"),
 	https = require("https"),
 	querystring = require("querystring"),
-	xxhash = require("xxhash"),
+	crypto = require("crypto"),
 	urlencode = require("urlencode"),
 	streamBuffers = require("stream-buffers");
 
@@ -148,7 +148,9 @@ function get(targetURL, _options, _cb)
 	let cachePath = "";
 	if(_options.cacheBase)
 	{
-		cachePath = path.join(_options.cacheBase, xxhash.hash64(Buffer.from(targetURL, "utf8"), 0xDEADBEEF, "hex"));
+		const hash = crypto.createHash("sha256");
+		hash.update(targetURL, "utf8");
+		cachePath = path.join(_options.cacheBase, hash.digest("base64"));
 		if(fileUtil.existsSync(cachePath))
 			return fs.readFile(cachePath, XU.UTF8, cb);
 	}
