@@ -12,7 +12,6 @@ module.exports =
 	get video() { return require("./videoUtil.js"); },
 	get http() { return require("./httpUtil.js"); },
 	get image() { return require("./imageUtil.js"); },
-	get url() { return require("./urlUtil.js"); },
 	get diff() { return require("./diffUtil.js"); },
 	get net() { return require("./netUtil.js"); },
 	get sendgrid() { return require("./sendgridUtil.js"); },
