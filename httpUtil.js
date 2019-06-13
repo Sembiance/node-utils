@@ -29,7 +29,7 @@ function getHeaders(extraHeaders)
 
 function httpExecute(targetURL, options, cb)
 {
-	const uo = url.parse(targetURL);
+	const uo = new url.URL(targetURL);
 	const requestOptions =
 	{
 		hostname : uo.hostname,
