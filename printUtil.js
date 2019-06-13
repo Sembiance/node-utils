@@ -169,7 +169,10 @@ exports.singleLineBooleanPie = function singleLineBooleanPie(o, label="Label", l
 
 exports.multiLineBarChart = function multiLineBarChart(o, label="Label", lineLength=120)
 {
-	const COLORS = ["#FF8700", "#AF5FD7", "#00FF5F", "#D7FF00", "#D70087", "#005FFF", "#BCBCBC"].pushCopyInPlace(10);
+	if(!o)
+		return;
+
+	const COLORS = ["#FF8700", "#AF5FD7", "#00FF5F", "#D7FF00", "#D70087", "#005FFF", "#BCBCBC"].pushCopyInPlace(100);
 	const LINES = Object.entries(o).sort((a, b) => b[1]-a[1]);
 	const TOTAL = Object.values(o).sum();
 	const VALUES = LINES.map(line => line[1].toLocaleString() + " (" + Math.round((line[1]/TOTAL)*100) + "%)");
