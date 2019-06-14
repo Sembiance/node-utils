@@ -77,8 +77,9 @@ exports.columnizeObject = function columnizeObject(o, options={})
 exports.columnizeObjects = function columnizeObjects(objects, options={})
 {
 	const rows = XU.clone(objects);
+	chalk.enabled = !options.noColor;
 
-	const colNames = options.colNames || rows.map(object => Object.keys(object)).flat().unique();
+	const colNames = options.colNames || rows.map(object => Object.keys(object).filter(k => !k.startsWith("_"))).flat().unique();
 	const colNameMap = Object.merge(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
 	const alignmentDefault = options.alignmentDefault || "l";
 	const colTypes = colNames.map(colName => (typeof rows[0][colName]));
@@ -129,10 +130,10 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 			rowOut += " ".repeat((options.padding ? (typeof options.padding==="function" ? options.padding(colName) : (Object.isObject(options.padding) ? (options.padding[colName] || 5) : options.padding)) : 5));
 		});
 
-		result += rowOut + "\n";
+		result += rowOut + (row.hasOwnProperty("_suffix") ? row._suffix : "") + "\n";	// eslint-disable-line no-underscore-dangle
 	});
 
-	return result;
+	return (options.noHeader ? result.split("\n").slice(2).join("\n") : result);
 };
 
 exports.singleLineBooleanPie = function singleLineBooleanPie(o, label="Label", lineLength=120)
