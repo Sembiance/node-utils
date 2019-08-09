@@ -171,12 +171,15 @@ function get(targetURL, _options, _cb)
 
 	return httpExecute(targetURL, options, cb || _options);
 }
+
 exports.post = post;
 function post(targetURL, postData, _options, cb)
 {
 	const options = XU.clone(!cb ? {} : _options);
 	options.method = "POST";
-	options.postData = querystring.stringify(postData);
+	options.postData = options.postAsJSON ? JSON.stringify(postData) : querystring.stringify(postData);
+	if(options.postAsJSON)
+		options.contentType = "application/json";
 
 	return httpExecute(targetURL, options, cb || _options);
 }

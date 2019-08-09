@@ -1,5 +1,4 @@
 "use strict";
-/*global setImmediate: true*/
 /* eslint-disable no-param-reassign */
 
 const XU = require("@sembiance/xu"),

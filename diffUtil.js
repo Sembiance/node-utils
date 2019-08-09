@@ -29,14 +29,14 @@ function diffObjects(o, n, options={})
 	const oKeys = Object.keys(o);
 	const nKeys = Object.keys(n);
 
-	const keysAdded = nKeys.subtract(oKeys);
+	const keysAdded = nKeys.subtractAll(oKeys);
 	keysAdded.forEach(keyAdded => { result += " ".repeat(options.indent*4) + chalk.green(util.format("%s : %j\n", keyAdded, n[keyAdded])); });
 
-	const keysRemoved = oKeys.subtract(nKeys);
+	const keysRemoved = oKeys.subtractAll(nKeys);
 	if(!options.ignoreRemovedKeys)
 		keysRemoved.forEach(keyRemoved => { result += " ".repeat(options.indent*4) + chalk.red(util.format("%s : %j\n", keyRemoved, o[keyRemoved])); });
 
-	oKeys.subtract(keysAdded).subtract(keysRemoved).forEach(key =>
+	oKeys.subtractAll(keysAdded).subtractAll(keysRemoved).forEach(key =>
 	{
 		const subResult = diff(o[key], n[key], options);
 		if(subResult)
@@ -68,8 +68,8 @@ function diffArray(o, n, options)
 	}
 	else
 	{
-		n.map(v => JSON.stringify(v)).subtract(o.map(v => JSON.stringify(v))).forEach(added => { result += (result.length ? ", " : "") + chalk.green(added); });
-		o.map(v => JSON.stringify(v)).subtract(n.map(v => JSON.stringify(v))).forEach(removed => { result += (result.length ? ", " : "") + chalk.red(removed); });
+		n.map(v => JSON.stringify(v)).subtractAll(o.map(v => JSON.stringify(v))).forEach(added => { result += (result.length ? ", " : "") + chalk.green(added); });
+		o.map(v => JSON.stringify(v)).subtractAll(n.map(v => JSON.stringify(v))).forEach(removed => { result += (result.length ? ", " : "") + chalk.red(removed); });
 	}
 
 	return (result.length ? "[ " : "") + result + (result.length ? " ]\n" : "");
