@@ -8,16 +8,7 @@ const XU = require("@sembiance/xu"),
 exports.render = render;
 function render(basePath, name, data, _options, _cb)
 {
-	let options = _options;
-	let cb = _cb;
-
-	if(!cb)
-	{
-		cb = options;
-		options = null;
-	}
-
-	options = options || {};
+	const {options, cb} = XU.optionscb(_options, _cb);
 
 	const readDustFile = function(n, subcb) { fs.readFile(path.join(basePath, n + (n.endsWith(".dust") ? "" : ".dust")), "utf8", subcb); };
 

@@ -38,16 +38,10 @@ exports.searchReplace = function searchReplace(file, match, replace, cb)
 };
 
 // Concatenates the _files array to dest
+// suffix : Text to add to end of file
 exports.concat = function concat(_files, dest, _options, _cb)
 {
-	let options = _options;
-	let cb = _cb;
-
-	if(!cb && typeof options==="function")
-	{
-		cb = options;
-		options = {};
-	}
+	const {options, cb} = XU.optionscb(_options, _cb);
 
 	let writeSeperator = 1;
 
@@ -77,10 +71,11 @@ exports.concat = function concat(_files, dest, _options, _cb)
 		if(!files.length)
 		{
 			if(options.suffix)
-				output.write(options.suffix);
-
-			output.end();
-			return cb();
+				output.write(options.suffix, () => output.end(cb));
+			else
+				output.end(cb);
+			
+			return;
 		}
 
 		const input = fs.createReadStream(files.shift());

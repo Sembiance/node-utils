@@ -119,31 +119,23 @@ function httpExecute(targetURL, options, cb)
 }
 
 exports.download = download;
-function download(targetURL, destination, _options, cb)
+function download(targetURL, destination, _options, _cb)
 {
-	const options = XU.clone(!cb ? {} : _options);
-	options.method = "GET";
-	options.download = destination;
-
-	return httpExecute(targetURL, options, cb || _options);
+	const {options, cb} = XU.optionscb(_options, _cb, {method : "GET", download : destination});
+	return httpExecute(targetURL, options, cb);
 }
 
 exports.head = head;
-function head(targetURL, _options, cb)
+function head(targetURL, _options, _cb)
 {
-	const options = XU.clone(!cb ? {} : _options);
-	options.method = "HEAD";
-
-	return httpExecute(targetURL, options, cb || _options);
+	const {options, cb} = XU.optionscb(_options, _cb, {method : "HEAD"});
+	return httpExecute(targetURL, options, cb);
 }
 
 exports.get = get;
 function get(targetURL, _options, _cb)
 {
-	const options = XU.clone(!_cb ? {} : _options);
-	options.method = "GET";
-
-	let cb = _cb;
+	let {options, cb} = XU.optionscb(_options, _cb, {method : "GET"});	// eslint-disable-line prefer-const
 
 	let cachePath = "";
 	if(_options.cacheBase)
@@ -169,14 +161,13 @@ function get(targetURL, _options, _cb)
 		};
 	}
 
-	return httpExecute(targetURL, options, cb || _options);
+	return httpExecute(targetURL, options, cb);
 }
 
 exports.post = post;
-function post(targetURL, postData, _options, cb)
+function post(targetURL, postData, _options, _cb)
 {
-	const options = XU.clone(!cb ? {} : _options);
-	options.method = "POST";
+	const {options, cb} = XU.optionscb(_options, _cb, {method : "POST"});
 	options.postData = options.postAsJSON ? JSON.stringify(postData) : querystring.stringify(postData);
 	if(options.postAsJSON)
 		options.contentType = "application/json";
@@ -185,12 +176,12 @@ function post(targetURL, postData, _options, cb)
 }
 
 exports.put = put;
-function put(targetURL, putData, _options, cb)
+function put(targetURL, putData, _options, _cb)
 {
-	const options = XU.clone(!cb ? {} : _options);
-	options.method = "PUT";
-	options.contentType = (typeof putData==="string" || putData instanceof Buffer) ? "text/plain" : "application/json";
-	options.postData = typeof putData==="string" ? putData : (putData instanceof Buffer ? putData.toString("utf8") : JSON.stringify(putData));
+	const {options, cb} = XU.optionscb(_options, _cb, {
+		method      : "PUT",
+		contentType : (typeof putData==="string" || putData instanceof Buffer) ? "text/plain" : "application/json",
+		postData    : typeof putData==="string" ? putData : (putData instanceof Buffer ? putData.toString("utf8") : JSON.stringify(putData))});
 
 	return httpExecute(targetURL, options, cb || _options);
 }
