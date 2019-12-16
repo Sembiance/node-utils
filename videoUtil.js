@@ -74,9 +74,12 @@ exports.getInfo = function getInfo(videoPath, cb)
 					info.aspectRatio = +parts[1];
 				if(parts[0]==="ID_VIDEO_FORMAT")
 					info.format = parts[1];
+				if(parts[0]==="ID_VIDEO_CODEC")
+					info.codec = parts[1];
+				if(parts[0]==="ID_DEMUXER")
+					info.demuxer = parts[1];
 			});
 
-			info.mimeType = "video/avi";
 			if(info.format)
 			{
 				const formatLow = info.format.toLowerCase();
@@ -87,6 +90,8 @@ exports.getInfo = function getInfo(videoPath, cb)
 					info.mimeType = "video/divx";
 				else if(formatLow.startsWith("wmv"))
 					info.mimeType = "video/x-ms-wmv";
+				else
+					info.mimeType = "video/avi";
 			}
 
 			return info;
