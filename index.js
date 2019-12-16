@@ -3,6 +3,7 @@
 
 module.exports =
 {
+	// Doing it this way means the files don't get required unless they are actually used
 	get run() { return require("./runUtil.js"); },
 	get file() { return require("./fileUtil.js"); },
 	get dust() { return require("./dustUtil.js"); },
@@ -16,5 +17,6 @@ module.exports =
 	get net() { return require("./netUtil.js"); },
 	get sendgrid() { return require("./sendgridUtil.js"); },
 	get redis() { return require("./redisUtil.js"); },
-	get zip() { return require("./zipUtil.js"); }
+	get zip() { return require("./zipUtil.js"); },
+	get adsTxt() { return require("./adsTxtUtil.js"); }
 };
