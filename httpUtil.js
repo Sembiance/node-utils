@@ -21,7 +21,7 @@ function getHeaders(extraHeaders)
 		"Accept-Language" : "en-US,en;q=0.8,fil;q=0.6",
 		"Cache-Control"   : "no-cache",
 		"Pragma"          : "no-cache",
-		"User-Agent"      : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.16 Safari/537.36"
+		"User-Agent"      : "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2192.0 Safari/537.36"
 	};
 
 	return Object.merge(headers, extraHeaders || {});
@@ -30,6 +30,7 @@ function getHeaders(extraHeaders)
 function httpExecute(targetURL, options, cb)
 {
 	const uo = new url.URL(targetURL);
+
 	const requestOptions =
 	{
 		hostname : uo.hostname,
@@ -61,6 +62,8 @@ function httpExecute(targetURL, options, cb)
 
 	const httpResponse = function httpResponse(response)
 	{
+		//console.log(response.statusCode, response.complete, response.headers, response.method, response.statusMessage, response.url);
+
 		// DO: Add support for 302 redirect
 		if(response.statusCode===301 || response.statusCode===302)
 		{
@@ -83,8 +86,15 @@ function httpExecute(targetURL, options, cb)
 		}
 		else
 		{
-			response.on("data", d => responseData.write(d));
-			response.on("end", () => { httpClearTimeout(); setImmediate(() => cb(undefined, responseData.getContents(), response.headers, response.statusCode)); });
+			const responseFinished = function responseFinished()
+			{
+				 httpClearTimeout();
+				 setImmediate(() => cb(undefined, responseData.getContents(), response.headers, response.statusCode));
+			};
+
+			response.on("aborted", responseFinished);
+			response.on("end", responseFinished);
+			response.on("data", d => { responseData.write(d); });
 		}
 	};
 
@@ -142,7 +152,7 @@ function get(targetURL, _options, _cb)
 	{
 		const hash = crypto.createHash("sha256");
 		hash.update(targetURL, "utf8");
-		cachePath = path.join(_options.cacheBase, hash.digest("base64"));
+		cachePath = path.join(_options.cacheBase, hash.digest("hex"));
 		if(fileUtil.existsSync(cachePath))
 			return fs.readFile(cachePath, XU.UTF8, cb);
 	}
