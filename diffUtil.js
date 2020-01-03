@@ -5,7 +5,6 @@ const XU = require("@sembiance/xu"),
 	ansidiff = require("ansidiff"),
 	chalk = require("chalk");
 
-chalk.enabled = true;
 chalk.level = 2;
 
 exports.diff = diff;

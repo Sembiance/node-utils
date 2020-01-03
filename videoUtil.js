@@ -44,7 +44,7 @@ exports.getInfo = function getInfo(videoPath, cb)
 	tiptoe(
 		function runIdentify()
 		{
-			runUtil.run(COMMAND_MPLAYER, ["-frames", "0", "-identify", "--", videoPath], runUtil.SILENT, this);
+			runUtil.run(COMMAND_MPLAYER, ["-frames", "0", "-identify", "--", videoPath], {silent : true, timeout : XU.MINUTE}, this);
 		},
 		function processData(data)
 		{

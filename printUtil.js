@@ -4,7 +4,6 @@ const XU = require("@sembiance/xu"),
 	util = require("util"),
 	chalk = require("chalk");
 
-chalk.enabled = true;
 chalk.level = 2;
 
 exports.toSize = function toSize(num, precision=1)
@@ -77,7 +76,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 exports.columnizeObjects = function columnizeObjects(objects, options={})
 {
 	const rows = XU.clone(objects);
-	chalk.enabled = !options.noColor;
+	chalk.level = (options.noColor ? 0 : 2);
 
 	const colNames = options.colNames || rows.map(object => Object.keys(object).filter(k => !k.startsWith("_"))).flat().unique();
 	const colNameMap = Object.merge(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});

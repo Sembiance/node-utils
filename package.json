@@ -1,6 +1,6 @@
 {
 	"name"         : "@sembiance/xutil",
-	"version"      : "1.20.0",
+	"version"      : "1.21.0",
 	"author"       : "Robert Schultz <robert@cosmicrealms.com>",
 	"description"  : "common util functions I use in many of my node projects",
 	"main"         : "index.js",
@@ -13,17 +13,17 @@
 	"dependencies" :
 	{
 		"@sembiance/xu"   : "file:/mnt/compendium/DevLab/node-modules/xu",
-		"@sendgrid/mail"  : "~6.3.1",
+		"@sendgrid/mail"  : "~6.4.0",
 		"ansidiff"        : "~1.0.0",
-		"chalk"           : "~2.4.2",
+		"chalk"           : "~3.0.0",
 		"dustjs-helpers"  : "~1.7.3",
 		"dustjs-linkedin" : "~2.7.5",
 		"mkdirp"          : "^0.5.1",
-		"rimraf"          : "~2.6.1",
+		"rimraf"          : "~3.0.0",
 		"stream-buffers"  : "~3.0.1",
 		"tiptoe"          : "file:/mnt/compendium/DevLab/node-modules/tiptoe",
-		"unicode"         : "~11.0.1",
+		"unicode"         : "~12.1.0",
 		"urlencode"       : "~1.1.0",
-		"uuid"            : "~3.3.2"
+		"uuid"            : "~3.3.3"
 	}
 }
