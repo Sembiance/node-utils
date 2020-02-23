@@ -24,7 +24,7 @@ function getHeaders(extraHeaders)
 		"User-Agent"      : "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2192.0 Safari/537.36"
 	};
 
-	return Object.merge(headers, extraHeaders || {});
+	return Object.assign(headers, extraHeaders || {});
 }
 
 function httpExecute(targetURL, options, cb)
@@ -94,7 +94,7 @@ function httpExecute(targetURL, options, cb)
 
 			response.on("aborted", responseFinished);
 			response.on("end", responseFinished);
-			response.on("data", d => { responseData.write(d); });
+			response.on("data", d => responseData.write(d));
 		}
 	};
 

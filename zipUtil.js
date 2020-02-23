@@ -23,7 +23,7 @@ exports.unzip = function unzip(zipPath, unzipPath, cb)
 			const extractedFiles = [];
 			output.trim().split("\n").forEach(line =>
 			{
-				const extractMatch = line.trim().match(/^(inflating|extracting|unshrinking|unreducing): (.+)$/);
+				const extractMatch = line.trim().match(/^(inflating|extracting|unshrinking|unreducing): (.+)$/);	// eslint-disable-line prefer-named-capture-group
 				if(extractMatch)
 					extractedFiles.push(path.relative(unzipPath, extractMatch[2]));
 			});

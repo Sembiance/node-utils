@@ -18,11 +18,11 @@ exports.getWidthHeight = function getWidthHeight(file, cb)
 			if(err)
 				return cb(err);
 
-			const matches = result.trim().match(/[^ ]+ [^ ]+ ([0-9]+)x([0-9]+) .*/);
-			if(!matches || matches.length<3)
+			const matches = result.trim().match(/[^ ]+ [^ ]+ (?<width>[0-9]+)x(?<height>[0-9]+) .*/);
+			if(!matches || matches.length<3 || !matches.groups)
 				return cb(new Error("Invalid image: " + file));
 			
-			cb(null, [+matches[1], +matches[2]]);
+			cb(null, [+matches.groups.width, +matches.groups.height]);
 		}
 	);
 };

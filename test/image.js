@@ -2,12 +2,19 @@
 
 const tiptoe = require("tiptoe"),
 	path = require("path"),
+	assert = require("assert"),
 	fileUtil = require("../index").file,
 	imageUtil = require("../index").image;
 
 tiptoe(
-	function prepare()
+	function getWH()
 	{
+		imageUtil.getWidthHeight(path.join(__dirname, "input.png"), this);
+	},
+	function prepare(wh)
+	{
+		assert.strictEqual(JSON.stringify(wh), JSON.stringify([1487, 1500]));
+
 		fileUtil.unlink(path.join(__dirname, "lossy.png"), this.parallel());
 		fileUtil.unlink(path.join(__dirname, "lossless.png"), this.parallel());
 		fileUtil.unlink(path.join(__dirname, "lossy.gif"), this.parallel());

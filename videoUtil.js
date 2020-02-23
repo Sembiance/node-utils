@@ -21,10 +21,15 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 		},
 		function grabFrames()
 		{
-			runUtil.run(COMMAND_MPLAYER, ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "png", "--", videoPath], {silent : true, cwd : this.data.tempDir}, this);
+			const args = ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "png", "--", path.resolve(videoPath)];
+			if(videoPath.endsWith(".m2ts"))
+				args.splice(0, 0, "-demuxer", "lavf");
+
+			runUtil.run(COMMAND_MPLAYER, args, {verbose : true, cwd : this.data.tempDir}, this);
 		},
 		function generateImage()
 		{
+			console.log(this.data.tempDir);
 			runUtil.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.png")], runUtil.SILENT, this);
 		},
 		function moveImage()
@@ -44,7 +49,11 @@ exports.getInfo = function getInfo(videoPath, cb)
 	tiptoe(
 		function runIdentify()
 		{
-			runUtil.run(COMMAND_MPLAYER, ["-frames", "0", "-identify", "--", videoPath], {silent : true, timeout : XU.MINUTE}, this);
+			const args = ["-frames", "0", "-identify", "--", videoPath];
+			if(videoPath.endsWith(".m2ts"))
+				args.splice(0, 0, "-demuxer", "lavf");
+
+			runUtil.run(COMMAND_MPLAYER, args, {silent : true, timeout : XU.MINUTE}, this);
 		},
 		function processData(data)
 		{

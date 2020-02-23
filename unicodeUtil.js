@@ -13,7 +13,7 @@ const categories =
 	other       : ["Cc", "Cf", "Co", "Cs"]	// Cn
 };
 
-const categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.merge(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line global-require
+const categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.assign(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line global-require
 
 // letter, number, punctuation, mark, symbol, space, other, unknown
 exports.getCategories = function getCategories(s)
@@ -119,7 +119,7 @@ const UNICODE_CONVERSION_MAP =
 exports.unicodeToAscii = function unicodeToAscii(text, additionalSymbols)
 {
 	let result = "";
-	const CONVERSION_MAP = Object.merge(UNICODE_CONVERSION_MAP, (additionalSymbols || {}));
+	const CONVERSION_MAP = Object.assign(UNICODE_CONVERSION_MAP, (additionalSymbols || {}));
 
 	for(let i=0, len=text.length;i<len;i++)
 	{

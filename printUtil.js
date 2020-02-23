@@ -38,7 +38,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 		options.alignment = options.alignment.map(a => a.substring(0, 1).toLowerCase());
 
 	const maxColSizes = [];
-	rows.forEach(row => { row.forEach((col, i) => { maxColSizes[i] = Math.max((maxColSizes[i] || 0), (""+col).length); }); });
+	rows.forEach(row => row.forEach((col, i) => { maxColSizes[i] = Math.max((maxColSizes[i] || 0), (""+col).length); }));
 
 	if(options.header)
 		rows.splice(1, 0, maxColSizes.map(maxColSize => chalk.hex("#00FFFF")("-".repeat(maxColSize))));
@@ -79,7 +79,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	chalk.level = (options.noColor ? 0 : 2);
 
 	const colNames = options.colNames || rows.map(object => Object.keys(object).filter(k => !k.startsWith("_"))).flat().unique();
-	const colNameMap = Object.merge(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});
+	const colNameMap = Object.assign(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});	// eslint-disable-line prefer-named-capture-group
 	const alignmentDefault = options.alignmentDefault || "l";
 	const colTypes = colNames.map(colName => (typeof rows[0][colName]));
 	const booleanValues = options.booleanValues || ["True", "False"];
@@ -218,11 +218,11 @@ exports.log = function log(s, ...args)
 	for(let i=0;i<s.length;i++)
 	{
 		const part = s.substring(i);
-		const code = part.match(/^%(#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])?([bmiuvh-])?([0-9]+)?[.]?([0-9]+)?([sdDjJf%])/);
-		if(code)
+		const code = part.match(/^%(?<color>#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])?(?<modifier>[bmiuvh-])?(?<numLength>[0-9]+)?[.]?(?<decimalPlaces>[0-9]+)?(?<type>[sdDjJf%])/);
+		if(code && code.groups)
 		{
 			let v = "";
-			switch(code[5])
+			switch(code.groups.type)
 			{
 				case "%":
 					v = "%";
@@ -231,7 +231,7 @@ exports.log = function log(s, ...args)
 					v = +args[codeNum++];
 					break;
 				case "f":
-					v = args[codeNum++].toFixed(+code[4]);
+					v = args[codeNum++].toFixed(+code.groups.decimalPlaces);
 					break;
 				case "D":
 					v = (+args[codeNum++]).toLocaleString();
@@ -247,13 +247,13 @@ exports.log = function log(s, ...args)
 					break;
 			}
 
-			if(code[3] && (code[3]-v.length)>0)
-				v = v.padStart(code[3], " ");
+			if(code.groups.numLength && ((+code.groups.numLength)-v.length)>0)
+				v = v.padStart(code.groups.numLength, " ");
 
-			if(code[1] && code[2])
-				process.stdout.write(chalk.hex(code[1])[MODIFIERS[code[2]]](v));
-			else if(code[1])
-				process.stdout.write(chalk.hex(code[1])(v));
+			if(code.groups.color && code.groups.modifier)
+				process.stdout.write(chalk.hex(code.groups.color)[MODIFIERS[code.groups.modifier]](v));
+			else if(code.groups.color)
+				process.stdout.write(chalk.hex(code.groups.color)(v));
 			else
 				process.stdout.write(chalk.reset(v));
 
