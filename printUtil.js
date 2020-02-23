@@ -78,7 +78,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	const rows = XU.clone(objects);
 	chalk.level = (options.noColor ? 0 : 2);
 
-	const colNames = options.colNames || rows.map(object => Object.keys(object).filter(k => !k.startsWith("_"))).flat().unique();
+	const colNames = options.colNames || rows.flatMap(object => Object.keys(object).filter(k => !k.startsWith("_"))).unique();
 	const colNameMap = Object.assign(colNames.reduce((r, colName) => { r[colName] = colName.replace( /([A-Z])/g, " $1" ).toProperCase(); return r; }, {}), options.colNameMap || {});	// eslint-disable-line prefer-named-capture-group
 	const alignmentDefault = options.alignmentDefault || "l";
 	const colTypes = colNames.map(colName => (typeof rows[0][colName]));
