@@ -18,5 +18,6 @@ module.exports =
 	get sendgrid() { return require("./sendgridUtil.js"); },
 	get redis() { return require("./redisUtil.js"); },
 	get zip() { return require("./zipUtil.js"); },
-	get adsTxt() { return require("./adsTxtUtil.js"); }
+	get adsTxt() { return require("./adsTxtUtil.js"); },
+	get hash() { return require("./hashUtil.js"); }
 };

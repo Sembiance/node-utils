@@ -83,7 +83,7 @@ function httpExecute(targetURL, options, cb)
 		else if(options.download)
 		{
 			if(options.progressBar)
-				response.pipe(progressStream({time : 100}, progress => options.progressBar.tick(progress.delta))).pipe(outputFile);
+				response.pipe(progressStream({time : 200}, progress => options.progressBar.tick(progress.delta))).pipe(outputFile);
 			else
 				response.pipe(outputFile);
 
