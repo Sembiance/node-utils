@@ -14,7 +14,7 @@ const XU = require("@sembiance/xu"),
 // redirect-stderr : Redirect all stderr content to stdout result
 //             env : Pass an object of key/value pairs to set for environment variables
 //         timeout : Number of 'ms' to allow the process to run and then terminate it
-exports.run = function run(command, args, options={}, cb)
+exports.run = function run(command, args, options={}, cb=() => {})
 {
 	if(!options.silent)
 		console.log("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
