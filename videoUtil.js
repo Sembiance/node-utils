@@ -5,11 +5,11 @@ const XU = require("@sembiance/xu"),
 	path = require("path"),
 	fs = require("fs"),
 	runUtil = require("./runUtil.js"),
-	rimraf = require("rimraf"),
 	fileUtil = require("./fileUtil.js");
 
-const	COMMAND_MPLAYER = "/usr/bin/mplayer";
-const	COMMAND_MOGRIFY = "/usr/bin/mogrify";
+const COMMAND_MPLAYER = "/usr/bin/mplayer";
+const COMMAND_MOGRIFY = "/usr/bin/mogrify";
+const COMMAND_CONVERT = "/usr/bin/convert";
 
 exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thumbnailPath, thumbnailWidth, thumbnailHeight, cb)
 {
@@ -21,7 +21,7 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 		},
 		function grabFrames()
 		{
-			const args = ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "png", "--", path.resolve(videoPath)];
+			const args = ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "jpeg", "--", path.resolve(videoPath)];
 			if(videoPath.endsWith(".m2ts"))
 				args.splice(0, 0, "-demuxer", "lavf");
 
@@ -29,16 +29,18 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 		},
 		function generateImage()
 		{
-			console.log(this.data.tempDir);
-			runUtil.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.png")], runUtil.SILENT, this);
+			runUtil.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.jpg")], runUtil.SILENT, this);
 		},
-		function moveImage()
+		function convertOrCopy()
 		{
-			fileUtil.copy(path.join(this.data.tempDir, "00000001.png"), thumbnailPath, this);
+			if(thumbnailPath.endsWith(".png"))
+				runUtil.run(COMMAND_CONVERT, [path.join(this.data.tempDir, "00000001.jpg"), thumbnailPath], runUtil.SILENT, this);
+			else
+				fileUtil.copy(path.join(this.data.tempDir, "00000001.png"), thumbnailPath, this);
 		},
 		function removeTempDirectory()
 		{
-			rimraf(this.data.tempDir, this);
+			fileUtil.unlink(this.data.tempDir, this);
 		},
 		cb
 	);
