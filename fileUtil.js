@@ -5,7 +5,7 @@ const XU = require("@sembiance/xu"),
 	path = require("path"),
 	uuid = require("uuid/v4"),
 	os = require("os"),
-	rimraf = require("rimraf"),
+	rimraf = require("rimraf"),		// eslint-disable-line
 	tiptoe = require("tiptoe");
 
 exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
@@ -35,6 +35,37 @@ exports.searchReplace = function searchReplace(file, match, replace, cb)
 		},
 		cb
 	);
+};
+
+// Creates the given dirPath and all parent directories. If already there, doesn't throw error
+exports.mkdirp = function mkdirp(dirPath, cb)
+{
+	let builtPath = "";
+
+	dirPath.split(path.sep).serialForEach((dirPart, subcb) =>
+	{
+		builtPath += (builtPath.endsWith(path.sep) ? "" : path.sep) + dirPart;
+		exports.exists(builtPath, (err, exists) =>
+		{
+			if(!exists)
+				fs.mkdir(builtPath, subcb);
+			else
+				setImmediate(subcb);
+		});
+	}, cb);
+};
+
+// Creates the given dirPath and all parent directories. If already there, doesn't throw error. Sync version.
+exports.mkdirpSync = function mkdirpSync(dirPath)
+{
+	let builtPath = "";
+
+	dirPath.split(path.sep).forEach(dirPart =>
+	{
+		builtPath += (builtPath.endsWith(path.sep) ? "" : path.sep) + dirPart;
+		if(!exports.existsSync(builtPath))
+			fs.mkdirSync(builtPath);
+	});
 };
 
 // Concatenates the _files array to dest
