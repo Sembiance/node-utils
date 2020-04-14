@@ -7,6 +7,7 @@ const XU = require("@sembiance/xu"),
 	fileUtil = require("./fileUtil.js"),
 	http = require("http"),
 	https = require("https"),
+	progressStream = require("progress-stream"),
 	querystring = require("querystring"),
 	crypto = require("crypto"),
 	urlencode = require("urlencode"),
@@ -81,7 +82,11 @@ function httpExecute(targetURL, options, cb)
 		}
 		else if(options.download)
 		{
-			response.pipe(outputFile);
+			if(options.progressBar)
+				response.pipe(progressStream({time : 100}, progress => options.progressBar.tick(progress.delta))).pipe(outputFile);
+			else
+				response.pipe(outputFile);
+
 			outputFile.on("finish", () => { httpClearTimeout(); setImmediate(() => cb(undefined, response.headers, response.statusCode)); });
 		}
 		else
@@ -178,9 +183,17 @@ exports.post = post;
 function post(targetURL, postData, _options, _cb)
 {
 	const {options, cb} = XU.optionscb(_options, _cb, {method : "POST"});
-	options.postData = options.postAsJSON ? JSON.stringify(postData) : querystring.stringify(postData);
-	if(options.postAsJSON)
-		options.contentType = "application/json";
+	if(options.postAsBinary)
+	{
+		options.contentType = "application/octet-stream";
+		options.postData = postData;
+	}
+	else
+	{
+		options.postData = options.postAsJSON ? JSON.stringify(postData) : querystring.stringify(postData);
+		if(options.postAsJSON)
+			options.contentType = "application/json";
+	}
 
 	return httpExecute(targetURL, options, cb || _options);
 }
