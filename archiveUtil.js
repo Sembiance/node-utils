@@ -175,6 +175,10 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					return cb(new Error("Unsuported archive type " + archiveType + " for file: " + filePath));
 			}
 		},
+		function fixPermissions()
+		{
+			runUtil.run("fixPerms", [], {silent : true, cwd : extractionPath}, this);
+		},
 		function fixEncodings()
 		{
 			// Encodings out of archives can often be in something other than UTF-8. So we convert to UTF8 so that glob actually WORKS, as v8 chokes on anything other than UTF8 encoded filenames/dirs
@@ -184,15 +188,12 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 		{
 			glob(path.join(extractionPath, "**"), {nodir : true}, this);
 		},
-		function fixPermissions(afterFiles)
+		function returnResults(err, afterFiles)
 		{
-			this.data.extractedFiles = afterFiles.subtractAll([extractionPath, ...this.data.beforeFiles]).map(v => path.relative(extractionPath, v)).filterEmpty();
+			if(err)
+				return cb(err);
 
-			runUtil.run("fixPerms", [], {silent : true, cwd : extractionPath}, this);
-		},
-		function returnResults(err)
-		{
-			cb(err, this.data.extractedFiles);
+			cb(undefined, afterFiles.subtractAll([extractionPath, ...this.data.beforeFiles]).map(v => path.relative(extractionPath, v)).filterEmpty());
 		}
 	);
 };
