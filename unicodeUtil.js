@@ -19,7 +19,7 @@ const categoryData = Object.map(categories, (categoryName, categorySymbols) => [
 // Fixes unicode characters, converting them to UTF8. This fixes problems with glob() and readdir() etc. because v8 only supports UTF8 encodings, sigh.
 exports.fixDirEncodings = function fixDirEncodings(dirPath, cb)
 {
-	runUtil.run("convmv", ["-r", "--notest", "-f", "windows-1252", "-t", "UTF-8", dirPath], runUtil.SILENT, cb);
+	runUtil.run("convmv", ["-r", "--qfrom", "--qto", "--notest", "-f", "windows-1252", "-t", "UTF-8", dirPath], runUtil.SILENT, cb);
 };
 
 // letter, number, punctuation, mark, symbol, space, other, unknown
