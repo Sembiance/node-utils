@@ -1,6 +1,7 @@
 "use strict";
 
-const XU = require("@sembiance/xu");
+const XU = require("@sembiance/xu"),
+	runUtil = require("./runUtil.js");
 
 const categories =
 {
@@ -14,6 +15,12 @@ const categories =
 };
 
 const categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.assign(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line global-require
+
+// Fixes unicode characters, converting them to UTF8. This fixes problems with glob() and readdir() etc. because v8 only supports UTF8 encodings, sigh.
+exports.fixDirEncodings = function fixDirEncodings(dirPath, cb)
+{
+	runUtil.run("convmv", ["-r", "--notest", "-f", "windows-1252", "-t", "UTF-8", dirPath], runUtil.SILENT, cb);
+};
 
 // letter, number, punctuation, mark, symbol, space, other, unknown
 exports.getCategories = function getCategories(s)

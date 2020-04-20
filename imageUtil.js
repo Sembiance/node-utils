@@ -79,7 +79,7 @@ exports.compress = function compress(input, output, lossy, cb)
 			else
 				this();
 		},
-		function convert()
+		function performCompression()
 		{
 			if(extension==="png")
 			{

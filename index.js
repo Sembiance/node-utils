@@ -17,7 +17,7 @@ module.exports =
 	get net() { return require("./netUtil.js"); },
 	get sendgrid() { return require("./sendgridUtil.js"); },
 	get redis() { return require("./redisUtil.js"); },
-	get zip() { return require("./zipUtil.js"); },
+	get archive() { return require("./archiveUtil.js"); },
 	get adsTxt() { return require("./adsTxtUtil.js"); },
 	get hash() { return require("./hashUtil.js"); }
 };

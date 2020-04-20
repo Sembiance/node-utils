@@ -2,6 +2,7 @@
 /* eslint-disable no-param-reassign */
 
 const XU = require("@sembiance/xu"),
+	process = require("process"),
 	childProcess = require("child_process");
 
 // Options include:
@@ -22,6 +23,9 @@ exports.run = function run(command, args, options={}, cb=() => {})
 		options.maxBuffer = (1024*1024)*20;	// 20MB Buffer
 	if(!options.hasOwnProperty("redirect-stderr"))
 		options["redirect-stderr"] = true;
+	
+	if(options.env)
+		options.env = Object.assign(Object.assign({}, options.env), process.env);	// eslint-disable-line no-process-env
 	
 	let p = null;
 	if(options.detached)
@@ -95,4 +99,4 @@ exports.run = function run(command, args, options={}, cb=() => {})
 
 exports.SILENT = {silent : true};
 exports.VERBOSE = {verbose : true};
-exports.SILENTX = { silent : true, env : { HOME : "/home/sembiance", LOGNAME : "sembiance", USER : "sembiance", DISPLAY : ":0" } };
+exports.SILENTX = { silent : true, env : { DISPLAY : ":0" } };
