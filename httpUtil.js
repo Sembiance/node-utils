@@ -13,6 +13,7 @@ const XU = require("@sembiance/xu"),
 	urlencode = require("urlencode"),
 	streamBuffers = require("stream-buffers");
 
+// Default headers used for all requests
 function getHeaders(extraHeaders)
 {
 	const headers =
@@ -28,6 +29,100 @@ function getHeaders(extraHeaders)
 	return Object.assign(headers, extraHeaders || {});
 }
 
+/*
+	Global options for all httpUtil.* methods:
+username & password		Specific a username and password for Basic authorization
+    headers : {}		Allows you to manually include HTTP headers in the request
+contentType : ""		Specify what content-type of data is being sent. Not usually directly set by the you.
+    timeout : ###		How many ms to allow the request to take before cancelling the request
+progressBar	: .			An NPM progress or multi-progress bar that should be tick updated was bytes come in
+      retry : ###		How many times to retry the request if it fails
+*/
+
+// Will download the given targetURL to the given destinationPath. cb(err, headers, statusCode)
+// resume : false		If set to true, and the destinationPath exists, it will attempt to 'resume' downloading using the HTTP "Range" header
+exports.download = function download(targetURL, destinationPath, _options, _cb)
+{
+	const {options, cb} = XU.optionscb(_options, _cb, {method : "GET", downloadTo : destinationPath});
+	return httpExecute(targetURL, options, cb);
+};
+
+// Will just do an HTTP HEAD. cb(err, headers, statusCode)
+exports.head = function head(targetURL, _options, _cb)
+{
+	const {options, cb} = XU.optionscb(_options, _cb, {method : "HEAD"});
+	return httpExecute(targetURL, options, cb);
+};
+
+// Will perform an HTTP GET. Special options:
+// cacheBase : ""		A path to a directory that will include a cache of any httpUtil.get() requests made.
+//   verbose : false	Specify true to have it output a log message on cache misses
+exports.get = function get(targetURL, _options, _cb)
+{
+	let {options, cb} = XU.optionscb(_options, _cb, {method : "GET"});	// eslint-disable-line prefer-const
+
+	let cachePath = "";
+	if(_options.cacheBase)
+	{
+		const hash = crypto.createHash("sha256");
+		hash.update(targetURL, "utf8");
+		cachePath = path.join(_options.cacheBase, hash.digest("hex"));
+		if(fileUtil.existsSync(cachePath))
+			return fs.readFile(cachePath, XU.UTF8, cb);
+	}
+
+	if(cachePath)
+	{
+		if(options.verbose)
+			console.log("Cache miss: %s vs %s", targetURL, cachePath);
+
+		cb = function(err, data, headers, statusCode)
+		{
+			if(err || !data)
+				return _cb(err, data, headers, statusCode);
+
+			fs.writeFile(cachePath, data, XU.UTF8, fileErr => _cb(fileErr, data, headers, statusCode));
+		};
+	}
+
+	return httpExecute(targetURL, options, cb);
+};
+
+// Will perform an HTTP POST of the given "postData". Special options:
+// postAsBinary : false		Will treat the postData as binary content of contentType application/octet-stream
+//   postAsJSON : false		Will tret the postData as a JSON object and will JSON.stringify() and set contentType application/json
+// If NEITHER of the above are set, then postData should be an Object and it will be querystring.stringify()'ed as FORM data and sent as application/x-www-form-urlencoded
+exports.post = function post(targetURL, postData, _options, _cb)
+{
+	const {options, cb} = XU.optionscb(_options, _cb, {method : "POST"});
+	if(options.postAsBinary)
+	{
+		options.contentType = "application/octet-stream";
+		options.postData = postData;
+	}
+	else
+	{
+		options.postData = options.postAsJSON ? JSON.stringify(postData) : querystring.stringify(postData);
+		if(options.postAsJSON)
+			options.contentType = "application/json";
+	}
+
+	return httpExecute(targetURL, options, cb || _options);
+};
+
+// Will perform an HTTP PUT. If the putData is a string, it will be sent as-is with text/plain. If it's a Buffer, it will be converted to a utf8 string.
+// Otherwise if an object/array it will be stringify'ed
+exports.put = function put(targetURL, putData, _options, _cb)
+{
+	const {options, cb} = XU.optionscb(_options, _cb, {
+		method      : "PUT",
+		contentType : (typeof putData==="string" || putData instanceof Buffer) ? "text/plain" : "application/json",
+		postData    : typeof putData==="string" ? putData : (putData instanceof Buffer ? putData.toString("utf8") : JSON.stringify(putData))});
+
+	return httpExecute(targetURL, options, cb || _options);
+};
+
+// The actual handler of all the above
 function httpExecute(targetURL, options, cb)
 {
 	const uo = new url.URL(targetURL);
@@ -59,7 +154,13 @@ function httpExecute(targetURL, options, cb)
 	let timeoutid = options.timeout ? setTimeout(() => { timeoutid = undefined; httpRequest.abort(); }, options.timeout) : undefined;
 	const httpClearTimeout = function() { if(timeoutid!==undefined) { clearTimeout(timeoutid); timeoutid = undefined; } };
 	const responseData = options.method!=="HEAD" ? new streamBuffers.WritableStreamBuffer() : undefined;
-	const outputFile = options.download ? fs.createWriteStream(options.download) : undefined;
+	const outputFileOptions = {};
+	if(options.downloadTo && options.resume && fileUtil.existsSync(options.downloadTo))
+	{
+		outputFileOptions.flags = "a";
+		requestOptions.headers.Range = "bytes=" + fs.statSync(options.downloadTo).size + "-";
+	}
+	const outputFile = options.downloadTo ? fs.createWriteStream(options.downloadTo, outputFileOptions) : undefined;
 
 	const httpResponse = function httpResponse(response)
 	{
@@ -70,7 +171,7 @@ function httpExecute(targetURL, options, cb)
 		{
 			httpClearTimeout();
 
-			if(options.download)
+			if(options.downloadTo)
 				outputFile.close();
 
 			return httpExecute((response.headers.location.startsWith("http") ? "" : ("http" + (targetURL.startsWith("https") ? "s" : "") + "://" + uo.host)) + response.headers.location, options, cb);
@@ -80,7 +181,7 @@ function httpExecute(targetURL, options, cb)
 		{
 			setImmediate(() => { httpClearTimeout(); cb(undefined, response.headers, response.statusCode); });
 		}
-		else if(options.download)
+		else if(options.downloadTo)
 		{
 			if(options.progressBar)
 				response.pipe(progressStream({time : 100}, progress => options.progressBar.tick(progress.delta))).pipe(outputFile);
@@ -111,7 +212,7 @@ function httpExecute(targetURL, options, cb)
 		if(outputFile)
 		{
 			outputFile.end();
-			fs.unlinkSync(options.download);
+			fs.unlinkSync(options.downloadTo);
 		}
 
 		if(options.retry && options.retry>=1)
@@ -131,80 +232,4 @@ function httpExecute(targetURL, options, cb)
 		httpRequest.write(options.postData, "utf8");
 	
 	httpRequest.end();
-}
-
-exports.download = download;
-function download(targetURL, destination, _options, _cb)
-{
-	const {options, cb} = XU.optionscb(_options, _cb, {method : "GET", download : destination});
-	return httpExecute(targetURL, options, cb);
-}
-
-exports.head = head;
-function head(targetURL, _options, _cb)
-{
-	const {options, cb} = XU.optionscb(_options, _cb, {method : "HEAD"});
-	return httpExecute(targetURL, options, cb);
-}
-
-exports.get = get;
-function get(targetURL, _options, _cb)
-{
-	let {options, cb} = XU.optionscb(_options, _cb, {method : "GET"});	// eslint-disable-line prefer-const
-
-	let cachePath = "";
-	if(_options.cacheBase)
-	{
-		const hash = crypto.createHash("sha256");
-		hash.update(targetURL, "utf8");
-		cachePath = path.join(_options.cacheBase, hash.digest("hex"));
-		if(fileUtil.existsSync(cachePath))
-			return fs.readFile(cachePath, XU.UTF8, cb);
-	}
-
-	if(cachePath)
-	{
-		if(options.verbose)
-			console.log("Cache miss: %s vs %s", targetURL, cachePath);
-
-		cb = function(err, data, headers, statusCode)
-		{
-			if(err || !data)
-				return _cb(err, data, headers, statusCode);
-
-			fs.writeFile(cachePath, data, XU.UTF8, fileErr => _cb(fileErr, data, headers, statusCode));
-		};
-	}
-
-	return httpExecute(targetURL, options, cb);
-}
-
-exports.post = post;
-function post(targetURL, postData, _options, _cb)
-{
-	const {options, cb} = XU.optionscb(_options, _cb, {method : "POST"});
-	if(options.postAsBinary)
-	{
-		options.contentType = "application/octet-stream";
-		options.postData = postData;
-	}
-	else
-	{
-		options.postData = options.postAsJSON ? JSON.stringify(postData) : querystring.stringify(postData);
-		if(options.postAsJSON)
-			options.contentType = "application/json";
-	}
-
-	return httpExecute(targetURL, options, cb || _options);
-}
-
-exports.put = put;
-function put(targetURL, putData, _options, _cb)
-{
-	const {options, cb} = XU.optionscb(_options, _cb, {
-		method      : "PUT",
-		contentType : (typeof putData==="string" || putData instanceof Buffer) ? "text/plain" : "application/json",
-		postData    : typeof putData==="string" ? putData : (putData instanceof Buffer ? putData.toString("utf8") : JSON.stringify(putData))});
-
-	return httpExecute(targetURL, options, cb || _options);
 }

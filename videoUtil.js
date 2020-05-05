@@ -23,9 +23,9 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 		{
 			const args = ["-msglevel", "all=0", "-ss", startTime, "-frames", "1", "-ao", "null", "-vo", "jpeg", "--", path.resolve(videoPath)];
 			if(videoPath.endsWith(".m2ts"))
-				args.splice(0, 0, "-demuxer", "lavf");
+				args.unshift("-demuxer", "lavf");
 
-			runUtil.run(COMMAND_MPLAYER, args, {verbose : true, cwd : this.data.tempDir}, this);
+			runUtil.run(COMMAND_MPLAYER, args, {silent : true, cwd : this.data.tempDir}, this);
 		},
 		function generateImage()
 		{
@@ -53,7 +53,7 @@ exports.getInfo = function getInfo(videoPath, cb)
 		{
 			const args = ["-frames", "0", "-identify", "--", videoPath];
 			if(videoPath.endsWith(".m2ts"))
-				args.splice(0, 0, "-demuxer", "lavf");
+				args.unshift("-demuxer", "lavf");
 
 			runUtil.run(COMMAND_MPLAYER, args, {silent : true, timeout : XU.MINUTE}, this);
 		},

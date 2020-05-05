@@ -32,7 +32,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 		rows = rows.map(row => { row[1] = (typeof row[1]==="number" ? row[1].toLocaleString() : row[1]); return row; });
 
 	if(options.header)
-		rows.splice(0, 0, options.header);
+		rows.unshift(options.header);
 
 	if(options.alignment)
 		options.alignment = options.alignment.map(a => a.substring(0, 1).toLowerCase());
@@ -96,7 +96,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 
 	rows.forEach(row => colNames.forEach(colName => { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (""+row[colName]).length, colNameMap[colName].length); } }));	// eslint-disable-line curly
 
-	rows.splice(0, 0, Object.map(colNameMap, (k, v) => v), Object.map(colNameMap, k => [k, chalk.hex("#00FFFF")("-".repeat(maxColSizeMap[k]))]));
+	rows.unshift(Object.map(colNameMap, (k, v) => v), Object.map(colNameMap, k => [k, chalk.hex("#00FFFF")("-".repeat(maxColSizeMap[k]))]));
 
 	let result = "";
 
