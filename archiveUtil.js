@@ -5,6 +5,7 @@ const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	fileUtil = require("./fileUtil.js"),
 	unicodeUtil = require("./unicodeUtil.js"),
+	{DOS} = require("./dosUtil.js"),
 	glob = require("glob"),
 	runUtil = require("./runUtil.js"),
 	path = require("path");
@@ -13,38 +14,38 @@ const RAM_DIR = "/mnt/ram";
 
 function tscompExtract(filePath, extractionPath, cb)
 {
-	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
+	const dos = new DOS();
 
 	tiptoe(
-		function createWorkDir()
+		function setup()
 		{
-			fileUtil.mkdirp(WORK_DIR, this);
+			dos.setup(this);
 		},
-		function copyArchiveToWorkDir()
+		function copyArchiveToHD()
 		{
-			fs.writeFile(path.join(WORK_DIR, "list.bat"), ["@echo off", "C:\\TSCOMP -l " + path.basename(filePath), ""].join("\n"), XU.UTF8, this.parallel());
-			fileUtil.copy(filePath, path.join(WORK_DIR, path.basename(filePath)), this.parallel());
+			dos.copyToHD(filePath, path.join("WORK", path.basename(filePath)), this);
 		},
-		function getFilename()
+		function prepareListCmd()
 		{
-			runUtil.run("dosemu", ["-dumb", "list.bat"], {silent : true, env : {DOSDRIVE_D : WORK_DIR}}, this);
+			dos.autoExec(["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\" + path.basename(filePath) + " > C:\\TMP\\TSFILES.TXT", "REBOOT.COM"], this);
 		},
-		function saveFilename(tscompOutput)
+		function readFileList()
 		{
-			this.data.tscompFilename = tscompOutput.split("\n").filter(line => line.trim().startsWith("=>"))[0].trim().substring(2).trim();
-			fs.writeFile(path.join(WORK_DIR, "expand.bat"), ["@echo off", "cd D:", "C:\\TSCOMP -d " + path.basename(filePath) + " " + this.data.tscompFilename.toLowerCase(), ""].join("\n"), XU.UTF8, this);
+			dos.readFromHD("TMP/TSFILES.TXT", this);
 		},
-		function performExtraction()
+		function prepareExtractCmd(tscompOutput)
 		{
-			runUtil.run("dosemu", ["-dumb", "expand.bat"], {silent : true, env : {DOSDRIVE_D : WORK_DIR}}, this);
+			this.data.tscompFilenames = tscompOutput.toString("utf8").split("\n").filter(line => line.trim().startsWith("=>")).map(line => line.trim().substring(2));
+
+			dos.autoExec(["cd WORK", ...this.data.tscompFilenames.map(fn => "C:\\APP\\TSCOMP.EXE -d " + path.basename(filePath) + " " + fn)], this);
 		},
-		function copyToDestination()
+		function copyFileResults()
 		{
-			fileUtil.move(path.join(WORK_DIR, this.data.tscompFilename.toLowerCase()), path.join(extractionPath, this.data.tscompFilename), this);
+			dos.copyFromHD(this.data.tscompFilenames.map(fn => path.join("WORK", fn)), extractionPath, this);
 		},
 		function cleanup()
 		{
-			fileUtil.unlink(WORK_DIR, this);
+			dos.teardown(this);
 		},
 		cb
 	);
@@ -52,38 +53,36 @@ function tscompExtract(filePath, extractionPath, cb)
 
 function pcxlibExtract(filePath, extractionPath, cb)
 {
-	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
+	const dos = new DOS();
 
 	tiptoe(
-		function createWorkDir()
+		function setup()
 		{
-			fileUtil.mkdirp(WORK_DIR, this);
+			dos.setup(this);
 		},
-		function copyArchiveToWorkDir()
+		function copyArchiveToHD()
 		{
-			fs.writeFile(path.join(WORK_DIR, "expand.bat"), ["@echo off", "C:\\PCXLIB " + path.basename(filePath) + " /X", ""].join("\n"), XU.UTF8, this.parallel());
-			fileUtil.copy(filePath, path.join(WORK_DIR, path.basename(filePath)), this.parallel());
+			dos.copyToHD(filePath, path.join("WORK", path.basename(filePath)), this);
 		},
-		function performExtraction()
+		function prepareExtractCmd()
 		{
-			runUtil.run("dosemu", ["-dumb", "expand.bat"], {silent : true, env : {DOSDRIVE_D : WORK_DIR}}, this);
+			dos.autoExec(["cd TMP", "C:\\APP\\PCXLIB.EXE C:\\WORK\\" + path.basename(filePath) + " /X"], this);
 		},
-		function removeWorkFiles()
+		function mountHD()
 		{
-			fileUtil.unlink(path.join(WORK_DIR, "expand.bat"), this.parallel());
-			fileUtil.unlink(path.join(WORK_DIR, path.basename(filePath)), this.parallel());
+			dos.mountHD(this);
 		},
-		function findExtractedFiles()
+		function findExtractedFiles(hdMountDirPath)
 		{
-			glob(path.join(WORK_DIR, "*"), this);
+			glob(path.join(hdMountDirPath, "TMP", "*"), this);
 		},
-		function copyToDestination(extractedFiles)
+		function copyFileResults(extractedFiles)
 		{
 			(extractedFiles || []).parallelForEach((extractedFile, subcb) => fileUtil.copy(extractedFile, path.join(extractionPath, path.basename(extractedFile)), subcb), this);
 		},
 		function cleanup()
 		{
-			fileUtil.unlink(WORK_DIR, this);
+			dos.teardown(this);
 		},
 		cb
 	);

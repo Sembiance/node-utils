@@ -6,7 +6,6 @@ const XU = require("@sembiance/xu"),
 	hashUtil = require("../index").hash,
 	fileUtil = require("../index").file,
 	path = require("path"),
-	fs = require("fs"),
 	{DOS} = require("../index").dos;
 
 const dos = new DOS();
@@ -49,21 +48,17 @@ tiptoe(
 	},
 	function step8()
 	{
-		dos.start(this);
+		dos.start(undefined, this);
 	},
 	function step9()
 	{
-		dos.registerExitCallback(this);
+		dos.copyFromHD("TMP/TSFILES.TXT", path.join("/tmp/tsfiles.txt"), this);
 	},
 	function step10()
 	{
-		dos.copyFromHD("TMP/TSFILES.TXT", path.join("/tmp/tsfiles.txt"), this);
-	},
-	function step11()
-	{
 		hashUtil.hashFile("sha1", "/tmp/tsfiles.txt", this);
 	},
-	function step12(tsFilesHash)
+	function step11(tsFilesHash)
 	{
 		assert.strictEqual(tsFilesHash, "9d880d46f380a12c4c27f30ff4412cb09ce4bf71");
 		
@@ -72,17 +67,3 @@ tiptoe(
 	},
 	XU.FINISH
 );
-
-/*
-			fs.writeFile(path.join(WORK_DIR, "list.bat"), ["@echo off", "C:\\TSCOMP -l " + path.basename(filePath), ""].join("\n"), XU.UTF8, this.parallel());
-			fileUtil.copy(filePath, path.join(WORK_DIR, path.basename(filePath)), this.parallel());
-		},
-		function getFilename()
-		{
-			runUtil.run("dosemu", ["-dumb", "list.bat"], {silent : true, env : {DOSDRIVE_D : WORK_DIR}}, this);
-		},
-		function saveFilename(tscompOutput)
-		{
-			this.data.tscompFilename = tscompOutput.split("\n").filter(line => line.trim().startsWith("=>"))[0].trim().substring(2).trim();
-			fs.writeFile(path.join(WORK_DIR, "expand.bat"), ["@echo off", "cd D:", "C:\\TSCOMP -d " + path.basename(filePath) + " " + this.data.tscompFilename.toLowerCase(), ""].join("\n"), XU.UTF8, this);
-*/

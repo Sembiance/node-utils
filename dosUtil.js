@@ -9,14 +9,16 @@ const XU = require("@sembiance/xu"),
 
 class DOS
 {
-	constructor(_masterHDFilePath=path.join(__dirname, "dos", "hd.img"))
+	constructor(_masterHDFilePath=path.join(__dirname, "dos", "hd.img"), _debug=false)
 	{
 		this.masterHDFilePath = _masterHDFilePath;
 		this.masterConfigFilePath = path.join(__dirname, "dos", "dosbox.conf");
 		this.loopNum = null;
 		this.setupDone = false;
 		this.dosBoxCP = null;
+		this.autoExecVanilla = null;
 		this.exitCallbacks = [];
+		this.debug = _debug;
 	}
 
 	// Will create a temporary directory in RAM and copy the master HD image and config file over
@@ -29,6 +31,7 @@ class DOS
 		this.hdFilePath = path.join(this.workDir, path.basename(this.masterHDFilePath));
 		this.configFilePath = path.join(this.workDir, path.basename(this.masterConfigFilePath));
 		this.hdMountDirPath = path.join(this.workDir, "hd");
+		this.mountedAutoExecFilePath = path.join(this.hdMountDirPath, "AUTOEXEC.BAT");
 
 		const self=this;
 		tiptoe(
@@ -83,8 +86,8 @@ class DOS
 		);
 	}
 
-	// will copy a file off the dos HD
-	copyFromHD(dosFileSubPath, destFilePath, cb)
+	// Will copy a file off the dos HD
+	copyFromHD(dosFilesSubPath, destPath, cb)
 	{
 		if(!this.setupDone)
 			throw new Error("Setup hasn't been run yet!");
@@ -99,7 +102,10 @@ class DOS
 			{
 				this.data.wasAlreadyMounted = wasAlreadyMounted;
 
-				fileUtil.copy(path.join(hdMountDirPath, dosFileSubPath), destFilePath, this);
+				if(Array.isArray(dosFilesSubPath))
+					dosFilesSubPath.parallelForEach((dosFileSubPath, subcb) => fileUtil.copy(path.join(hdMountDirPath, dosFileSubPath), path.join(destPath, path.basename(dosFileSubPath)), subcb), this);
+				else
+					fileUtil.copy(path.join(hdMountDirPath, dosFilesSubPath), destPath, this);
 			},
 			function unmountIfNeeded()
 			{
@@ -107,6 +113,41 @@ class DOS
 					this();
 				else
 					self.unmountHD(this);
+			},
+			cb
+		);
+	}
+
+	// Will read a file from the HD
+	readFromHD(dosFileSubPath, cb)
+	{
+		if(!this.setupDone)
+			throw new Error("Setup hasn't been run yet!");
+
+		const self=this;
+		tiptoe(
+			function mountHDIfNeeded()
+			{
+				self.mountHD(this);
+			},
+			function copyFile(hdMountDirPath, wasAlreadyMounted)
+			{
+				this.data.wasAlreadyMounted = wasAlreadyMounted;
+
+				fs.readFile(path.join(hdMountDirPath, dosFileSubPath), this);
+			},
+			function unmountIfNeeded(dataRaw)
+			{
+				this.data.dataRaw = dataRaw;
+
+				if(this.data.wasAlreadyMounted)
+					this();
+				else
+					self.unmountHD(this);
+			},
+			function returnData()
+			{
+				this(undefined, this.data.dataRaw);
 			},
 			cb
 		);
@@ -170,6 +211,23 @@ class DOS
 		);
 	}
 
+	// Automatically executes the lines and returns when all done
+	autoExec(lines, cb)
+	{
+		const self=this;
+		tiptoe(
+			function appendLines()
+			{
+				self.appendToAutoExec([...lines, "REBOOT.COM"], this);
+			},
+			function runEm()
+			{
+				self.start(undefined, this);
+			},
+			cb
+		);
+	}
+
 	// Writes the lines to the autoexec that takes place in the dos config
 	appendToAutoExec(lines, cb)
 	{
@@ -179,11 +237,23 @@ class DOS
 			{
 				self.mountHD(this);
 			},
-			function appendLines(hdMountDirPath, wasAlreadyMounted)
+			function resetIfNeeded(hdMountDirPath, wasAlreadyMounted)
 			{
 				this.data.wasAlreadyMounted = wasAlreadyMounted;
+				this.data.hdMountDirPath = hdMountDirPath;
 
-				fs.appendFile(path.join(hdMountDirPath, "AUTOEXEC.BAT"), Array.force(lines).join("\r\n"), XU.UTF8, this);
+				// If we've callde this before, let's reset the autoexec bat to vanilla first
+				if(self.autoExecVanilla)
+					fs.writeFile(self.mountedAutoExecFilePath, self.autoExecVanilla, XU.UTF8, this);
+				else
+					fs.readFile(self.mountedAutoExecFilePath, XU.UTF8, this);
+			},
+			function appendLines(autoExecVanilla)
+			{
+				if(!self.autoExecVanilla)
+					self.autoExecVanilla = autoExecVanilla;
+
+				fs.appendFile(self.mountedAutoExecFilePath, Array.force(lines).join("\r\n"), XU.UTF8, this);
 			},
 			function unmountIfNeeded()
 			{
@@ -197,24 +267,34 @@ class DOS
 	}
 
 	// Will start up DOSBox
-	start(cb)
+	start(_cb, exitcb)
 	{
 		if(this.dosBoxCP!==null)
 			throw new Error("DOSBox already running!");
 		if(this.loopNum!==null)
 			throw new Error("HD currently mounted!");
+		
+		const cb = _cb || (() => {});
 
 		const self=this;
 		tiptoe(
 			function runDOSBox()
 			{
-				runUtil.run("dosbox", ["-conf", self.configFilePath], {silent : true, detached : true}, this);
+				const dosBoxArgs = ["-conf", self.configFilePath];
+				if(!self.debug)
+					dosBoxArgs.unshift("dosbox");
+
+				runUtil.run(self.debug ? "dosbox" : "xvfb-run", dosBoxArgs, {silent : true, detached : true}, this);
 			},
 			function recordChildProcess(cp)
 			{
 				self.dosBoxCP = cp;
 
 				self.dosBoxCP.on("exit", self.exitHandler.bind(self));
+
+				if(exitcb)
+					self.registerExitCallback(exitcb);
+
 				this();
 			},
 			cb

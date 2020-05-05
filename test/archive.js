@@ -14,11 +14,11 @@ const OUTPUT_DIR = fileUtil.generateTempFilePath();
 /* eslint-disable comma-spacing, max-len */
 const TEST_PARAMS =
 {
+	pcxlib     : {archiveFile : "POKER.PCL", filenames : ["ASP.PCC", "CARDS.PCC", "DECK.PCX", "EMLOGO.PCC", "POKER.PCC", "WELCOME.PCC"], hash : {filename : "CARDS.PCC", sum : "386ef6988fd2bc620dfa186463b76b72"}},
 	ttcomp     : {archiveFile : "quickgif.__d", filenames : ["quickgif.__d.unpacked"], hash : {filename : "quickgif.__d.unpacked", sum : "0a34340a86c6a437bb6b7207b48b735a"}},
 	sit        : {archiveFile : "blackfor.sit", filenames : ["BlackForest ƒ/BlackFor.rsrc","BlackForest ƒ/BlackForest.AFM","BlackForest ƒ/BlackForest.bmap.rsrc","BlackForest ƒ/Read Me First!!"], hash : {filename : "BlackForest ƒ/BlackFor.rsrc", sum : "4fee556ca486335cf9d0ea5c1165ff73"}},
 	iso        : {archiveFile : "test.iso", filenames : ["autorun.inf","INET.exe","README.txt"], hash : {filename : "INET.exe", sum : "fcd64a8ff61ae4fd07fc7b8d3646b6e2"}},
-	tscomp     : {archiveFile : "TEST.TSC", filenames : ["INSTALL.EXE"], hash : {filename : "INSTALL.EXE", sum : "f1d79c4cb0821b9609d9f84f36e9b457"}},
-	pcxlib     : {archiveFile : "POKER.PCL", filenames : ["asp.pcc", "cards.pcc", "deck.pcx", "emlogo.pcc", "poker.pcc", "welcome.pcc"], hash : {filename : "cards.pcc", sum : "386ef6988fd2bc620dfa186463b76b72"}},
+	tscomp     : {archiveFile : "TWOFILES.TSC", filenames : ["A.TXT", "B.TXT"], hash : {filename : "B.TXT", sum : "fb59fc0592398f60b5d05299b2bb976f"}},
 	ico        : {archiveFile : "favicon.ico", filenames : [].pushSequence(0, 5).map(iconNum => ("favicon.ico-" + iconNum + ".png")), hash : {filename : "favicon.ico-1.png", sum : "4ac74e067d8e8851cb1e3204c6f8bffe"}},
 	zip        : {archiveFile : "test.zip", filenames : ["pewpewpew.flac", "subdir/zip_smile.png", "zip_hello.txt"], hash : {filename : "subdir/zip_smile.png", sum : "fe813e1041186ed0b65eb1e4bda01467"}},
 	mscompress : {archiveFile : "REGISTER.TXT", filenames : ["REGISTER.TXT"], hash : {filename : "REGISTER.TXT", sum : "108b8cd039bac2bccf045c3cb582cfa2"}},
