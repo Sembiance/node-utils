@@ -89,42 +89,11 @@ function pcxlibExtract(filePath, extractionPath, cb)
 	);
 }
 
-function mscompressExtract(filePath, extractionPath, cb)
+function extractWithCommandAndSuffix(command, suffix, filePath, extractionPath, cb)
 {
 	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
-	const underscoreFilename = path.basename(filePath) + (filePath.endsWith("_") ? "" : "_");
-	const noUnderscoreFilename = underscoreFilename.substring(0, underscoreFilename.length-1);
-
-	tiptoe(
-		function createWorkDir()
-		{
-			fileUtil.mkdirp(WORK_DIR, this);
-		},
-		function copyFileToWorkDirWithUnderscoreSuffix()
-		{
-			fileUtil.copy(filePath, path.join(WORK_DIR, underscoreFilename), this);
-		},
-		function performExtraction()
-		{
-			runUtil.run("msexpand", [path.join(WORK_DIR, underscoreFilename)], runUtil.SILENT, this);
-		},
-		function moveFiles()
-		{
-			fileUtil.move(path.join(WORK_DIR, noUnderscoreFilename), path.join(extractionPath, noUnderscoreFilename), this);
-		},
-		function cleanup()
-		{
-			fileUtil.unlink(WORK_DIR, this);
-		},
-		cb
-	);
-}
-
-function gzExtract(filePath, extractionPath, cb)
-{
-	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
-	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(".gz") ? "" : ".gz");
-	const filenameWithoutSuffix = path.basename(filenameWithSuffix, ".gz");
+	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(suffix) ? "" : suffix);
+	const filenameWithoutSuffix = path.basename(filenameWithSuffix, suffix);
 	
 	tiptoe(
 		function createWorkDir()
@@ -137,38 +106,7 @@ function gzExtract(filePath, extractionPath, cb)
 		},
 		function performExtraction()
 		{
-			runUtil.run("gunzip", [path.join(WORK_DIR, filenameWithSuffix)], runUtil.SILENT, this);
-		},
-		function moveFiles()
-		{
-			fileUtil.move(path.join(WORK_DIR, filenameWithoutSuffix), path.join(extractionPath, filenameWithoutSuffix), this);
-		},
-		function cleanup()
-		{
-			fileUtil.unlink(WORK_DIR, this);
-		},
-		cb
-	);
-}
-
-function bz2Extract(filePath, extractionPath, cb)
-{
-	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
-	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(".bz2") ? "" : ".bz2");
-	const filenameWithoutSuffix = path.basename(filenameWithSuffix, ".bz2");
-	
-	tiptoe(
-		function createWorkDir()
-		{
-			fileUtil.mkdirp(WORK_DIR, this);
-		},
-		function copyFileToWorkDirWithSuffix()
-		{
-			fileUtil.copy(filePath, path.join(WORK_DIR, filenameWithSuffix), this);
-		},
-		function performExtraction()
-		{
-			runUtil.run("bunzip2", [path.join(WORK_DIR, filenameWithSuffix)], runUtil.SILENT, this);
+			runUtil.run(command, [path.join(WORK_DIR, filenameWithSuffix)], runUtil.SILENT, this);
 		},
 		function moveFiles()
 		{
@@ -240,7 +178,7 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					runUtil.run("unrar", ["x", "-p-", filePath, extractionPath], runUtil.SILENT, this);
 					break;
 				case "mscompress":
-					mscompressExtract(filePath, extractionPath, this);
+					extractWithCommandAndSuffix("msexpand", "_", filePath, extractionPath, this);
 					break;
 				case "tscomp":
 					tscompExtract(filePath, extractionPath, this);
@@ -258,10 +196,10 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					runUtil.run("tar", ["-xf", filePath, "-C", extractionPath], runUtil.SILENT, this);
 					break;
 				case "gz":
-					gzExtract(filePath, extractionPath, this);
+					extractWithCommandAndSuffix("gunzip", ".gz", filePath, extractionPath, this);
 					break;
 				case "bz2":
-					bz2Extract(filePath, extractionPath, this);
+					extractWithCommandAndSuffix("bunzip2", ".bz2", filePath, extractionPath, this);
 					break;
 				case "ttcomp":
 					runUtil.run("ttdecomp", [filePath, path.join(extractionPath, filenameWithExt + ".unpacked")], runUtil.SILENT, this);
