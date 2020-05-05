@@ -25,7 +25,7 @@ exports.run = function run(command, args, options={}, cb=() => {})
 		options["redirect-stderr"] = true;
 	
 	if(options.env)
-		options.env = Object.assign(Object.assign({}, options.env), process.env);	// eslint-disable-line no-process-env
+		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line no-process-env
 	
 	let p = null;
 	if(options.detached)
