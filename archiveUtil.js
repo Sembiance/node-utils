@@ -120,6 +120,90 @@ function mscompressExtract(filePath, extractionPath, cb)
 	);
 }
 
+function gzExtract(filePath, extractionPath, cb)
+{
+	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
+	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(".gz") ? "" : ".gz");
+	const filenameWithoutSuffix = path.basename(filenameWithSuffix, ".gz");
+	
+	tiptoe(
+		function createWorkDir()
+		{
+			fileUtil.mkdirp(WORK_DIR, this);
+		},
+		function copyFileToWorkDirWithSuffix()
+		{
+			fileUtil.copy(filePath, path.join(WORK_DIR, filenameWithSuffix), this);
+		},
+		function performExtraction()
+		{
+			runUtil.run("gunzip", [path.join(WORK_DIR, filenameWithSuffix)], runUtil.SILENT, this);
+		},
+		function moveFiles()
+		{
+			fileUtil.move(path.join(WORK_DIR, filenameWithoutSuffix), path.join(extractionPath, filenameWithoutSuffix), this);
+		},
+		function cleanup()
+		{
+			fileUtil.unlink(WORK_DIR, this);
+		},
+		cb
+	);
+}
+
+function bz2Extract(filePath, extractionPath, cb)
+{
+	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
+	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(".bz2") ? "" : ".bz2");
+	const filenameWithoutSuffix = path.basename(filenameWithSuffix, ".bz2");
+	
+	tiptoe(
+		function createWorkDir()
+		{
+			fileUtil.mkdirp(WORK_DIR, this);
+		},
+		function copyFileToWorkDirWithSuffix()
+		{
+			fileUtil.copy(filePath, path.join(WORK_DIR, filenameWithSuffix), this);
+		},
+		function performExtraction()
+		{
+			runUtil.run("bunzip2", [path.join(WORK_DIR, filenameWithSuffix)], runUtil.SILENT, this);
+		},
+		function moveFiles()
+		{
+			fileUtil.move(path.join(WORK_DIR, filenameWithoutSuffix), path.join(extractionPath, filenameWithoutSuffix), this);
+		},
+		function cleanup()
+		{
+			fileUtil.unlink(WORK_DIR, this);
+		},
+		cb
+	);
+}
+
+function amosExtract(filePath, extractionPath, cb)
+{
+	const filename = path.basename(filePath);
+	
+	tiptoe(
+		function performExtraction()
+		{
+			runUtil.run("listamos", [filePath], runUtil.SILENT, this.parallel());
+			runUtil.run("dumpamos", [filePath], {silent : true, cwd : extractionPath}, this.parallel());
+		},
+		function saveSourceCode(sourceCodeRaw)
+		{
+			const sourceCode = (sourceCodeRaw || "").trim();
+			if(sourceCode.length===0 || sourceCode.endsWith("not an AMOS source file"))
+				return this();
+
+			fs.writeFile(path.join(extractionPath, filename + "_sourceCode"), sourceCodeRaw.trim(), XU.UTF8, this);
+		},
+		cb
+	);
+}
+
 // Extracts the files in the given filePath if supported
 exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 {
@@ -167,8 +251,32 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "ico":
 					runUtil.run("convert", [filePath, path.join(extractionPath, filenameWithExt + ".png")], runUtil.SILENT, this);
 					break;
-				case "powerpack":
-					runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : (filenameWithExt + ".unpacked")))], runUtil.SILENT, this);
+				case "xpk":
+					runUtil.run("amigadepacker", ["-o", path.join(extractionPath, (ext===".xpk" ? path.basename(filenameWithExt, ext) : (filenameWithExt + ".unpacked"))), filePath], runUtil.SILENT, this);
+					break;
+				case "tar":
+					runUtil.run("tar", ["-xf", filePath, "-C", extractionPath], runUtil.SILENT, this);
+					break;
+				case "gz":
+					gzExtract(filePath, extractionPath, this);
+					break;
+				case "bz2":
+					bz2Extract(filePath, extractionPath, this);
+					break;
+				case "ttcomp":
+					runUtil.run("ttdecomp", [filePath, path.join(extractionPath, filenameWithExt + ".unpacked")], runUtil.SILENT, this);
+					break;
+				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : (filenameWithExt + ".unpacked")))], runUtil.SILENT, this);
+				case "dms":
+				case "lzx":
+				case "sit":
+					runUtil.run("unar", ["-o", extractionPath, filePath], runUtil.SILENT, this);
+					break;
+				case "amos":
+					amosExtract(filePath, extractionPath, this);
+					break;
+				case "adf":
+					runUtil.run("xdftool", [filePath, "unpack", extractionPath], runUtil.SILENT, this);
 					break;
 
 				default:

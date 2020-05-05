@@ -6,8 +6,9 @@ const assert = require("assert"),
 	fs = require("fs"),
 	videoUtil = require("../index").video;
 
-const VIDEO_PATH = path.join(__dirname, "video.mp4");
-const VIDEO_THUMBNAIL_PATH = path.join(__dirname, "video.mp4.thumb.png");
+const FILES_DIR = path.join(__dirname, "files");
+const VIDEO_PATH = path.join(FILES_DIR, "video.mp4");
+const VIDEO_THUMBNAIL_PATH = path.join(FILES_DIR, "video.mp4.thumb.png");
 
 tiptoe(
 	function getVideoInfo()

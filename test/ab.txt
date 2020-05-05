@@ -1,4 +1,0 @@
-prefix
-abc
-123
-xyz
