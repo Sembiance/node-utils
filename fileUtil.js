@@ -5,8 +5,32 @@ const XU = require("@sembiance/xu"),
 	path = require("path"),
 	uuid = require("uuid/v4"),
 	os = require("os"),
+	runUtil = require("./runUtil.js"),
+	progressStream = require("progress-stream"),
 	rimraf = require("rimraf"),		// eslint-disable-line
 	tiptoe = require("tiptoe");
+
+// Returns an array of possible identifications of this file type based on the output from `trid`
+exports.identify = function identify(filePath, cb)
+{
+	tiptoe(
+		function runTrid()
+		{
+			runUtil.run("file", ["-m", "/usr/share/misc/magic.mgc:/mnt/compendium/sys/magic/my-magic", "-b", filePath], runUtil.SILENT, this.parallel());
+			runUtil.run("file", ["-m", "/usr/share/misc/magic.mgc:/mnt/compendium/sys/magic/my-magic", "-b", "--extension", filePath], runUtil.SILENT, this.parallel());
+			runUtil.run("tridid", ["--jsonOutput", filePath], runUtil.SILENT, this.parallel());
+		},
+		function parseResults(magicRaw, magicExtensionsRaw, trididRaw)
+		{
+			const magicResult = {magic : magicRaw.trim().slice(0, 40)};
+			if(magicExtensionsRaw && magicExtensionsRaw.length>0 && magicExtensionsRaw.trim()!=="???")
+				magicResult.extensions = magicExtensionsRaw.trim().toLowerCase().split("/").map(ext => (ext.charAt(0)==="." ? "" : ".") + ext).filter(ext => ext!==".???");
+
+			return [magicResult, ...JSON.parse(trididRaw)].multiSort(match => (match.percentage || 0), true);
+		},
+		cb
+	);
+};
 
 exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
 {
@@ -48,7 +72,7 @@ exports.mkdirp = function mkdirp(dirPath, cb)
 		exports.exists(builtPath, (err, exists) =>
 		{
 			if(!exists)
-				fs.mkdir(builtPath, subcb);
+				fs.mkdir(builtPath, () => setImmediate(subcb));
 			else
 				setImmediate(subcb);
 		});
@@ -118,8 +142,10 @@ exports.concat = function concat(_files, dest, _options, _cb)
 };
 
 // Copies a file from src to dest
-exports.copy = function copy(src, dest, cb)
+exports.copy = function copy(src, dest, _options, _cb)
 {
+	const {options, cb} = XU.optionscb(_options, _cb, {});
+
 	if(src===dest)
 		return cb(new Error("src and dest are identical: " + src));
 
@@ -132,7 +158,10 @@ exports.copy = function copy(src, dest, cb)
 	wr.on("error", done);
 
 	wr.on("close", () => done());
-	rd.pipe(wr);
+	if(options.progressBar)
+		rd.pipe(progressStream({time : 100}, progress => options.progressBar.tick(progress.delta))).pipe(wr);
+	else
+		rd.pipe(wr);
 
 	function done(err)
 	{
@@ -213,6 +242,9 @@ exports.unlink = function unlink(target, cb)
 
 		fs.stat(target, (err, stats) =>
 		{
+			if(!stats)
+				return setImmediate(cb);
+				
 			if(stats.isDirectory())
 				rimraf(target, cb);
 			else
