@@ -8,7 +8,7 @@ const XU = require("@sembiance/xu"),
 
 
 exports.hashFile = hashFile;
-function hashFile(filePath, algorithm, cb)
+function hashFile(algorithm, filePath, cb)
 {
 	tiptoe(
 		function checkExistance()
@@ -20,18 +20,19 @@ function hashFile(filePath, algorithm, cb)
 			if(!exists)
 				throw new Error("Unable to access file: " + filePath);
 			
-			const fd = fs.createReadStream(filePath);
+			const fileStream = fs.createReadStream(filePath);
 			const h = crypto.createHash(algorithm);
 			h.setEncoding("hex");
-			fd.on("end", () => { h.end(); this(undefined, h.read()); });
-			fd.pipe(h);
+			fileStream.on("end", () => { h.end(); this(undefined, h.read()); });
+			fileStream.on("error", err => this(err));
+			fileStream.pipe(h);
 		},
 		cb
 	);
 }
 
 exports.hash = hash;
-function hash(data, algorithm)
+function hash(algorithm, data)
 {
 	return crypto.createHash(algorithm).update(data).digest("hex");
 }
