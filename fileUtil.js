@@ -19,14 +19,23 @@ exports.identify = function identify(filePath, cb)
 			runUtil.run("file", ["-m", "/usr/share/misc/magic.mgc:/mnt/compendium/sys/magic/my-magic", "-b", filePath], runUtil.SILENT, this.parallel());
 			runUtil.run("file", ["-m", "/usr/share/misc/magic.mgc:/mnt/compendium/sys/magic/my-magic", "-b", "--extension", filePath], runUtil.SILENT, this.parallel());
 			runUtil.run("tridid", ["--jsonOutput", filePath], runUtil.SILENT, this.parallel());
+			runUtil.run("fido", ["-q", "-noextension", "-matchprintf", "%(info.formatname)s", filePath], runUtil.SILENT, this.parallel());
 		},
-		function parseResults(magicRaw, magicExtensionsRaw, trididRaw)
+		function parseResults(magicRaw, magicExtensionsRaw, trididRaw, fidoRaw)
 		{
-			const magicResult = {magic : magicRaw.trim().slice(0, 40)};
+			const results = [];
+
+			const magicResult = {magic : magicRaw.trim(), from : "file"};
 			if(magicExtensionsRaw && magicExtensionsRaw.length>0 && magicExtensionsRaw.trim()!=="???")
 				magicResult.extensions = magicExtensionsRaw.trim().toLowerCase().split("/").map(ext => (ext.charAt(0)==="." ? "" : ".") + ext).filter(ext => ext!==".???");
+			results.push(magicResult);
 
-			return [magicResult, ...JSON.parse(trididRaw)].multiSort(match => (match.percentage || 0), true);
+			results.push(...JSON.parse(trididRaw).map(v => { v.from = "trid"; return v; }));
+
+			if(fidoRaw && fidoRaw.trim().length>0)
+				results.push({magic : fidoRaw.trim(), from : "fido"});
+
+			return results.multiSort(match => (match.percentage || 0), true);
 		},
 		cb
 	);
