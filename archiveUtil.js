@@ -170,6 +170,9 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "arc":
 					runUtil.run("arc", ["x", filePath], {cwd : extractionPath, silent : true}, this);
 					break;
+				case "rsrc":
+					runUtil.run("deark", ["-od", extractionPath, "-o", path.basename(filePath, path.extname(filePath)), filePath], runUtil.SILENT, this);	// Can pass this to RAW extract all resources: "-opt", "macrsrc:extractraw"
+					break;
 				case "lbr":
 					runUtil.run("lbrate", [filePath], {cwd : extractionPath, silent : true}, this);
 					break;
