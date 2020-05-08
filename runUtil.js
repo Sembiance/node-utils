@@ -3,6 +3,7 @@
 
 const XU = require("@sembiance/xu"),
 	process = require("process"),
+	{performance} = require("perf_hooks"),
 	childProcess = require("child_process");
 
 // Options include:
@@ -15,10 +16,8 @@ const XU = require("@sembiance/xu"),
 // redirect-stderr : Redirect all stderr content to stdout result
 //             env : Pass an object of key/value pairs to set for environment variables
 //         timeout : Number of 'ms' to allow the process to run and then terminate it
-exports.run = function run(command, args, options={}, cb=() => {})
+exports.run = function run(_command, _args, options={}, cb=() => {})
 {
-	if(!options.silent)
-		console.log("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
 	if(!options.maxBuffer)
 		options.maxBuffer = (1024*1024)*20;	// 20MB Buffer
 	if(!options.hasOwnProperty("redirect-stderr"))
@@ -27,6 +26,19 @@ exports.run = function run(command, args, options={}, cb=() => {})
 	if(options.env)
 		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line no-process-env
 	
+	let command = _command;
+	const args = _args.slice();
+	if(options.virtualX)
+	{
+		// If running a virtual X, we use xvfb-run instead. It's -a arg auto finds an open X display number but still suffers from race conditions
+		// So we start it's search at a quasi random 3 digit number pulled from the last 3 sub-ms of performance.now
+		args.unshift("--server-num=" + (""+performance.now()).reverse().substring(0, 3), "-a", command);
+		command = "xvfb-run";
+	}
+
+	if(!options.silent)
+		console.log("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
+
 	let p = null;
 	if(options.detached)
 	{

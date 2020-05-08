@@ -7,6 +7,10 @@ const XU = require("@sembiance/xu"),
 	fileUtil = require("./fileUtil"),
 	path = require("path");
 
+// Resources for controlling dosbox more via xdotool through xvfb:
+// https://unix.stackexchange.com/questions/259294/use-xvfb-to-automate-x-program
+// https://stackoverflow.com/questions/5094389/automation-using-xdotool-and-xvfb
+
 class DOS
 {
 	constructor(_masterHDFilePath=path.join(__dirname, "dos", "hd.img"), _debug=false)
@@ -218,6 +222,7 @@ class DOS
 		tiptoe(
 			function appendLines()
 			{
+				// Use this to delay X (3) seconds: "choice /N /Ty,3",
 				self.appendToAutoExec([...lines, "REBOOT.COM"], this);
 			},
 			function runEm()
@@ -280,11 +285,7 @@ class DOS
 		tiptoe(
 			function runDOSBox()
 			{
-				const dosBoxArgs = ["-conf", self.configFilePath];
-				if(!self.debug)
-					dosBoxArgs.unshift("dosbox");
-
-				runUtil.run(self.debug ? "dosbox" : "xvfb-run", dosBoxArgs, {silent : true, detached : true}, this);
+				runUtil.run("dosbox", ["-conf", self.configFilePath], {virtualX : !self.debug, silent : true, detached : true}, this);
 			},
 			function recordChildProcess(cp)
 			{
