@@ -11,6 +11,37 @@ const COMMAND_MPLAYER = "/usr/bin/mplayer";
 const COMMAND_MOGRIFY = "/usr/bin/mogrify";
 const COMMAND_CONVERT = "/usr/bin/convert";
 
+exports.convert = function convert(srcFilePath, outFilePath, _options, _cb)
+{
+	const {options, cb} = XU.optionscb(_options, _cb, {method : "HEAD"});
+
+	tiptoe(
+		function getCropInfoIfNeeded()
+		{
+			if(!options.autocrop)
+				return this();
+			
+			runUtil.run("ffmpeg", ["-i", srcFilePath, "-t", "1", "-vf", "cropdetect", "-f", "null", "-"], runUtil.SILENT, this);
+		},
+		function performConversion(cropInfoRaw)
+		{
+			const convertArgs = ["-i", srcFilePath];
+
+			// Should we auto-crop?
+			if(options.autocrop && cropInfoRaw)
+			{
+				const cropProps = cropInfoRaw.toString("utf8").trim().split("\n").reverse().find(line => line.match(/crop=[^\n]+/));
+				if(cropProps && cropProps.length===1)
+					convertArgs.push("-vf", cropProps[0].trim());
+			}
+			convertArgs.push(outFilePath);
+
+			runUtil.run("ffmpeg", convertArgs, runUtil.SILENT, this);
+		},
+		cb
+	);
+};
+
 exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thumbnailPath, thumbnailWidth, thumbnailHeight, cb)
 {
 	tiptoe(
