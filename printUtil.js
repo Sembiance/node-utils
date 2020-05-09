@@ -240,10 +240,10 @@ exports.log = function log(s, ...args)
 					v = args[codeNum++];
 					break;
 				case "j":
-					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity, breakLength : Infinity});
+					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity, maxArrayLength : Infinity, breakLength : Infinity});
 					break;
 				case "J":
-					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity});
+					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity, maxArrayLength : Infinity});
 					break;
 			}
 

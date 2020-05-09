@@ -14,8 +14,8 @@ const OUTPUT_DIR = fileUtil.generateTempFilePath();
 /* eslint-disable comma-spacing, max-len */
 const TEST_PARAMS =
 {
+	rsrc       : {archiveFile : "blackfor.rsrc", filenames : ["blackfor.000.icns"], hash : {filename : "blackfor.000.icns", sum : "1120f28a9ed0657c83263583f86825a0"}},
 	stc        : {archiveFile : "MA2", filenames : ["MA2.unpacked"], hash : {filename : "MA2.unpacked", sum : "446f663a8882fc10f19fcf75a9b3dd1f"}},
-	rsrc       : {archiveFile : "blackfor.rsrc", filenames : ["blackfor.000.icns","blackfor.000.POST.bin","blackfor.001.POST.bin","blackfor.002.POST.bin","blackfor.003.POST.bin","blackfor.004.POST.bin","blackfor.005.POST.bin","blackfor.006.POST.bin","blackfor.007.POST.bin","blackfor.008.ICN#.bin","blackfor.009.FREF.bin","blackfor.010.BNDL.bin","blackfor.011.ACP1.bin","blackfor.012.vers.bin"], hash : {filename : "blackfor.000.icns", sum : "1120f28a9ed0657c83263583f86825a0"}},
 	tscomp     : {archiveFile : "TWOFILES.TSC", filenames : ["A.TXT", "B.TXT"], hash : {filename : "B.TXT", sum : "fb59fc0592398f60b5d05299b2bb976f"}},
 	lha        : {archiveFile : "hexify.lha", filenames : ["hexify/hexify.c","hexify/hexify.h","hexify/hexify.readme","hexify/LICENSE","hexify/Makefile","hexify/sample","hexify/sample.c"], hash : {filename : "hexify/Makefile", sum : "35f2105b032f4668b1d284e0404cb076"}},
 	arc        : {archiveFile : "CHRISTIE.ARC", filenames : ["CHRISTIE.MAC","READMAC.EXE"], hash : {filename : "CHRISTIE.MAC", sum : "653620bafbbf434714bb8bbcb2563499"}},
