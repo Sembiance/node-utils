@@ -191,8 +191,9 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "ico":
 					runUtil.run("convert", [filePath, path.join(extractionPath, filenameWithExt + ".png")], runUtil.SILENT, this);
 					break;
+				case "stc":
 				case "xpk":
-					runUtil.run("amigadepacker", ["-o", path.join(extractionPath, (ext===".xpk" ? path.basename(filenameWithExt, ext) : (filenameWithExt + ".unpacked"))), filePath], runUtil.SILENT, this);
+					runUtil.run("amigadepacker", ["-o", path.join(extractionPath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : (filenameWithExt + ".unpacked"))), filePath], runUtil.SILENT, this);
 					break;
 				case "tar":
 					runUtil.run("tar", ["-xf", filePath, "-C", extractionPath], runUtil.SILENT, this);
