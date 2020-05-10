@@ -6,7 +6,6 @@ const XU = require("@sembiance/xu"),
 	uuid = require("uuid/v4"),
 	os = require("os"),
 	runUtil = require("./runUtil.js"),
-	progressStream = require("progress-stream"),
 	rimraf = require("rimraf"),		// eslint-disable-line
 	tiptoe = require("tiptoe");
 
@@ -150,38 +149,6 @@ exports.concat = function concat(_files, dest, _options, _cb)
 	concatNext();
 };
 
-// Copies a file from src to dest
-exports.copy = function copy(src, dest, _options, _cb)
-{
-	const {options, cb} = XU.optionscb(_options, _cb, {});
-
-	if(src===dest)
-		return cb(new Error("src and dest are identical: " + src));
-
-	let cbCalled = false;
-
-	const rd = fs.createReadStream(src);
-	rd.on("error", done);
-
-	const wr = fs.createWriteStream(dest);
-	wr.on("error", done);
-
-	wr.on("close", () => done());
-	if(options.progressBar)
-		rd.pipe(progressStream({time : 100}, progress => options.progressBar.tick(progress.delta))).pipe(wr);
-	else
-		rd.pipe(wr);
-
-	function done(err)
-	{
-		if(!cbCalled)
-		{
-			cbCalled = true;
-			return cb(err);
-		}
-	}
-};
-
 // Moves a file from src to dest, works even across disks
 exports.move = function move(src, dest, cb)
 {
@@ -210,7 +177,7 @@ exports.move = function move(src, dest, cb)
 			if(!err)
 				return this.finish();
 
-			exports.copy(src, dest, this);
+			fs.copyFile(src, dest, this);
 		},
 		function removeFile()
 		{

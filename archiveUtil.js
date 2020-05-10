@@ -134,7 +134,7 @@ function extractWithCommandAndSuffix(command, suffix, filePath, extractionPath, 
 		},
 		function copyFileToWorkDirWithSuffix()
 		{
-			fileUtil.copy(filePath, path.join(WORK_DIR, filenameWithSuffix), this);
+			fs.copyFile(filePath, path.join(WORK_DIR, filenameWithSuffix), this);
 		},
 		function performExtraction()
 		{
@@ -241,7 +241,7 @@ function pcxlibExtract(filePath, extractionPath, cb)
 		},
 		function copyFileResults(extractedFiles)
 		{
-			(extractedFiles || []).parallelForEach((extractedFile, subcb) => fileUtil.copy(extractedFile, path.join(extractionPath, path.basename(extractedFile)), subcb), this);
+			(extractedFiles || []).parallelForEach((extractedFile, subcb) => fs.copyFile(extractedFile, path.join(extractionPath, path.basename(extractedFile)), subcb), this);
 		},
 		function cleanup()
 		{
@@ -287,7 +287,7 @@ exports.zipFiles = function zipFiles(_filePaths, zipPath, options, cb)
 				const destFilePath = path.join(this.data.tmpRenameDir, renameTo);
 				filePaths[i] = destFilePath;
 				
-				fileUtil.copy(path.join((options.cwd || ""), filePath), destFilePath, subcb);
+				fs.copyFile(path.join((options.cwd || ""), filePath), destFilePath, subcb);
 			}, this);
 		},
 		function createZip()

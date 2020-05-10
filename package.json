@@ -1,10 +1,10 @@
 {
 	"name"         : "@sembiance/xutil",
-	"version"      : "1.24.1",
+	"version"      : "1.24.2",
 	"author"       : "Robert Schultz <robert@cosmicrealms.com>",
 	"description"  : "common util functions I use in many of my node projects",
 	"main"         : "index.js",
-	"engines"      : { "node" : ">6.5.0" },
+	"engines"      : { "node" : ">8.5.0" },
 	"repository"   :
 	{
 		"type" : "git",

@@ -67,7 +67,7 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 			if(thumbnailPath.endsWith(".png"))
 				runUtil.run(COMMAND_CONVERT, [path.join(this.data.tempDir, "00000001.jpg"), thumbnailPath], runUtil.SILENT, this);
 			else
-				fileUtil.copy(path.join(this.data.tempDir, "00000001.png"), thumbnailPath, this);
+				fs.copyFile(path.join(this.data.tempDir, "00000001.png"), thumbnailPath, this);
 		},
 		function removeTempDirectory()
 		{

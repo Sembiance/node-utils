@@ -45,8 +45,8 @@ class DOS
 			},
 			function copyHDImgAndReadConfig()
 			{
-				fileUtil.copy(self.masterHDFilePath, self.hdFilePath, this.parallel());
-				fileUtil.copy(self.masterConfigFilePath, self.configFilePath, this.parallel());
+				fs.copyFile(self.masterHDFilePath, self.hdFilePath, this.parallel());
+				fs.copyFile(self.masterConfigFilePath, self.configFilePath, this.parallel());
 			},
 			function addMountAndBootToConfig()
 			{
@@ -77,7 +77,7 @@ class DOS
 			{
 				this.data.wasAlreadyMounted = wasAlreadyMounted;
 
-				fileUtil.copy(srcFilePath, path.join(hdMountDirPath, dosFileSubPath), this);
+				fs.copyFile(srcFilePath, path.join(hdMountDirPath, dosFileSubPath), this);
 			},
 			function unmountIfNeeded()
 			{
@@ -107,9 +107,9 @@ class DOS
 				this.data.wasAlreadyMounted = wasAlreadyMounted;
 
 				if(Array.isArray(dosFilesSubPath))
-					dosFilesSubPath.parallelForEach((dosFileSubPath, subcb) => fileUtil.copy(path.join(hdMountDirPath, dosFileSubPath), path.join(destPath, path.basename(dosFileSubPath)), subcb), this);
+					dosFilesSubPath.parallelForEach((dosFileSubPath, subcb) => fs.copyFile(path.join(hdMountDirPath, dosFileSubPath), path.join(destPath, path.basename(dosFileSubPath)), subcb), this);
 				else
-					fileUtil.copy(path.join(hdMountDirPath, dosFilesSubPath), destPath, this);
+					fs.copyFile(path.join(hdMountDirPath, dosFilesSubPath), destPath, this);
 			},
 			function unmountIfNeeded()
 			{

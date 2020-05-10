@@ -3,6 +3,7 @@
 const XU = require("@sembiance/xu"),
 	path = require("path"),
 	fileUtil = require("./fileUtil.js"),
+	fs = require("fs"),
 	runUtil = require("./runUtil.js"),
 	tiptoe = require("tiptoe");
 
@@ -37,7 +38,7 @@ exports.randomCrop = function randomCrop(inputPath, outputPath, targetWidth, tar
 		function calcOffsetsAndCrop(dimensions)
 		{
 			if(targetWidth===dimensions[0] && targetHeight===dimensions[1])
-				return fileUtil.copy(inputPath, outputPath, this), undefined;
+				return fs.copyFile(inputPath, outputPath, this), undefined;
 				
 			const xOffset = (targetWidth<dimensions[0]) ? Math.randomInt(0, (dimensions[0]-targetWidth)) : 0;
 			const yOffset = (targetHeight<dimensions[1]) ? Math.randomInt(0, (dimensions[1]-targetHeight)) : 0;
@@ -63,7 +64,7 @@ exports.compress = function compress(input, output, lossy, cb)
 			if(input===output)
 			{
 				const inputTMP = fileUtil.generateTempFilePath();
-				fileUtil.copy(input, inputTMP, this);
+				fs.copyFile(input, inputTMP, this);
 				input = inputTMP;	// eslint-disable-line no-param-reassign
 				deleteInput = true;
 			}
@@ -75,7 +76,7 @@ exports.compress = function compress(input, output, lossy, cb)
 		function prepare()
 		{
 			if(extension==="png")
-				fileUtil.copy(input, tmpFile, this);
+				fs.copyFile(input, tmpFile, this);
 			else
 				this();
 		},
