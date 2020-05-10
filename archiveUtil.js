@@ -16,6 +16,7 @@ const RAM_DIR = "/mnt/ram";
 exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 {
 	const filenameWithExt = path.basename(filePath);
+	const filenameWithoutExt = path.basename(filenameWithExt, path.extname(filenameWithExt));
 	const ext = path.extname(filenameWithExt);
 	const runOptions = {silent : true, cwd : path.dirname(filePath)};
 	const relativeToExtractionPath = [path.relative(runOptions.cwd, extractionPath), extractionPath].multiSort(a => a.length)[0];	// Pick whichever arg is shorter to avoid "argument loo longer" errors
@@ -59,16 +60,16 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					runUtil.run("tar", ["-xf", filenameWithExt, "-C", relativeToExtractionPath], runOptions, this);
 					break;
 				case "ttcomp":
-					runUtil.run("ttdecomp", [filenameWithExt, path.join(relativeToExtractionPath, filenameWithExt + ".unpacked")], runOptions, this);
+					runUtil.run("ttdecomp", [filenameWithExt, path.join(relativeToExtractionPath, filenameWithoutExt)], runOptions, this);
 					break;
 				case "adf":
 					runUtil.run("xdftool", [filenameWithExt, "unpack", relativeToExtractionPath], runOptions, this);
 					break;
 				case "stc":
 				case "xpk":
-					runUtil.run("amigadepacker", ["-o", path.join(relativeToExtractionPath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : (filenameWithExt + ".unpacked"))), filenameWithExt], runOptions, this);
+					runUtil.run("amigadepacker", ["-o", path.join(relativeToExtractionPath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : filenameWithoutExt)), filenameWithExt], runOptions, this);
 					break;
-				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : (filenameWithExt + ".unpacked")))], runUtil.SILENT, this);
+				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
 				case "dms":
 				case "lzx":
 				case "sit":

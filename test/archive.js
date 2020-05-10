@@ -15,12 +15,12 @@ const OUTPUT_DIR = fileUtil.generateTempFilePath();
 const TEST_PARAMS =
 {
 	rsrc       : {archiveFile : "blackfor.rsrc", filenames : ["blackfor.000.icns"], hash : {filename : "blackfor.000.icns", sum : "1120f28a9ed0657c83263583f86825a0"}},
-	stc        : {archiveFile : "MA2", filenames : ["MA2.unpacked"], hash : {filename : "MA2.unpacked", sum : "446f663a8882fc10f19fcf75a9b3dd1f"}},
+	stc        : {archiveFile : "MA2", filenames : ["MA2"], hash : {filename : "MA2", sum : "446f663a8882fc10f19fcf75a9b3dd1f"}},
 	tscomp     : {archiveFile : "TWOFILES.TSC", filenames : ["A.TXT", "B.TXT"], hash : {filename : "B.TXT", sum : "fb59fc0592398f60b5d05299b2bb976f"}},
 	lha        : {archiveFile : "hexify.lha", filenames : ["hexify/hexify.c","hexify/hexify.h","hexify/hexify.readme","hexify/LICENSE","hexify/Makefile","hexify/sample","hexify/sample.c"], hash : {filename : "hexify/Makefile", sum : "35f2105b032f4668b1d284e0404cb076"}},
 	arc        : {archiveFile : "CHRISTIE.ARC", filenames : ["CHRISTIE.MAC","READMAC.EXE"], hash : {filename : "CHRISTIE.MAC", sum : "653620bafbbf434714bb8bbcb2563499"}},
 	pcxlib     : {archiveFile : "POKER.PCL", filenames : ["ASP.PCC", "CARDS.PCC", "DECK.PCX", "EMLOGO.PCC", "POKER.PCC", "WELCOME.PCC"], hash : {filename : "CARDS.PCC", sum : "386ef6988fd2bc620dfa186463b76b72"}},
-	ttcomp     : {archiveFile : "quickgif.__d", filenames : ["quickgif.__d.unpacked"], hash : {filename : "quickgif.__d.unpacked", sum : "0a34340a86c6a437bb6b7207b48b735a"}},
+	ttcomp     : {archiveFile : "quickgif.__d", filenames : ["quickgif"], hash : {filename : "quickgif", sum : "0a34340a86c6a437bb6b7207b48b735a"}},
 	sit        : {archiveFile : "blackfor.sit", filenames : ["BlackForest ƒ/BlackFor.rsrc","BlackForest ƒ/BlackForest.AFM","BlackForest ƒ/BlackForest.bmap.rsrc","BlackForest ƒ/Read Me First!!"], hash : {filename : "BlackForest ƒ/BlackFor.rsrc", sum : "4fee556ca486335cf9d0ea5c1165ff73"}},
 	iso        : {archiveFile : "test.iso", filenames : ["autorun.inf","INET.exe","README.txt"], hash : {filename : "INET.exe", sum : "fcd64a8ff61ae4fd07fc7b8d3646b6e2"}},
 	ico        : {archiveFile : "favicon.ico", filenames : [].pushSequence(0, 5).map(iconNum => ("favicon.ico-" + iconNum + ".png")), hash : {filename : "favicon.ico-1.png", sum : "4ac74e067d8e8851cb1e3204c6f8bffe"}},
