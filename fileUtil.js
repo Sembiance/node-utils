@@ -87,6 +87,62 @@ exports.mkdirp = function mkdirp(dirPath, cb)
 	}, cb);
 };
 
+// Copies a directory recursively from srcDirPath to destDirPath
+exports.copyDirSync = function copyDirSync(srcDirPath, destDirPath)
+{
+	if(!exports.existsSync(destDirPath))
+		fs.mkdirSync(destDirPath);
+	
+	if(fs.lstatSync(srcDirPath).isDirectory())
+	{
+		fs.readdirSync(srcDirPath).forEach(subFilename =>
+		{
+			const srcDirSubFilePath = path.join(srcDirPath, subFilename);
+			if(fs.lstatSync(srcDirSubFilePath).isDirectory())
+				exports.copyDirSync(srcDirSubFilePath, path.join(destDirPath, subFilename));
+			else
+				fs.copyFileSync(srcDirSubFilePath, path.join(destDirPath, subFilename));
+		});
+	}
+};
+
+exports.copyDir = function copyDir(srcDirPath, destDirPath, cb)
+{
+	tiptoe(
+		function collectInfo()
+		{
+			exports.exists(destDirPath, this.parallel());
+			fs.lstat(srcDirPath, this.parallel());
+		},
+		function makeDirIfNeeded(destDirExists, srcDirStat)
+		{
+			if(!srcDirStat.isDirectory())
+				return this.finish();
+
+			if(!destDirExists)
+				fs.mkdir(destDirPath, this);
+			else
+				this();
+		},
+		function readSrcDir()
+		{
+			fs.readdir(srcDirPath, this);
+		},
+		function copyFilesAndDirs(srcDirFilenames)
+		{
+			srcDirFilenames.serialForEach((srcDirFilename, subcb) =>
+			{
+				const srcDirSubFilePath = path.join(srcDirPath, srcDirFilename);
+				if(fs.lstatSync(srcDirSubFilePath).isDirectory())
+					exports.copyDir(srcDirSubFilePath, path.join(destDirPath, srcDirFilename), subcb);
+				else
+					fs.copyFile(srcDirSubFilePath, path.join(destDirPath, srcDirFilename), subcb);
+			}, this);
+		},
+		cb
+	);
+};
+
 // Creates the given dirPath and all parent directories. If already there, doesn't throw error. Sync version.
 exports.mkdirpSync = function mkdirpSync(dirPath)
 {
