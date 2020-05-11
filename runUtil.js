@@ -2,7 +2,6 @@
 /* eslint-disable no-param-reassign */
 
 const XU = require("@sembiance/xu"),
-	process = require("process"),
 	{performance} = require("perf_hooks"),
 	childProcess = require("child_process");
 
@@ -24,7 +23,7 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 		options["redirect-stderr"] = true;
 	
 	if(options.env)
-		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line no-process-env
+		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line node/no-process-env
 	
 	let command = _command;
 	const args = _args.slice();

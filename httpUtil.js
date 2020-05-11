@@ -2,7 +2,6 @@
 
 const XU = require("@sembiance/xu"),
 	fs = require("fs"),
-	url = require("url"),
 	path = require("path"),
 	fileUtil = require("./fileUtil.js"),
 	http = require("http"),
@@ -125,7 +124,7 @@ exports.put = function put(targetURL, putData, _options, _cb)
 // The actual handler of all the above
 function httpExecute(targetURL, options, cb)
 {
-	const uo = new url.URL(targetURL);
+	const uo = new URL(targetURL);
 
 	const requestOptions =
 	{
@@ -224,7 +223,7 @@ function httpExecute(targetURL, options, cb)
 		}
 		else
 		{
-			cb(err);	// eslint-disable-line callback-return
+			return cb(err);
 		}
 	});
 

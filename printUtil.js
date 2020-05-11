@@ -245,6 +245,9 @@ exports.log = function log(s, ...args)
 				case "J":
 					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity, maxArrayLength : Infinity});
 					break;
+				default:
+					console.log("Unknown group type: %s", code.groups.type);
+					break;
 			}
 
 			if(code.groups.numLength && ((+code.groups.numLength)-v.length)>0)

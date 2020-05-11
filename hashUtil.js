@@ -10,6 +10,9 @@ const XU = require("@sembiance/xu"),
 exports.hashFile = hashFile;
 function hashFile(algorithm, filePath, cb)
 {
+	if(!cb)
+		throw new Error("No callback! Did you forget to include the algorithm?");
+		
 	tiptoe(
 		function checkExistance()
 		{

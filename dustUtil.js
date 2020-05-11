@@ -12,14 +12,14 @@ function render(basePath, name, data, _options, _cb)
 
 	const readDustFile = function(n, subcb) { fs.readFile(path.join(basePath, n + (n.endsWith(".dust") ? "" : ".dust")), "utf8", subcb); };
 
-	const dust = require("dustjs-linkedin");	// eslint-disable-line global-require
+	const dust = require("dustjs-linkedin");	// eslint-disable-line node/global-require
 
 	if(options.disableCache)
 		dust.config.cache = false;
 
 	dust.filters.lowercase = value => (typeof value==="string" ? value.toLowerCase() : value);
 
-	dust.helper = require("dustjs-helpers");	// eslint-disable-line global-require
+	dust.helper = require("dustjs-helpers");	// eslint-disable-line node/global-require
 	dust.onLoad = readDustFile;
 
 	tiptoe(
