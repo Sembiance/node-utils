@@ -68,7 +68,7 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 
 		if(stderr)
 		{
-			stderr = stderr.replace(/Xlib:[ ]+extension "RANDR" missing on display "[^:]*:[^"]+".\n?/, "");
+			stderr = stderr.replace(/Xlib: +extension "RANDR" missing on display "[^:]*:[^"]+".\n?/, "");
 			stderr = stderr.trim();
 			if(!stderr.length)
 				stderr = null;

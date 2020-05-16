@@ -41,7 +41,7 @@ class DOS
 		tiptoe(
 			function mkWorkDir()
 			{
-				fileUtil.mkdirp(self.workDir, this);
+				fs.mkdir(self.workDir, {recursive : true}, this);
 			},
 			function copyHDImgAndReadConfig()
 			{
@@ -66,6 +66,9 @@ class DOS
 	{
 		if(!this.setupDone)
 			throw new Error("Setup hasn't been run yet!");
+		
+		if(path.basename(dosFileSubPath, path.extname(dosFileSubPath)).length>8 || path.extname(dosFileSubPath)>3)
+			throw new Error("Invalid DOS 8.3 filename. Filename can't be longer than 8 chars, extension can't be longer than 3: " + path.basename(dosFileSubPath));
 
 		const self=this;
 		tiptoe(
@@ -95,6 +98,12 @@ class DOS
 	{
 		if(!this.setupDone)
 			throw new Error("Setup hasn't been run yet!");
+
+		Array.force(dosFilesSubPath).forEach(dosFileSubPath =>
+		{
+			if(path.basename(dosFileSubPath, path.extname(dosFileSubPath)).length>8 || path.extname(dosFileSubPath)>3)
+				throw new Error("Invalid DOS 8.3 filename. Filename can't be longer than 8 chars, extension can't be longer than 3: " + path.basename(dosFileSubPath));
+		});
 
 		const self=this;
 		tiptoe(
@@ -170,7 +179,7 @@ class DOS
 		tiptoe(
 			function createMountDir()
 			{
-				fileUtil.mkdirp(self.hdMountDirPath, this);
+				fs.mkdir(self.hdMountDirPath, {recursive : true}, this);
 			},
 			function attachLoopDevice()
 			{
@@ -178,7 +187,7 @@ class DOS
 			},
 			function mountHDImage(rawOut)
 			{
-				self.loopNum = +rawOut.toString("utf8").trim().match(/^\/dev\/loop(?<loopNum>[0-9]+)/).groups.loopNum;
+				self.loopNum = +rawOut.toString("utf8").trim().match(/^\/dev\/loop(?<loopNum>\d+)/).groups.loopNum;
 				
 				runUtil.run("sudo", ["mount", "-t", "vfat", "-o", "uid=7777", "/dev/loop" + self.loopNum + "p1", self.hdMountDirPath], runUtil.SILENT, this);
 			},
@@ -224,6 +233,7 @@ class DOS
 			{
 				// Use this to delay X (3) seconds: "choice /N /Ty,3",
 				self.appendToAutoExec([...lines, "REBOOT.COM"], this);
+				//self.appendToAutoExec(lines, this);	// Comment out above line and uncomment this to debug by not rebooting the DOS window
 			},
 			function runEm()
 			{
@@ -285,7 +295,7 @@ class DOS
 		tiptoe(
 			function runDOSBox()
 			{
-				runUtil.run("dosbox", ["-conf", self.configFilePath], {virtualX : !self.debug, silent : true, detached : true}, this);
+				runUtil.run("dosbox", ["-conf", self.configFilePath], {virtualX : !self.debug, silent : !self.debug, detached : true}, this);
 			},
 			function recordChildProcess(cp)
 			{

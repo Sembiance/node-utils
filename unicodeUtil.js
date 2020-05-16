@@ -14,7 +14,7 @@ const categories =
 	other       : ["Cc", "Cf", "Co", "Cs"]	// Cn
 };
 
-const categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.assign(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line node/global-require
+let categoryData = null;
 
 // Fixes unicode characters, converting them to UTF8. This fixes problems with glob() and readdir() etc. because v8 only supports UTF8 encodings, sigh.
 exports.fixDirEncodings = function fixDirEncodings(dirPath, cb)
@@ -40,6 +40,8 @@ exports.getCategory = function getCategory(charOrCharCode)
 function getCharCodeCategory(charCode)
 {
 	let result = null;
+	if(categoryData===null)
+		categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.assign(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line node/global-require
 
 	Object.forEach(categoryData, (categoryName, data) =>
 	{

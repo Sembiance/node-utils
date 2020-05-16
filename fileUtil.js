@@ -5,9 +5,28 @@ const XU = require("@sembiance/xu"),
 	path = require("path"),
 	uuid = require("uuid/v4"),
 	os = require("os"),
+	globModule = require("glob"),	// eslint-disable-line node/no-restricted-require
 	runUtil = require("./runUtil.js"),
-	rimraf = require("rimraf"),		// eslint-disable-line
 	tiptoe = require("tiptoe");
+
+// Glob has many built in issues, which is probably why the author wants to rewrite it: https://github.com/isaacs/node-glob/issues/405
+// This wrapper is an attempt to fix some of the issues that I myself have run into when using glob. sigh.
+exports.glob = function glob(baseDirPath, matchPattern, _options, _cb)
+{
+	const {options, cb} = XU.optionscb(_options, _cb, {});
+
+	// We always set dot to true, because it's not really obvious that it's going to exclude some files just because they start with a period
+	// We also set the 'cwd' to the baseDirPath. Without this, if baseDirPath was part of the match pattern many characters would need to be manually escaped like brackets, question marks and other regex-like patterns.
+	const globOptions = Object.assign({dot : true, cwd : baseDirPath}, options);
+	globModule(matchPattern, globOptions, (err, results) =>
+	{
+		if(err)
+			return setImmediate(() => cb(err));
+		
+		// Since we changed our cwd, we need to resolve our results relative to that
+		cb(undefined, results.map(v => path.resolve(path.join(baseDirPath, v))));
+	});
+};
 
 // Returns an array of possible identifications of this file type based on the output from `trid`
 exports.identify = function identify(filePath, cb)
@@ -15,8 +34,8 @@ exports.identify = function identify(filePath, cb)
 	tiptoe(
 		function runTrid()
 		{
-			runUtil.run("file", ["-m", "/usr/share/misc/magic.mgc:/mnt/compendium/sys/magic/my-magic", "-b", filePath], runUtil.SILENT, this.parallel());
-			runUtil.run("file", ["-m", "/usr/share/misc/magic.mgc:/mnt/compendium/sys/magic/my-magic", "-b", "--extension", filePath], runUtil.SILENT, this.parallel());
+			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic:/usr/share/misc/magic.mgc", "-b", filePath], runUtil.SILENT, this.parallel());
+			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic:/usr/share/misc/magic.mgc", "-b", "--extension", filePath], runUtil.SILENT, this.parallel());
 			runUtil.run("tridid", ["--jsonOutput", filePath], runUtil.SILENT, this.parallel());
 			runUtil.run("fido", ["-q", "-noextension", "-matchprintf", "%(info.formatname)s", filePath], runUtil.SILENT, this.parallel());
 		},
@@ -67,24 +86,6 @@ exports.searchReplace = function searchReplace(file, match, replace, cb)
 		},
 		cb
 	);
-};
-
-// Creates the given dirPath and all parent directories. If already there, doesn't throw error
-exports.mkdirp = function mkdirp(dirPath, cb)
-{
-	let builtPath = "";
-
-	dirPath.split(path.sep).serialForEach((dirPart, subcb) =>
-	{
-		builtPath += (builtPath.endsWith(path.sep) ? "" : path.sep) + dirPart;
-		exports.exists(builtPath, (err, exists) =>
-		{
-			if(!exists)
-				fs.mkdir(builtPath, () => setImmediate(subcb));
-			else
-				setImmediate(subcb);
-		});
-	}, cb);
 };
 
 // Copies a directory recursively from srcDirPath to destDirPath
@@ -141,19 +142,6 @@ exports.copyDir = function copyDir(srcDirPath, destDirPath, cb)
 		},
 		cb
 	);
-};
-
-// Creates the given dirPath and all parent directories. If already there, doesn't throw error. Sync version.
-exports.mkdirpSync = function mkdirpSync(dirPath)
-{
-	let builtPath = "";
-
-	dirPath.split(path.sep).forEach(dirPart =>
-	{
-		builtPath += (builtPath.endsWith(path.sep) ? "" : path.sep) + dirPart;
-		if(!exports.existsSync(builtPath))
-			fs.mkdirSync(builtPath);
-	});
 };
 
 // Concatenates the _files array to dest
@@ -278,7 +266,7 @@ exports.unlink = function unlink(target, cb)
 				return setImmediate(cb);
 				
 			if(stats.isDirectory())
-				rimraf(target, cb);
+				fs.rmdir(target, {recursive : true}, cb);
 			else
 				fs.unlink(target, cb);
 		});

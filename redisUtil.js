@@ -4,7 +4,7 @@ const XU = require("@sembiance/xu");
 
 exports.hmget = function hmget(redis, ...args)
 {
-	const redisArgs = args.slice(0, args.length-1);
+	const redisArgs = args.slice(0, -1);
 
 	redis.hmget(redisArgs, (err, data) =>
 	{

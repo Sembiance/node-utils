@@ -5,16 +5,14 @@ const XU = require("@sembiance/xu"),
 	path = require("path"),
 	tiptoe = require("tiptoe"),
 	fs = require("fs"),
-	glob = require("glob"),
 	fileUtil = require("../index").file;
 
-const UTF8 = { encoding : "utf8" };
 const FILES_DIR = path.join(__dirname, "files");
 
 // TEST: copyDir && copyDirSync
 function testCopyDir(cb)
 {
-	const expectedFiles = ["/tmp/xutilTestDir","/tmp/xutilTestDir/a.txt","/tmp/xutilTestDir/number","/tmp/xutilTestDir/subdir","/tmp/xutilTestDir/subdir/another","/tmp/xutilTestDir/subdir/another/andMore","/tmp/xutilTestDir/subdir/another/andMore/emptydir","/tmp/xutilTestDir/subdir/another/andMore/hi.txt","/tmp/xutilTestDir/subdir/b.txt","/tmp/xutilTestDir/subdir/c.txt"];	// eslint-disable-line max-len, comma-spacing
+	const expectedFiles = ["/tmp/xutilTestDir/a.txt","/tmp/xutilTestDir/number","/tmp/xutilTestDir/subdir","/tmp/xutilTestDir/subdir/another","/tmp/xutilTestDir/subdir/another/andMore","/tmp/xutilTestDir/subdir/another/andMore/emptydir","/tmp/xutilTestDir/subdir/another/andMore/hi.txt","/tmp/xutilTestDir/subdir/b.txt","/tmp/xutilTestDir/subdir/c.txt"];	// eslint-disable-line max-len, comma-spacing
 	
 	tiptoe(
 		function prepare()
@@ -24,7 +22,7 @@ function testCopyDir(cb)
 		function testSync()
 		{
 			fileUtil.copyDirSync(path.join(__dirname, "files", "dirTest"), "/tmp/xutilTestDir");
-			glob("/tmp/xutilTestDir/**", this);
+			fileUtil.glob("/tmp/xutilTestDir", "**", {nodor : true}, this);
 		},
 		function verifyAndPrepare(globFiles)
 		{
@@ -37,7 +35,7 @@ function testCopyDir(cb)
 		},
 		function listResultingFiles()
 		{
-			glob("/tmp/xutilTestDir/**", this);
+			fileUtil.glob("/tmp/xutilTestDir", "**", this);
 		},
 		function verifyAndCleanup(globFiles)
 		{
@@ -78,8 +76,11 @@ function testExists(cb)
 // TEST: generateTempFilePath
 const DIR_TEST_PATH = fileUtil.generateTempFilePath();
 const FILE_TEST_PATH = fileUtil.generateTempFilePath();
-fs.mkdirSync(DIR_TEST_PATH);
-fs.writeFileSync(FILE_TEST_PATH, "hello", UTF8);
+fs.mkdirSync(path.join(DIR_TEST_PATH, "subdir"), {recursive : true});
+fs.writeFileSync(path.join(DIR_TEST_PATH, "abc.txt"), "abc123", XU.UTF8);
+fs.writeFileSync(path.join(DIR_TEST_PATH, "subdir", "subfile.dat"), "DATA\nGOES\nHERE", XU.UTF8);
+
+fs.writeFileSync(FILE_TEST_PATH, "hello", XU.UTF8);
 assert.strictEqual(fileUtil.existsSync(DIR_TEST_PATH), true);
 assert.strictEqual(fileUtil.existsSync(FILE_TEST_PATH), true);
 
@@ -120,14 +121,58 @@ function testConcat(cb)
 		function verifyExistanceAndCleanup(err)
 		{
 			assert(!err);
-			assert.strictEqual(fs.readFileSync(path.join(FILES_DIR, "ab.txt"), UTF8), fs.readFileSync(CONCAT_DEST_PATH, UTF8));
+			assert.strictEqual(fs.readFileSync(path.join(FILES_DIR, "ab.txt"), XU.UTF8), fs.readFileSync(CONCAT_DEST_PATH, XU.UTF8));
 			fileUtil.unlink(CONCAT_DEST_PATH, this);
 		},
 		cb
 	);
 }
 
+// TEST: glob
+function testGlob(cb)
+{
+	tiptoe(
+		function runGlob()
+		{
+			fileUtil.glob(path.join(FILES_DIR, "globTest", "A_dir_with[brackets]_and?(parenthesis)"), "**", this.parallel());
+			fileUtil.glob(path.join(FILES_DIR, "globTest", "A_dir_with[brackets]_and?(parenthesis)"), "*/*.txt", this.parallel());
+			fileUtil.glob(path.join(FILES_DIR, "globTest", "A_dir_with[brackets]_and?(parenthesis)"), "**", {nodir : true}, this.parallel());
+			fileUtil.glob(path.join(FILES_DIR, "globTest", "A_dir_with[brackets]_and?(parenthesis)"), "**/", this.parallel());
+		},
+		function verifyResults(allItems, txtItems, fileItems, dirItems)
+		{
+			assert(allItems.equals([
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/emptyDir",
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/file1.txt",
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/file2.txt",
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/subdir",
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/subdir/file3.txt"
+			]));
+
+			assert(txtItems.equals(["/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/subdir/file3.txt"]));
+
+			assert(fileItems.equals([
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/file1.txt",
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/file2.txt",
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/subdir/file3.txt"
+			]));
+
+			assert(dirItems.equals([
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/emptyDir",
+				"/mnt/compendium/DevLab/node-modules/xutil/test/files/globTest/A_dir_with[brackets]_and?(parenthesis)/subdir"
+			]));
+
+			this();
+		},
+		cb
+	);
+}
+
 tiptoe(
+	function runTestGlob()
+	{
+		testGlob(this);
+	},
 	function runTestCopyDir()
 	{
 		testCopyDir(this);

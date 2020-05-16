@@ -218,7 +218,7 @@ exports.log = function log(s, ...args)
 	for(let i=0;i<s.length;i++)
 	{
 		const part = s.substring(i);
-		const code = part.match(/^%(?<color>#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])?(?<modifier>[bmiuvh-])?(?<numLength>[0-9]+)?[.]?(?<decimalPlaces>[0-9]+)?(?<type>[sdDjJf%])/);
+		const code = part.match(/^%(?<color>#[\dA-Fa-f]{6})?(?<modifier>[bhimuv-])?(?<numLength>\d+)?\.?(?<decimalPlaces>\d+)?(?<type>[%DJdfjs])/);
 		if(code && code.groups)
 		{
 			let v = "";

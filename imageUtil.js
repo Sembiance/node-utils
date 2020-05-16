@@ -19,7 +19,7 @@ exports.getWidthHeight = function getWidthHeight(file, cb)
 			if(err)
 				return cb(err);
 
-			const matches = result.trim().match(/[^ ]+ [^ ]+ (?<width>[0-9]+)x(?<height>[0-9]+) .*/);
+			const matches = result.trim().match(/[^ ]+ [^ ]+ (?<width>\d+)x(?<height>\d+) .*/);
 			if(!matches || matches.length<3 || !matches.groups)
 				return cb(new Error("Invalid image: " + file));
 			

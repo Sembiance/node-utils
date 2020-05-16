@@ -6,7 +6,6 @@ const XU = require("@sembiance/xu"),
 	fileUtil = require("./fileUtil.js"),
 	unicodeUtil = require("./unicodeUtil.js"),
 	{DOS} = require("./dosUtil.js"),
-	glob = require("glob"),
 	runUtil = require("./runUtil.js"),
 	path = require("path");
 
@@ -16,15 +15,16 @@ const RAM_DIR = "/mnt/ram";
 exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 {
 	const filenameWithExt = path.basename(filePath);
+	const filenameWithExtPath = "./" + filenameWithExt;	// We do this to get around problems with files that start with a dash -
 	const filenameWithoutExt = path.basename(filenameWithExt, path.extname(filenameWithExt));
 	const ext = path.extname(filenameWithExt);
-	const runOptions = {silent : true, cwd : path.dirname(filePath)};
+	const runOptions = {silent : true, cwd : path.dirname(filePath), timeout : XU.MINUTE*30};
 	const relativeToExtractionPath = [path.relative(runOptions.cwd, extractionPath), extractionPath].multiSort(a => a.length)[0];	// Pick whichever arg is shorter to avoid "argument loo longer" errors
 	
 	tiptoe(
 		function getBeforeFiles()
 		{
-			glob(path.join(extractionPath, "**"), {nodir : true}, this);
+			fileUtil.glob(extractionPath, "**", {nodir : true}, this);
 		},
 		function extractFiles(beforeFiles)
 		{
@@ -33,47 +33,53 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 			switch(archiveType)
 			{
 				case "zip":
-					runUtil.run("unzip", ["-qod", relativeToExtractionPath, "-P", "nopasswd", filenameWithExt], runOptions, this);	// By passing a password to -P it avoids the program hanging when a file requires a password
+					runUtil.run("unzip", ["-qod", relativeToExtractionPath, "-P", "nopasswd", filenameWithExtPath], runOptions, this);	// By passing a password to -P it avoids the program hanging when a file requires a password
 					break;
 				case "iso":
-					runUtil.run("uniso", [filenameWithExt, relativeToExtractionPath], runOptions, this);
+					runUtil.run("uniso", [filenameWithExtPath, relativeToExtractionPath], runOptions, this);
 					break;
 				case "lha":
-					runUtil.run("lha", ["-x", "-w=" + relativeToExtractionPath, filenameWithExt], runOptions, this);
+					runUtil.run("lha", ["-x", "-w=" + relativeToExtractionPath, filenameWithExtPath], runOptions, this);
 					break;
 				case "arc":
 					runUtil.run("arc", ["x", path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
 				case "rsrc":
-					runUtil.run("deark", ["-od", relativeToExtractionPath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExt], runOptions, this);	// Can pass this to RAW extract all resources: "-opt", "macrsrc:extractraw"
+					runUtil.run("deark", ["-od", relativeToExtractionPath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
 					break;
 				case "lbr":
 					runUtil.run("lbrate", [path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
 				case "rar":
-					runUtil.run("unrar", ["x", "-p-", filenameWithExt, relativeToExtractionPath], runOptions, this);
+					runUtil.run("unrar", ["x", "-p-", filenameWithExtPath, relativeToExtractionPath], runOptions, this);
 					break;
 				case "ico":
-					runUtil.run("convert", [filenameWithExt, path.join(relativeToExtractionPath, filenameWithExt + ".png")], runOptions, this);
+					runUtil.run("convert", [filenameWithExtPath, path.join(relativeToExtractionPath, filenameWithExt + ".png")], runOptions, this);
 					break;
 				case "tar":
-					runUtil.run("tar", ["-xf", filenameWithExt, "-C", relativeToExtractionPath], runOptions, this);
+					runUtil.run("tar", ["-xf", filenameWithExtPath, "-C", relativeToExtractionPath], runOptions, this);
 					break;
 				case "ttcomp":
-					runUtil.run("ttdecomp", [filenameWithExt, path.join(relativeToExtractionPath, filenameWithoutExt)], runOptions, this);
+					runUtil.run("ttdecomp", [filenameWithExtPath, path.join(relativeToExtractionPath, filenameWithoutExt)], runOptions, this);
 					break;
-				case "adf":
-					runUtil.run("xdftool", [filenameWithExt, "unpack", relativeToExtractionPath], runOptions, this);
+				case "adfOFS":
+					runUtil.run("extract-adf", ["-a", path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
+					break;
+				case "adfFFS":
+					runUtil.run("xdftool", [filenameWithExtPath, "unpack", relativeToExtractionPath], runOptions, this);
 					break;
 				case "stc":
 				case "xpk":
-					runUtil.run("amigadepacker", ["-o", path.join(relativeToExtractionPath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : filenameWithoutExt)), filenameWithExt], runOptions, this);
+					runUtil.run("amigadepacker", ["-o", path.join(relativeToExtractionPath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : filenameWithoutExt)), filenameWithExtPath], runOptions, this);
+					break;
+				case "pcxlib":
+					runUtil.run("unpcx", [filenameWithExtPath, relativeToExtractionPath], runOptions, this);
 					break;
 				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
 				case "dms":
 				case "lzx":
 				case "sit":
-					runUtil.run("unar", ["-o", relativeToExtractionPath, filenameWithExt], runOptions, this);
+					runUtil.run("unar", ["-o", relativeToExtractionPath, filenameWithExtPath], runOptions, this);
 					break;
 				case "gz":
 					extractWithCommandAndSuffix("gunzip", ".gz", filePath, extractionPath, this);
@@ -89,9 +95,6 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					break;
 				case "tscomp":
 					tscompExtract(filePath, extractionPath, this);
-					break;
-				case "pcxlib":
-					pcxlibExtract(filePath, extractionPath, this);
 					break;
 
 				default:
@@ -109,7 +112,7 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 		},
 		function getAfterFiles()
 		{
-			glob(path.join(extractionPath, "**"), {nodir : true}, this);
+			fileUtil.glob(extractionPath, "**", {nodir : true}, this);
 		},
 		function returnResults(err, afterFiles)
 		{
@@ -125,12 +128,13 @@ function extractWithCommandAndSuffix(command, suffix, filePath, extractionPath, 
 {
 	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
 	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(suffix) ? "" : suffix);
+	const filenameWithSuffixPath = "./" + filenameWithSuffix;
 	const filenameWithoutSuffix = path.basename(filenameWithSuffix, suffix);
 	
 	tiptoe(
 		function createWorkDir()
 		{
-			fileUtil.mkdirp(WORK_DIR, this);
+			fs.mkdir(WORK_DIR, {recursive : true}, this);
 		},
 		function copyFileToWorkDirWithSuffix()
 		{
@@ -138,7 +142,7 @@ function extractWithCommandAndSuffix(command, suffix, filePath, extractionPath, 
 		},
 		function performExtraction()
 		{
-			runUtil.run(command, [filenameWithSuffix], {silent : true, cwd : WORK_DIR}, this);
+			runUtil.run(command, [filenameWithSuffixPath], {silent : true, cwd : WORK_DIR}, this);
 		},
 		function moveFiles()
 		{
@@ -178,6 +182,7 @@ function amosExtract(filePath, extractionPath, cb)
 function tscompExtract(filePath, extractionPath, cb)
 {
 	const dos = new DOS();
+	const safeDOSFile = "COMPRESD.TSC";
 
 	tiptoe(
 		function setup()
@@ -186,11 +191,11 @@ function tscompExtract(filePath, extractionPath, cb)
 		},
 		function copyArchiveToHD()
 		{
-			dos.copyToHD(filePath, path.join("WORK", path.basename(filePath)), this);
+			dos.copyToHD(filePath, path.join("WORK", safeDOSFile), this);
 		},
 		function prepareListCmd()
 		{
-			dos.autoExec(["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\" + path.basename(filePath) + " > C:\\TMP\\TSFILES.TXT", "REBOOT.COM"], this);
+			dos.autoExec(["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\" + safeDOSFile + " > C:\\TMP\\TSFILES.TXT"], this);
 		},
 		function readFileList()
 		{
@@ -200,48 +205,11 @@ function tscompExtract(filePath, extractionPath, cb)
 		{
 			this.data.tscompFilenames = tscompOutput.toString("utf8").split("\n").filter(line => line.trim().startsWith("=>")).map(line => line.trim().substring(2));
 
-			dos.autoExec(["cd WORK", ...this.data.tscompFilenames.map(fn => "C:\\APP\\TSCOMP.EXE -d " + path.basename(filePath) + " " + fn)], this);
+			dos.autoExec(["cd WORK", ...this.data.tscompFilenames.map(fn => "C:\\APP\\TSCOMP.EXE -d " + safeDOSFile + " " + fn)], this);
 		},
 		function copyFileResults()
 		{
 			dos.copyFromHD(this.data.tscompFilenames.map(fn => path.join("WORK", fn)), extractionPath, this);
-		},
-		function cleanup()
-		{
-			dos.teardown(this);
-		},
-		cb
-	);
-}
-
-function pcxlibExtract(filePath, extractionPath, cb)
-{
-	const dos = new DOS();
-
-	tiptoe(
-		function setup()
-		{
-			dos.setup(this);
-		},
-		function copyArchiveToHD()
-		{
-			dos.copyToHD(filePath, path.join("WORK", path.basename(filePath)), this);
-		},
-		function prepareExtractCmd()
-		{
-			dos.autoExec(["cd TMP", "C:\\APP\\PCXLIB.EXE C:\\WORK\\" + path.basename(filePath) + " /X"], this);
-		},
-		function mountHD()
-		{
-			dos.mountHD(this);
-		},
-		function findExtractedFiles(hdMountDirPath)
-		{
-			glob(path.join(hdMountDirPath, "TMP", "*"), this);
-		},
-		function copyFileResults(extractedFiles)
-		{
-			(extractedFiles || []).parallelForEach((extractedFile, subcb) => fs.copyFile(extractedFile, path.join(extractionPath, path.basename(extractedFile)), subcb), this);
 		},
 		function cleanup()
 		{
