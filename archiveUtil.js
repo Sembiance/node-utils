@@ -79,7 +79,7 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "dms":
 				case "lzx":
 				case "sit":
-					runUtil.run("unar", ["-o", relativeToExtractionPath, filenameWithExtPath], runOptions, this);
+					unarExtract(filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
 					break;
 				case "gz":
 					extractWithCommandAndSuffix("gunzip", ".gz", filePath, extractionPath, this);
@@ -124,6 +124,56 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 	);
 };
 
+// unary doesn't handle filenames with strange characters very well. So we temporarily create a nice boring filename for it to use and then convert it back on the other side
+function unarExtract(filePath, extractionPath, extension, cb)
+{
+	const tmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/archiveUtil-unar");
+	const tmpExtractionPath = path.join(tmpDirPath, "out");
+	const tmpArchiveName = "wip" + extension;
+
+	tiptoe(
+		function mkTmpExtractionPath()
+		{
+			fs.mkdir(tmpExtractionPath, {recursive : true}, this);
+		},
+		function copyFileOver()
+		{
+			fs.copyFile(filePath, path.join(tmpDirPath, tmpArchiveName), this);
+		},
+		function runUnar()
+		{
+			runUtil.run("unar", ["-f", "-D", "-o", "out", tmpArchiveName], {silent : true, cwd : tmpDirPath}, this);
+		},
+		function checkOutputFiles()
+		{
+			fileUtil.glob(tmpExtractionPath, "**", {nodir : true}, this);
+		},
+		function renameSingleFileIfNeeded(outFilePaths)
+		{
+			if(outFilePaths.length>1)
+				return this();
+			
+			const outFilename = path.basename(outFilePaths[0]);
+			if(outFilename==="wip")
+				fs.rename(path.join(tmpExtractionPath, outFilename), path.join(tmpExtractionPath, path.basename(filePath, path.extname(filePath))), this);
+			else if(path.basename(outFilename, path.extname(outFilename))==="wip")
+				fs.rename(path.join(tmpExtractionPath, outFilename), path.join(tmpExtractionPath, path.basename(filePath, path.extname(filePath)) + path.extname(outFilename)), this);
+			else
+				this();
+		},
+		function copyResultsOver()
+		{
+			fileUtil.copyDir(tmpExtractionPath, extractionPath, this);
+		},
+		function cleanup()
+		{
+			fileUtil.unlink(tmpDirPath, this);
+		},
+		cb
+	);
+}
+
+// Extracts SINGLE files only, like gunzip
 function extractWithCommandAndSuffix(command, suffix, filePath, extractionPath, cb)
 {
 	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
