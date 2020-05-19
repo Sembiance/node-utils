@@ -90,7 +90,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	if(options.formatter)
 		rows.forEach(object => colNames.forEach(colName => { object[colName] = options.formatter(colName, object[colName], object); }));
 	else
-		rows.forEach(object => colNames.forEach((colName, i) => { const v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? (typeof v==="number" ? v.toLocaleString() : 0) : v); }));
+		rows.forEach(object => colNames.forEach((colName, i) => { const v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? (typeof v==="number" ? v.toLocaleString() : 0) : (typeof v==="undefined" ? "" : v)); }));	// eslint-disable-line max-len
 
 	const maxColSizeMap = {};
 

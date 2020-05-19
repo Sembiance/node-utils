@@ -73,22 +73,22 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					runUtil.run("amigadepacker", ["-o", path.join(relativeToExtractionPath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : filenameWithoutExt)), filenameWithExtPath], runOptions, this);
 					break;
 				case "pcxlib":
-					runUtil.run("unpcx", [filenameWithExtPath, relativeToExtractionPath], runOptions, this);
+					extractWithSafeFilename("unpcx", ["%archive%", "%out%"], filePath, extractionPath, ".pcl", this);
 					break;
 				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
 				case "dms":
 				case "lzx":
 				case "sit":
-					unarExtract(filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
+					extractWithSafeFilename("unar", ["-f", "-D", "-o", "%out%", "%archive%"], filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
 					break;
 				case "gz":
-					extractWithCommandAndSuffix("gunzip", ".gz", filePath, extractionPath, this);
+					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
 					break;
 				case "bz2":
-					extractWithCommandAndSuffix("bunzip2", ".bz2", filePath, extractionPath, this);
+					extractSingleWithSuffix("bunzip2", ".bz2", filePath, extractionPath, this);
 					break;
 				case "mscompress":
-					extractWithCommandAndSuffix("msexpand", "_", filePath, extractionPath, this);
+					extractSingleWithSuffix("msexpand", "_", filePath, extractionPath, this);
 					break;
 				case "amos":
 					amosExtract(filePath, extractionPath, this);
@@ -124,12 +124,23 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 	);
 };
 
-// unary doesn't handle filenames with strange characters very well. So we temporarily create a nice boring filename for it to use and then convert it back on the other side
-function unarExtract(filePath, extractionPath, extension, cb)
+// Extracts an archive by first renaming it as a safe boring filename outputting to a safe boring directory name
+// Then copies over the results to the target extractionPath
+function extractWithSafeFilename(command, _args, filePath, extractionPath, extension, cb)
 {
-	const tmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/archiveUtil-unar");
+	const tmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/archiveUtil");
 	const tmpExtractionPath = path.join(tmpDirPath, "out");
 	const tmpArchiveName = "wip" + extension;
+	const args = _args.map(arg =>
+	{
+		if(arg==="%archive%")
+			return tmpArchiveName;
+		
+		if(arg==="%out%")
+			return "out";
+		
+		return arg;
+	});
 
 	tiptoe(
 		function mkTmpExtractionPath()
@@ -142,7 +153,7 @@ function unarExtract(filePath, extractionPath, extension, cb)
 		},
 		function runUnar()
 		{
-			runUtil.run("unar", ["-f", "-D", "-o", "out", tmpArchiveName], {silent : true, cwd : tmpDirPath}, this);
+			runUtil.run(command, args, {silent : true, cwd : tmpDirPath}, this);
 		},
 		function checkOutputFiles()
 		{
@@ -174,7 +185,7 @@ function unarExtract(filePath, extractionPath, extension, cb)
 }
 
 // Extracts SINGLE files only, like gunzip
-function extractWithCommandAndSuffix(command, suffix, filePath, extractionPath, cb)
+function extractSingleWithSuffix(command, suffix, filePath, extractionPath, cb)
 {
 	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
 	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(suffix) ? "" : suffix);

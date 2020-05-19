@@ -44,7 +44,7 @@ tiptoe(
 	},
 	function step7()
 	{
-		dos.appendToAutoExec(["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\TEST.TSC > C:\\TMP\\TSFILES.TXT", "REBOOT.COM"], this);
+		dos.autoExec(["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\TEST.TSC > C:\\TMP\\TSFILES.TXT"], this);
 	},
 	function step8()
 	{
@@ -61,6 +61,8 @@ tiptoe(
 	function step11(tsFilesHash)
 	{
 		assert.strictEqual(tsFilesHash, "9d880d46f380a12c4c27f30ff4412cb09ce4bf71");
+
+		console.log("SUCCESS");
 		
 		fileUtil.unlink("/tmp/tsfiles.txt", this.parallel());
 		dos.teardown(this.parallel());

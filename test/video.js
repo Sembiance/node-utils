@@ -7,18 +7,57 @@ const assert = require("assert"),
 	videoUtil = require("../index").video;
 
 const FILES_DIR = path.join(__dirname, "files");
-const VIDEO_PATH = path.join(FILES_DIR, "video.mp4");
+
 const VIDEO_THUMBNAIL_PATH = path.join(FILES_DIR, "video.mp4.thumb.png");
 
+const VIDEO_PATH = path.join(FILES_DIR, "video.mp4");
+const CROP_VIDEO_PATH = path.join(FILES_DIR, "cropme.mp4");
+
+assert(fs.existsSync(VIDEO_PATH));
+assert(fs.existsSync(CROP_VIDEO_PATH));
+
+const destCroppedVideoPath = "/mnt/ram/videoUtilTestCropped.mp4";
+const destTrimmedVideoPath = "/mnt/ram/videoUtilTestTrimmed.mp4";
+
 tiptoe(
+	function getCroppedVideoInfoBefore()
+	{
+		videoUtil.getInfo(CROP_VIDEO_PATH, this);
+	},
+	function cropVideo(cropVidInfo)
+	{
+		assert.strictEqual(cropVidInfo.width, 1920);
+		assert.strictEqual(cropVidInfo.height, 1080);
+		assert.strictEqual(cropVidInfo.duration, 9.8);
+		assert.strictEqual(cropVidInfo.framesPerSecond, 60);
+
+		videoUtil.autocrop(CROP_VIDEO_PATH, destCroppedVideoPath, {cropColor : "#FFC0CB"}, this);
+	},
+	function getCroppedVideoInfoAfter()
+	{
+		videoUtil.getInfo(destCroppedVideoPath, this);
+	},
+	function trimVideo(trimVidInfo)
+	{
+		assert.strictEqual(trimVidInfo.width, 1280);
+		assert.strictEqual(trimVidInfo.height, 720);
+		assert.strictEqual(trimVidInfo.duration, 9.8);
+		assert.strictEqual(trimVidInfo.framesPerSecond, 60);
+
+		videoUtil.trimSolidFrames(destCroppedVideoPath, destTrimmedVideoPath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this);
+	},
 	function getVideoInfo()
 	{
-		assert(fs.existsSync(VIDEO_PATH));
-
-		videoUtil.getInfo(VIDEO_PATH, this);
+		videoUtil.getInfo(destTrimmedVideoPath, this.parallel());
+		videoUtil.getInfo(VIDEO_PATH, this.parallel());
 	},
-	function generateThumbnail(videoInfo)
+	function generateThumbnail(trimmedVidInfo, videoInfo)
 	{
+		assert.strictEqual(trimmedVidInfo.width, 1280);
+		assert.strictEqual(trimmedVidInfo.height, 720);
+		assert.strictEqual(trimmedVidInfo.duration, 9.57);
+		assert.strictEqual(trimmedVidInfo.framesPerSecond, 60);
+
 		videoUtil.generateThumbnail(VIDEO_PATH, "00:00:" + (videoInfo.duration<40 ? Math.floor(Math.floor(videoInfo.duration)/2) : 30), VIDEO_PATH + ".thumb.png", 400, 600, this);
 	},
 	function removeThumbnail()

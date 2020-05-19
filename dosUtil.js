@@ -31,7 +31,7 @@ class DOS
 		if(this.setupDone)
 			return;
 		
-		this.workDir = fileUtil.generateTempFilePath("/mnt/ram/dosutil");
+		this.workDir = fileUtil.generateTempFilePath("/mnt/ram/dosUtil");
 		this.hdFilePath = path.join(this.workDir, path.basename(this.masterHDFilePath));
 		this.configFilePath = path.join(this.workDir, path.basename(this.masterConfigFilePath));
 		this.hdMountDirPath = path.join(this.workDir, "hd");
@@ -295,12 +295,12 @@ class DOS
 		tiptoe(
 			function runDOSBox()
 			{
+				//const vidTest = "/mnt/ram/dosutilvideo" + Date.now() + ".mp4";	// recordVirtualX : vidTest
 				runUtil.run("dosbox", ["-conf", self.configFilePath], {virtualX : !self.debug, silent : !self.debug, detached : true}, this);
 			},
 			function recordChildProcess(cp)
 			{
 				self.dosBoxCP = cp;
-
 				self.dosBoxCP.on("exit", self.exitHandler.bind(self));
 
 				if(exitcb)
@@ -326,7 +326,7 @@ class DOS
 	{
 		this.dosBoxCP = null;
 
-		this.exitCallbacks.forEach(exitCallback => setImmediate(exitCallback));
+		this.exitCallbacks.splice(0, this.exitCallbacks.length).forEach(exitCallback => setImmediate(exitCallback));
 	}
 
 	// Will stop DOSBox
