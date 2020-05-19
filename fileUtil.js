@@ -3,8 +3,8 @@
 const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	path = require("path"),
-	uuid = require("uuid/v4"),
 	os = require("os"),
+	{performance} = require("perf_hooks"),
 	globModule = require("glob"),	// eslint-disable-line node/no-restricted-require
 	runUtil = require("./runUtil.js"),
 	tiptoe = require("tiptoe");
@@ -48,6 +48,15 @@ exports.identify = function identify(filePath, cb)
 				magicResult.extensions = magicExtensionsRaw.trim().toLowerCase().split("/").map(ext => (ext.charAt(0)==="." ? "" : ".") + ext).filter(ext => ext!==".???");
 			results.push(magicResult);
 
+			try
+			{
+				JSON.parse(trididRaw);
+			}
+			catch(err)
+			{
+				console.log(magicRaw, magicExtensionsRaw, trididRaw, fidoRaw);
+				process.exit(0);
+			}
 			results.push(...JSON.parse(trididRaw).map(v => { v.from = "trid"; return v; }));
 
 			if(fidoRaw && fidoRaw.trim().length>0)
@@ -62,9 +71,10 @@ exports.identify = function identify(filePath, cb)
 exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
 {
 	let tempFilePath = null;
+	const filePathPrefix = path.join(prefix.startsWith("/") ? "" : os.tmpdir(), prefix);
 
 	do
-		tempFilePath = path.join(prefix.startsWith("/") ? "" : os.tmpdir(), prefix, uuid() + suffix);
+		tempFilePath = path.join(filePathPrefix, ((""+performance.now()).replaceAll(".", "") + Math.randomInt(0, 10000)) + suffix);
 	while(exports.existsSync(tempFilePath));
 
 	if(!tempFilePath)

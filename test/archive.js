@@ -76,6 +76,8 @@ tiptoe(
 	},
 	function removeOutDir()
 	{
+		console.log("SUCCESS");
+		
 		fileUtil.unlink(OUTPUT_DIR, this);
 	},
 	XU.FINISH

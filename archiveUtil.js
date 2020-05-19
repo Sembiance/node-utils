@@ -9,8 +9,6 @@ const XU = require("@sembiance/xu"),
 	runUtil = require("./runUtil.js"),
 	path = require("path");
 
-const RAM_DIR = "/mnt/ram";
-
 // Extracts the files in the given filePath if supported
 exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 {
@@ -128,7 +126,7 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 // Then copies over the results to the target extractionPath
 function extractWithSafeFilename(command, _args, filePath, extractionPath, extension, cb)
 {
-	const tmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/archiveUtil");
+	const tmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/tmp");
 	const tmpExtractionPath = path.join(tmpDirPath, "out");
 	const tmpArchiveName = "wip" + extension;
 	const args = _args.map(arg =>
@@ -187,7 +185,7 @@ function extractWithSafeFilename(command, _args, filePath, extractionPath, exten
 // Extracts SINGLE files only, like gunzip
 function extractSingleWithSuffix(command, suffix, filePath, extractionPath, cb)
 {
-	const WORK_DIR = fileUtil.generateTempFilePath(RAM_DIR);
+	const WORK_DIR = fileUtil.generateTempFilePath("/mnt/ram/tmp");
 	const filenameWithSuffix = path.basename(filePath) + (filePath.endsWith(suffix) ? "" : suffix);
 	const filenameWithSuffixPath = "./" + filenameWithSuffix;
 	const filenameWithoutSuffix = path.basename(filenameWithSuffix, suffix);

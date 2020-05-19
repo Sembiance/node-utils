@@ -2,12 +2,7 @@
 /* eslint-disable no-param-reassign */
 
 const XU = require("@sembiance/xu"),
-	tiptoe = require("tiptoe"),
-	videoUtil = require("./videoUtil.js"),
-	fileUtil = require("./fileUtil.js"),
 	childProcess = require("child_process");
-
-const xvfbPorts = [].pushSequence(10, 999).shuffle();
 
 // Options include:
 //        detached : Set to 'true' and have the cb be called right away, with the childProcess result
@@ -19,155 +14,99 @@ const xvfbPorts = [].pushSequence(10, 999).shuffle();
 // redirect-stderr : Redirect all stderr content to stdout result
 //             env : Pass an object of key/value pairs to set for environment variables
 //         timeout : Number of 'ms' to allow the process to run and then terminate it
-//        virtualX : Run the program in a 'virtual' X11 buffer
-//  recordVirtualX : Record a video of the virtualX display to disk.
-exports.run = function run(command, _args, _options, _cb)
+exports.run = function run(_command, _args, options={}, cb=() => {})
 {
-	// Can't use XU.optionscb because _options and _cb are both optional
-	const cb = typeof _cb==="function" ? _cb : (typeof _options==="function" ? _options : (() => {}));
-	const options = Object.assign({maxBuffer : (1024*1024)*20, "redirect-stderr" : true}, (typeof _cb==="function" ? _options : (Object.isObject(_options) ? _options : {})));
-
-	if(!options.env)
-		options.env = Object.assign({}, process.env);	// eslint-disable-line node/no-process-env
-	else
+	if(!options.maxBuffer)
+		options.maxBuffer = (1024*1024)*20;	// 20MB Buffer
+	if(!options.hasOwnProperty("redirect-stderr"))
+		options["redirect-stderr"] = true;
+	
+	if(options.env)
 		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line node/no-process-env
 	
+	let command = _command;
 	const args = _args.slice();
-
-	const virtualX = {};
-	function setupVirtualX(setupcb)
+	if(options.virtualX)
 	{
-		if(!options.virtualX)
-			return setImmediate(setupcb);
+		args.unshift(command);
 
-		virtualX.port = xvfbPorts.pop();
-		xvfbPorts.unshift(virtualX.port);
-		options.env.DISPLAY = ":" + virtualX.port;
-
-		tiptoe(
-			function startXvfb()
-			{
-				exports.run("Xvfb", [":" + virtualX.port, "-listen", "tcp", "-nocursor", "-ac", "-screen", "0", "1920x1080x24"], {silent : true, detached : true}, this);
-			},
-			function setBackgroundPink(xvfbCP)
-			{
-				virtualX.xvfbCP = xvfbCP;
-
-				// If we are not recording, we don't need a pink background, so we can continue
-				if(!options.recordVirtualX)
-					return this.finish();
-				
-				exports.run("xsetroot", ["-solid", "Pink"], {env : {DISPLAY : ":" + virtualX.port}, silent : true, detached : true}, this);
-			},
-			function startRecording()
-			{
-				virtualX.vidFilePath = fileUtil.generateTempFilePath("/mnt/ram", ".mp4");
-				const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", "127.0.0.1:" + virtualX.port, "-y", "-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", "-r", "60", virtualX.vidFilePath];
-				exports.run("ffmpeg", ffmpegArgs, {silent : true, detached : true}, this);
-			},
-			function recordFFMPEGCP(ffmpegCP)
-			{
-				virtualX.ffmpegCP = ffmpegCP;
-
-				this();
-			},
-			setupcb
-		);
+		if(options.recordVirtualX)
+			args.unshift("--recordVideo=" + options.recordVirtualX);
+			
+		command = "xRun";
 	}
 
-	function cleanupVirtualX(cleanupcb)
+	if(!options.silent)
+		console.log("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
+
+	let p = null;
+	if(options.detached)
 	{
-		if(!options.virtualX)
-			return setImmediate(cleanupcb);
-		
-		tiptoe(
-			function stopFFMPEG()
-			{
-				if(!options.recordVirtualX)
-					return this();
-
-				virtualX.ffmpegCP.on("exit", () => this());
-				virtualX.ffmpegCP.kill();
-			},
-			function stopXvfb()
-			{
-				virtualX.xvfbCP.on("exit", () => this());
-				virtualX.xvfbCP.kill();
-			},
-			function cropVideo()
-			{
-				if(!options.recordVirtualX)
-					return this.finish();
-
-				virtualX.croppedVideoPath = fileUtil.generateTempFilePath("/mnt/ram", ".mp4");
-				videoUtil.autocrop(virtualX.vidFilePath, virtualX.croppedVideoPath, {cropColor : "#FFC0CB"}, this);
-			},
-			function trimVideo()
-			{
-				videoUtil.trimSolidFrames(virtualX.croppedVideoPath, options.recordVirtualX, {color : "#FFC0CB", fuzz : 0, fps : 30}, this);
-			},
-			function removeTmpVideoFiles()
-			{
-				fileUtil.unlink(virtualX.vidFilePath, this.parallel());
-				fileUtil.unlink(virtualX.croppedVideoPath, this.parallel());
-			},
-			cleanupcb
-		);
+		const cp = childProcess.spawn(command, args, options);
+		return setImmediate(() => cb(undefined, cp));
 	}
 
-	const stdout = [];
-	const stderr = [];
-	let cp = null;
+	if(cb)
+		p = childProcess.execFile(command, args, options, handler);
+	else
+		p = childProcess.execFile(command, args, handler);
 
-	setupVirtualX(() =>
+	if(options.liveOutput)
 	{
-		if(!options.silent)
-			console.log("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
-		
-		cp = childProcess.spawn(command, args, options);
-		cp.stdout.on("data", v =>
-		{
-			if(options.liveOutput)
-				process.stdout.write(v.toString("utf8"));
+		p.stdout.pipe(process.stdout);
+		p.stderr.pipe(process.stderr);
+	}
 
-			stdout.push(v);
-		});
-		if(!options["ignore-errors"] && !options["ignore-stderr"])
-		{
-			cp.stderr.on("data", v =>
-			{
-				if(options.liveOutput)
-					process.stderr.write(v);
+	if(options.inputData)
+		p.stdin.end(options.inputData);
 
-				(options["redirect-stderr"] ? stdout : stderr).push(v.toString("utf8"));
-			});
+	function handler(err, stdout, stderr)
+	{
+		if(options["ignore-errors"])
+			err = null;
+		if(options["ignore-stderr"])
+			stderr = null;
+
+		if(stderr)
+		{
+			stderr = stderr.replace(/Xlib: +extension "RANDR" missing on display "[^:]*:[^"]+".\n?/, "");
+			stderr = stderr.trim();
+			if(!stderr.length)
+				stderr = null;
 		}
 
-		if(options.inputData)
-			cp.stdin.end(options.inputData);
-
-		cp.on("exit", exitHandler);
-		
-		if(options.detached)
-			return cb(undefined, cp);
-	});
-
-	function exitHandler()
-	{
-		cleanupVirtualX(() =>
+		if(options["redirect-stderr"] && (err || stderr))
 		{
-			//if(stderr)
-			//	stderr.filterInPlace(line => !line.match(/Xlib: +extension "RANDR" missing on display "[^:]*:[^"]+".\n?/));
-
-			if(options.verbose)
-				console.log("%s %s\n%s %s", command, args.join(" "), stdout.join(""), stderr.join(""));
+			if(err)
+			{
+				stdout = err + stdout;
+				err = undefined;
+			}
 
 			if(stderr)
-				return cb(stderr.join(""), stdout.join(""));
-			
-			cb(undefined, stdout.join(""));
-		});
+			{
+				stdout = stderr + stdout;
+				stderr = undefined;
+			}
+		}
+
+		if(options.verbose)
+			console.log("%s %s\n%s %s", command, args.join(" "), stdout || "", stderr || "");
+
+		if(cb)
+		{
+			if(options["redirect-stderr"])
+				setImmediate(() => cb(err || stderr, stdout));
+			else
+				setImmediate(() => cb(err || stderr, stdout, stderr));
+		}
+		else
+		{
+			options(err || stderr, stdout, stderr);
+		}
 	}
+
+	return p;
 };
 
 exports.SILENT = {silent : true};

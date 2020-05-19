@@ -47,7 +47,8 @@ function testLiveOutput(cb)
 
 function testVirtualXRecord(cb)
 {
-	const OUTPUT_VIDEO_FILE_PATH = "/mnt/ram/xutilRunTest.mp4";
+	const OUTPUT_VIDEO_FILE_PATH = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
+	console.log(OUTPUT_VIDEO_FILE_PATH);
 	tiptoe(
 		function runProcess()
 		{
@@ -61,7 +62,7 @@ function testVirtualXRecord(cb)
 		{
 			assert.strictEqual(vidInfo.width, 1280);
 			assert.strictEqual(vidInfo.height, 720);
-			assert(vidInfo.duration>=9.5 && vidInfo.duration<=9.6, vidInfo.duration);
+			assert(vidInfo.duration>=9.5 && vidInfo.duration<=9.8, vidInfo.duration);
 			assert.strictEqual(vidInfo.framesPerSecond, 60);
 
 			fileUtil.unlink(OUTPUT_VIDEO_FILE_PATH, this);
@@ -69,7 +70,6 @@ function testVirtualXRecord(cb)
 		cb
 	);
 }
-
 
 tiptoe(
 	function runTestSimpleRun()

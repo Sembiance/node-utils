@@ -8,6 +8,7 @@ const XU = require("@sembiance/xu"),
 	path = require("path"),
 	{DOS} = require("../index").dos;
 
+const tmpTSFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".txt");
 const dos = new DOS();
 tiptoe(
 	function step1()
@@ -38,8 +39,6 @@ tiptoe(
 	{
 		assert.strictEqual(hashResult, "a8a4cbb3c89e4582706fc87d0310f617b91dba82");
 
-		//fs.writeFileSync(path.join(this.data.hdMountDirPath, "WORK", "GO.BAT"), ["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\TEST.TSC > C:\\TMP\\TSFILES.TXT", "CHOICE /TY,5", "REBOOT.COM"].join("\r\n"), XU.UTF8);
-
 		dos.unmountHD(this);
 	},
 	function step7()
@@ -52,11 +51,11 @@ tiptoe(
 	},
 	function step9()
 	{
-		dos.copyFromHD("TMP/TSFILES.TXT", path.join("/tmp/tsfiles.txt"), this);
+		dos.copyFromHD("TMP/TSFILES.TXT", path.join(tmpTSFilePath), this);
 	},
 	function step10()
 	{
-		hashUtil.hashFile("sha1", "/tmp/tsfiles.txt", this);
+		hashUtil.hashFile("sha1", tmpTSFilePath, this);
 	},
 	function step11(tsFilesHash)
 	{
@@ -64,7 +63,7 @@ tiptoe(
 
 		console.log("SUCCESS");
 		
-		fileUtil.unlink("/tmp/tsfiles.txt", this.parallel());
+		fileUtil.unlink(tmpTSFilePath, this.parallel());
 		dos.teardown(this.parallel());
 	},
 	XU.FINISH

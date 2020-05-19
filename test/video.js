@@ -4,6 +4,7 @@ const assert = require("assert"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs"),
+	fileUtil = require("../index").file,
 	videoUtil = require("../index").video;
 
 const FILES_DIR = path.join(__dirname, "files");
@@ -16,8 +17,8 @@ const CROP_VIDEO_PATH = path.join(FILES_DIR, "cropme.mp4");
 assert(fs.existsSync(VIDEO_PATH));
 assert(fs.existsSync(CROP_VIDEO_PATH));
 
-const destCroppedVideoPath = "/mnt/ram/videoUtilTestCropped.mp4";
-const destTrimmedVideoPath = "/mnt/ram/videoUtilTestTrimmed.mp4";
+const destCroppedVideoPath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
+const destTrimmedVideoPath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
 
 tiptoe(
 	function getCroppedVideoInfoBefore()
