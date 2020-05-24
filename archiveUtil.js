@@ -17,7 +17,7 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 	const filenameWithoutExt = path.basename(filenameWithExt, path.extname(filenameWithExt));
 	const ext = path.extname(filenameWithExt);
 	const runOptions = {silent : true, cwd : path.dirname(filePath), timeout : XU.MINUTE*30};
-	const relativeToExtractionPath = [path.relative(runOptions.cwd, extractionPath), extractionPath].multiSort(a => a.length)[0];	// Pick whichever arg is shorter to avoid "argument loo longer" errors
+	const extractionRelativePath = [path.relative(runOptions.cwd, extractionPath), extractionPath].multiSort(a => a.length)[0];	// Pick whichever arg is shorter to avoid "argument loo longer" errors
 	
 	tiptoe(
 		function getBeforeFiles()
@@ -30,69 +30,72 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 
 			switch(archiveType)
 			{
-				case "zip":
-					runUtil.run("unzip", ["-qod", relativeToExtractionPath, "-P", "nopasswd", filenameWithExtPath], runOptions, this);	// By passing a password to -P it avoids the program hanging when a file requires a password
-					break;
-				case "iso":
-					runUtil.run("uniso", [filenameWithExtPath, relativeToExtractionPath], runOptions, this);
-					break;
-				case "lha":
-					runUtil.run("lha", ["-x", "-w=" + relativeToExtractionPath, filenameWithExtPath], runOptions, this);
-					break;
 				case "arc":
 					runUtil.run("arc", ["x", path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
-				case "rsrc":
-					runUtil.run("deark", ["-od", relativeToExtractionPath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
+				case "amos":
+					amosExtract(filePath, extractionPath, this);
 					break;
-				case "lbr":
-					runUtil.run("lbrate", [path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
-					break;
-				case "rar":
-					runUtil.run("unrar", ["x", "-p-", filenameWithExtPath, relativeToExtractionPath], runOptions, this);
-					break;
-				case "ico":
-					runUtil.run("convert", [filenameWithExtPath, path.join(relativeToExtractionPath, filenameWithExt + ".png")], runOptions, this);
-					break;
-				case "tar":
-					runUtil.run("tar", ["-xf", filenameWithExtPath, "-C", relativeToExtractionPath], runOptions, this);
-					break;
-				case "ttcomp":
-					runUtil.run("ttdecomp", [filenameWithExtPath, path.join(relativeToExtractionPath, filenameWithoutExt)], runOptions, this);
+				case "adfFFS":
+					runUtil.run("xdftool", [filenameWithExtPath, "unpack", extractionRelativePath], runOptions, this);
 					break;
 				case "adfOFS":
 					runUtil.run("extract-adf", ["-a", path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
-				case "adfFFS":
-					runUtil.run("xdftool", [filenameWithExtPath, "unpack", relativeToExtractionPath], runOptions, this);
+				case "bz2":
+					extractSingleWithSuffix("bunzip2", ".bz2", filePath, extractionPath, this);
 					break;
-				case "stc":
-				case "xpk":
-					runUtil.run("amigadepacker", ["-o", path.join(relativeToExtractionPath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : filenameWithoutExt)), filenameWithExtPath], runOptions, this);
+				case "crunchmania":
+					runUtil.run("decrmtool", [filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
+					break;
+				case "gz":
+					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
+					break;
+				case "iso":
+					runUtil.run("uniso", [filenameWithExtPath, extractionRelativePath], runOptions, this);
+					break;
+				case "lbr":
+					runUtil.run("lbrate", [path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
+					break;
+				case "lha":
+					runUtil.run("lha", ["-x", "-w=" + extractionRelativePath, filenameWithExtPath], runOptions, this);
+					break;
+				case "mbox":
+					runUtil.run("unmbox", [filenameWithExtPath, extractionRelativePath], runOptions, this);
+					break;
+				case "mscompress":
+					extractSingleWithSuffix("msexpand", "_", filePath, extractionPath, this);
 					break;
 				case "pcxlib":
-					extractWithSafeFilename("unpcx", ["%archive%", "%out%"], filePath, extractionPath, ".pcl", this);
+					extractWithSafeFilename("unpcx", ["%archive%", "out"], filePath, extractionPath, ".pcl", this);
 					break;
 				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
 				case "dms":
 				case "lzx":
 				case "sit":
-					extractWithSafeFilename("unar", ["-f", "-D", "-o", "%out%", "%archive%"], filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
+					extractWithSafeFilename("unar", ["-f", "-D", "-o", "out", "%archive%"], filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
 					break;
-				case "gz":
-					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
+				case "rar":
+					runUtil.run("unrar", ["x", "-p-", filenameWithExtPath, extractionRelativePath], runOptions, this);
 					break;
-				case "bz2":
-					extractSingleWithSuffix("bunzip2", ".bz2", filePath, extractionPath, this);
+				case "rsrc":
+					runUtil.run("deark", ["-od", extractionRelativePath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
 					break;
-				case "mscompress":
-					extractSingleWithSuffix("msexpand", "_", filePath, extractionPath, this);
+				case "stc":
+				case "xpk":
+					runUtil.run("amigadepacker", ["-o", path.join(extractionRelativePath, (ext===("." + archiveType) ? path.basename(filenameWithExt, ext) : filenameWithoutExt)), filenameWithExtPath], runOptions, this);
 					break;
-				case "amos":
-					amosExtract(filePath, extractionPath, this);
+				case "tar":
+					runUtil.run("tar", ["-xf", filenameWithExtPath, "-C", extractionRelativePath], runOptions, this);
 					break;
 				case "tscomp":
 					tscompExtract(filePath, extractionPath, this);
+					break;
+				case "ttcomp":
+					runUtil.run("ttdecomp", [filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
+					break;
+				case "zip":
+					runUtil.run("unzip", ["-qod", extractionRelativePath, "-P", "nopasswd", filenameWithExtPath], runOptions, this);	// By passing a password to -P it avoids the program hanging when a file requires a password
 					break;
 
 				default:
@@ -133,10 +136,7 @@ function extractWithSafeFilename(command, _args, filePath, extractionPath, exten
 	{
 		if(arg==="%archive%")
 			return tmpArchiveName;
-		
-		if(arg==="%out%")
-			return "out";
-		
+				
 		return arg;
 	});
 
@@ -159,6 +159,9 @@ function extractWithSafeFilename(command, _args, filePath, extractionPath, exten
 		},
 		function renameSingleFileIfNeeded(outFilePaths)
 		{
+			if(outFilePaths.length===0)
+				return this.jump(-1);
+				
 			if(outFilePaths.length>1)
 				return this();
 			

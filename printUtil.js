@@ -1,7 +1,6 @@
 "use strict";
 
 const XU = require("@sembiance/xu"),
-	util = require("util"),
 	chalk = require("chalk");
 
 chalk.level = 2;
@@ -35,7 +34,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 		rows.unshift(options.header);
 
 	if(options.alignment)
-		options.alignment = options.alignment.map(a => a.substring(0, 1).toLowerCase());
+		options.alignment = options.alignment.map(a => a.charAt(0).toLowerCase());
 
 	const maxColSizes = [];
 	rows.forEach(row => row.forEach((col, i) => { maxColSizes[i] = Math.max((maxColSizes[i] || 0), (""+col).length); }));
@@ -193,83 +192,6 @@ exports.multiLineBarChart = function multiLineBarChart(o, label="Label", lineLen
 	process.stdout.write("\n");
 };
 
-// An advanced log function that supports padded length strings and numbers and color
-// %10s : Will pad the left side of the string with spaces to at least 10 length. Can also pad all other values such as %7d
-// %D   : Auto formats the string with .toLocaleString()
-// %j   : Outputs colorized JSON on 1 line
-// %J	: Outputs colorized JSON over multiple lines
-// %#FFFFFFs : Outputs the string (or digit or whatever) in the given hex color.
-// %#FFFFFF[bdiuvsh] : Outputs the string in the given color with the letter modifier, see MODIFIERS map below
-// %0.2f : Output a float formatted value
-exports.log = function log(s, ...args)
-{
-	const MODIFIERS =
-	{
-		b   : "bold",
-		m   : "dim",
-		i   : "italic",
-		u   : "underline",
-		v   : "inverse",
-		"-" : "strikethrough",
-		h   : "hidden"
-	};
-	let codeNum = 0;
-
-	for(let i=0;i<s.length;i++)
-	{
-		const part = s.substring(i);
-		const code = part.match(/^%(?<color>#[\dA-Fa-f]{6})?(?<modifier>[bhimuv-])?(?<numLength>\d+)?\.?(?<decimalPlaces>\d+)?(?<type>[%DJdfjs])/);
-		if(code && code.groups)
-		{
-			let v = "";
-			switch(code.groups.type)
-			{
-				case "%":
-					v = "%";
-					break;
-				case "d":
-					v = +args[codeNum++];
-					break;
-				case "f":
-					v = args[codeNum++].toFixed(+code.groups.decimalPlaces);
-					break;
-				case "D":
-					v = (+args[codeNum++]).toLocaleString();
-					break;
-				case "s":
-					v = args[codeNum++];
-					break;
-				case "j":
-					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity, maxArrayLength : Infinity, breakLength : Infinity});
-					break;
-				case "J":
-					v = util.inspect(args[codeNum++], {colors : true, depth : Infinity, maxArrayLength : Infinity});
-					break;
-				default:
-					console.log("Unknown group type: %s", code.groups.type);
-					break;
-			}
-
-			if(code.groups.numLength && ((+code.groups.numLength)-v.length)>0)
-				v = v.padStart(code.groups.numLength, " ");
-
-			if(code.groups.color && code.groups.modifier)
-				process.stdout.write(chalk.hex(code.groups.color)[MODIFIERS[code.groups.modifier]](v));
-			else if(code.groups.color)
-				process.stdout.write(chalk.hex(code.groups.color)(v));
-			else
-				process.stdout.write(chalk.reset(v));
-
-			i += code[0].length-1;
-			continue;
-		}
-
-		process.stdout.write(chalk.reset(s.charAt(i)));
-	}
-
-	process.stdout.write("\n");
-};
-
 // Prints out a major header that looks like this:
 // /--------------\
 // | Major Header |
@@ -279,9 +201,9 @@ exports.majorHeader = function majorHeader(text, options={})
 	if(options.prefix)
 		process.stdout.write(options.prefix);
 
-	exports.log("%#00FFFFs", "/" + "-".repeat(text.length+2) + "\\");
-	exports.log("%#00FFFFs %" + (options.color || "#FFFFFF") + "s %#00FFFFs", "|", text, "|");
-	exports.log("%#00FFFFs", "\\" + "-".repeat(text.length+2) + "/");
+	XU.log`${XU.c.fg.cyan + "/" + "-".repeat(text.length+2) + "\\"}`;
+	XU.log`${XU.c.fg.cyan + "|"} ${XU.c.fg.white + text} ${XU.c.fg.cyan + "|"}`;
+	XU.log`${XU.c.fg.cyan + "\\" + "-".repeat(text.length+2) + "/"}`;
 
 	if(options.suffix)
 		process.stdout.write(options.suffix);
@@ -295,8 +217,8 @@ exports.minorHeader = function minorHeader(text, options={})
 	if(options.prefix)
 		process.stdout.write(options.prefix);
 
-	exports.log("%" + (options.color || "#FFFFFF") + "s", text);
-	exports.log("%#00FFFFs", "-".repeat(text.length));
+	XU.log`${XU.c.fg.white + text}`;
+	XU.log`${XU.c.fg.cyan + "-".repeat(text.length)}`;
 
 	if(options.suffix)
 		process.stdout.write(options.suffix);

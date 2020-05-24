@@ -36,6 +36,7 @@ class DOS
 		this.configFilePath = path.join(this.workDir, path.basename(this.masterConfigFilePath));
 		this.hdMountDirPath = path.join(this.workDir, "hd");
 		this.mountedAutoExecFilePath = path.join(this.hdMountDirPath, "AUTOEXEC.BAT");
+		this.portNumFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp");
 
 		const self=this;
 		tiptoe(
@@ -257,7 +258,7 @@ class DOS
 				this.data.wasAlreadyMounted = wasAlreadyMounted;
 				this.data.hdMountDirPath = hdMountDirPath;
 
-				// If we've callde this before, let's reset the autoexec bat to vanilla first
+				// If we've called this before, let's reset the autoexec bat to vanilla first
 				if(self.autoExecVanilla)
 					fs.writeFile(self.mountedAutoExecFilePath, self.autoExecVanilla, XU.UTF8, this);
 				else
@@ -281,6 +282,27 @@ class DOS
 		);
 	}
 
+	// Will send the keys to the virtual doesbox window with the given delay then call the cb. Only works if virtualX was set
+	sendKeys(keys, cb, delay=XU.SECOND)
+	{
+		const xPortNum = fs.readFileSync(this.portNumFilePath, XU.UTF8).trim();
+
+		Array.force(keys).serialForEach((key, subcb) =>
+		{
+			tiptoe(
+				function sendKey()
+				{
+					runUtil.run("xdotool", ["search", "--class", "dosbox", "windowfocus", Array.isArray(key) ? "key" : "type", "--delay", "100", Array.isArray(key) ? key[0] : key], {silent : true, env : {"DISPLAY" : ":" + xPortNum}}, this);
+				},
+				function waitDelay()
+				{
+					setTimeout(this, delay);
+				},
+				subcb
+			);
+		}, cb);
+	}
+
 	// Will start up DOSBox
 	start(_cb, exitcb)
 	{
@@ -295,7 +317,7 @@ class DOS
 		tiptoe(
 			function runDOSBox()
 			{
-				runUtil.run("dosbox", ["-conf", self.configFilePath], {virtualX : !self.debug, silent : !self.debug, detached : true}, this);
+				runUtil.run("dosbox", ["-conf", self.configFilePath], {virtualX : !self.debug, virtualXPortNumFile : self.portNumFilePath, silent : !self.debug, detached : true}, this);
 			},
 			function recordChildProcess(cp)
 			{
@@ -347,9 +369,10 @@ class DOS
 			{
 				self.unmountHD(this);
 			},
-			function mkWorkDir()
+			function removeFiles()
 			{
-				fileUtil.unlink(self.workDir, this);
+				fileUtil.unlink(self.workDir, this.parallel());
+				fileUtil.unlink(self.portNumFilePath, this.parallel());
 			},
 			cb
 		);

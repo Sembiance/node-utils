@@ -30,6 +30,8 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 	{
 		args.unshift(command);
 
+		if(options.virtualXPortNumFile)
+			args.unshift("--portNumFile=" + options.virtualXPortNumFile);
 		if(options.recordVirtualX)
 			args.unshift("--recordVideo=" + options.recordVirtualX);
 			

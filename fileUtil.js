@@ -32,7 +32,7 @@ exports.glob = function glob(baseDirPath, matchPattern, _options, _cb)
 exports.identify = function identify(filePath, cb)
 {
 	tiptoe(
-		function runTrid()
+		function runIndentifiers()
 		{
 			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic:/usr/share/misc/magic.mgc", "-b", filePath], runUtil.SILENT, this.parallel());
 			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic:/usr/share/misc/magic.mgc", "-b", "--extension", filePath], runUtil.SILENT, this.parallel());
@@ -48,16 +48,8 @@ exports.identify = function identify(filePath, cb)
 				magicResult.extensions = magicExtensionsRaw.trim().toLowerCase().split("/").map(ext => (ext.charAt(0)==="." ? "" : ".") + ext).filter(ext => ext!==".???");
 			results.push(magicResult);
 
-			try
-			{
-				JSON.parse(trididRaw);
-			}
-			catch(err)
-			{
-				console.log(magicRaw, magicExtensionsRaw, trididRaw, fidoRaw);
-				process.exit(0);
-			}
-			results.push(...JSON.parse(trididRaw).map(v => { v.from = "trid"; return v; }));
+			try { results.push(...JSON.parse(trididRaw).map(v => { v.from = "trid"; return v; })); }
+			catch(parseErr) { }
 
 			if(fidoRaw && fidoRaw.trim().length>0)
 				results.push({magic : fidoRaw.trim(), from : "fido"});
@@ -74,7 +66,7 @@ exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix="
 	const filePathPrefix = path.join(prefix.startsWith("/") ? "" : os.tmpdir(), prefix);
 
 	do
-		tempFilePath = path.join(filePathPrefix, ((""+performance.now()).replaceAll(".", "") + Math.randomInt(0, 10000)) + suffix);
+		tempFilePath = path.join(filePathPrefix, ((""+performance.now()).replaceAll(".", "") + Math.randomInt(0, 1000000)) + suffix);
 	while(exports.existsSync(tempFilePath));
 
 	if(!tempFilePath)
