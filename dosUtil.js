@@ -11,6 +11,8 @@ const XU = require("@sembiance/xu"),
 // https://unix.stackexchange.com/questions/259294/use-xvfb-to-automate-x-program
 // https://stackoverflow.com/questions/5094389/automation-using-xdotool-and-xvfb
 
+const MAX_DOSBOXES_AT_ONCE = 15;
+
 class DOS
 {
 	constructor(_masterHDFilePath=path.join(__dirname, "dos", "hd.img"), _debug=false)
@@ -40,6 +42,10 @@ class DOS
 
 		const self=this;
 		tiptoe(
+			function waitIfNeeded()
+			{
+				self.waitForCongestion(this);
+			},
 			function mkWorkDir()
 			{
 				fs.mkdir(self.workDir, {recursive : true}, this);
@@ -59,6 +65,25 @@ class DOS
 				this();
 			},
 			cb
+		);
+	}
+
+	// Will only allow X dosbox instances at once
+	waitForCongestion(cb)
+	{
+		const self=this;
+		tiptoe(
+			function getDOSBoxProcList()
+			{
+				runUtil.run("ps", ["-C", "dosbox", "--no-headers", "-o", "pid"], {"ignore-errors" : true, silent : true}, this);
+			},
+			function stopIfTooMany(err, dosBoxProcs)
+			{
+				if(dosBoxProcs.trim().length===0 || dosBoxProcs.trim().split("\n").length<MAX_DOSBOXES_AT_ONCE)
+					return setImmediate(cb);
+
+				setTimeout(() => self.waitForCongestion(cb), XU.SECOND);
+			}
 		);
 	}
 
@@ -232,8 +257,12 @@ class DOS
 		tiptoe(
 			function appendLines()
 			{
-				// Use this to delay X (3) seconds: "choice /N /Ty,3",
-				self.appendToAutoExec([...lines, "REBOOT.COM"], this);
+				const autoExecLines = Array.from(lines);
+				if(self.debug)
+					autoExecLines.push("choice /N /Ty,10");
+				autoExecLines.push("REBOOT.COM");
+
+				self.appendToAutoExec(autoExecLines, this);
 				//self.appendToAutoExec(lines, this);	// Comment out above line and uncomment this to debug by not rebooting the DOS window
 			},
 			function runEm()

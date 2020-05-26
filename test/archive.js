@@ -31,6 +31,7 @@ const TEST_PARAMS =
 	pcxlib      : {archiveFile : "POKER.PCL", filenames : ["ASP.PCC", "CARDS.PCC", "DECK.PCX", "EMLOGO.PCC", "POKER.PCC", "WELCOME.PCC"], hash : {filename : "CARDS.PCC", sum : "386ef6988fd2bc620dfa186463b76b72"}},
 	powerpack   : {archiveFile : "hotachy1.anim.pp", filenames : ["hotachy1.anim"], hash : {filename : "hotachy1.anim", sum : "effe736a9641b42f50e5a4b865687f56"}},
 	rar         : {archiveFile : "cheats.rar", filenames : ["BLOOD3D.RAR", "CHEATS-T.RAR", "MAGIC-G.RAR", "MDKTRAIN.RAR"], hash : {filename : "MDKTRAIN.RAR", sum : "000352ddf886ef7ded10ac1f366f1956"}},
+	rnc			: {archiveFile : "test.rnc", filenames : ["test"], hash : {filename : "test", "sum" : "f74bef743d591d21bf78fdefaa902aef"}},
 	rsrc        : {archiveFile : "blackfor.rsrc", filenames : ["blackfor.000.icns"], hash : {filename : "blackfor.000.icns", sum : "1120f28a9ed0657c83263583f86825a0"}},
 	sit         : {archiveFile : "blackfor.sit", filenames : ["BlackForest ƒ/BlackFor.rsrc","BlackForest ƒ/BlackForest.AFM","BlackForest ƒ/BlackForest.bmap.rsrc","BlackForest ƒ/Read Me First!!"], hash : {filename : "BlackForest ƒ/BlackFor.rsrc", sum : "4fee556ca486335cf9d0ea5c1165ff73"}},
 	stc         : {archiveFile : "MA2", filenames : ["MA2"], hash : {filename : "MA2", sum : "446f663a8882fc10f19fcf75a9b3dd1f"}},

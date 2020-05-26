@@ -48,6 +48,12 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "crunchmania":
 					runUtil.run("decrmtool", [filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
 					break;
+				case "dms":
+				case "lzx":
+				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
+				case "sit":
+					extractWithSafeFilename("unar", ["-f", "-D", "-o", "out", "%archive%"], filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
+					break;
 				case "gz":
 					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
 					break;
@@ -69,14 +75,11 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "pcxlib":
 					extractWithSafeFilename("unpcx", ["%archive%", "out"], filePath, extractionPath, ".pcl", this);
 					break;
-				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
-				case "dms":
-				case "lzx":
-				case "sit":
-					extractWithSafeFilename("unar", ["-f", "-D", "-o", "out", "%archive%"], filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
-					break;
 				case "rar":
 					runUtil.run("unrar", ["x", "-p-", filenameWithExtPath, extractionRelativePath], runOptions, this);
+					break;
+				case "rnc":
+					runUtil.run("ancient", ["decompress", filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
 					break;
 				case "rsrc":
 					runUtil.run("deark", ["-od", extractionRelativePath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
@@ -255,7 +258,7 @@ function tscompExtract(filePath, extractionPath, cb)
 		{
 			dos.copyToHD(filePath, path.join("WORK", safeDOSFile), this);
 		},
-		function prepareListCmd()
+		function execTSComp()
 		{
 			dos.autoExec(["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\" + safeDOSFile + " > C:\\TMP\\TSFILES.TXT"], this);
 		},

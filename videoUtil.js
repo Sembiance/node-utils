@@ -165,7 +165,11 @@ exports.convert = function convert(srcFilePath, outFilePath, _options, _cb)
 		},
 		function performConversion(cropInfoRaw)
 		{
-			const convertArgs = ["-i", srcFilePath];
+			const convertArgs = [];
+			if(options.ffmpegFormat)
+				convertArgs.push("-f", options.ffmpegFormat);
+
+			convertArgs.push("-i", srcFilePath);
 
 			// Should we auto-crop?
 			if(options.autocrop && cropInfoRaw)
