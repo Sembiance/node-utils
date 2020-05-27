@@ -312,24 +312,33 @@ class DOS
 	}
 
 	// Will send the keys to the virtual doesbox window with the given delay then call the cb. Only works if virtualX was set
-	sendKeys(keys, cb, delay=XU.SECOND)
+	sendKeys(keys, _options, _cb)
 	{
-		const xPortNum = fs.readFileSync(this.portNumFilePath, XU.UTF8).trim();
-
-		Array.force(keys).serialForEach((key, subcb) =>
+		const {options, cb} = XU.optionscb(_options, _cb, {interval : XU.SECOND, delay : XU.SECOND*15});
+	
+		const self=this;
+		setTimeout(() =>
 		{
-			tiptoe(
-				function sendKey()
-				{
-					runUtil.run("xdotool", ["search", "--class", "dosbox", "windowfocus", Array.isArray(key) ? "key" : "type", "--delay", "100", Array.isArray(key) ? key[0] : key], {silent : true, env : {"DISPLAY" : ":" + xPortNum}}, this);
-				},
-				function waitDelay()
-				{
-					setTimeout(this, delay);
-				},
-				subcb
-			);
-		}, cb);
+			const xPortNum = fs.readFileSync(self.portNumFilePath, XU.UTF8).trim();
+
+			Array.force(keys).serialForEach((key, subcb) =>
+			{
+				tiptoe(
+					function sendKey()
+					{
+						runUtil.run("xdotool", ["search", "--class", "dosbox", "windowfocus", Array.isArray(key) ? "key" : "type", "--delay", "100", Array.isArray(key) ? key[0] : key], {silent : true, env : {"DISPLAY" : ":" + xPortNum}}, this);
+					},
+					function waitDelay()
+					{
+						if(!options.interval)
+							return this();
+
+						setTimeout(this, options.interval);
+					},
+					subcb
+				);
+			}, cb);
+		}, options.delay);
 	}
 
 	// Will start up DOSBox
@@ -402,6 +411,47 @@ class DOS
 			{
 				fileUtil.unlink(self.workDir, this.parallel());
 				fileUtil.unlink(self.portNumFilePath, this.parallel());
+			},
+			cb
+		);
+	}
+
+	static quickOp({inFiles, outFiles, cmds, keys}, cb)
+	{
+		const quickOpTmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/tmp");
+		const dos = new DOS();
+		
+		tiptoe(
+			function createTmpDir()
+			{
+				fs.mkdir(quickOpTmpDirPath, {recursive : true}, this);
+			},
+			function setup()
+			{
+				dos.setup(this);
+			},
+			function copyInFilesToHD()
+			{
+				Object.entries(inFiles).serialForEach(([diskFilePath, dosFilePath], subcb) => dos.copyToHD(diskFilePath, dosFilePath, subcb), this);
+			},
+			function execCommands()
+			{
+				dos.autoExec(Array.force(cmds), this.parallel());
+				if(keys)
+					dos.sendKeys(Array.force(keys), this.parallel());
+			},
+			function copyFileResult()
+			{
+				this.capture();	// We might not have an output file, so we just catch the error and ignore it
+				Object.entries(outFiles).serialForEach(([dosFilePath, diskFilePath], subcb) => dos.copyFromHD(dosFilePath, diskFilePath, subcb), this);
+			},
+			function teardown()
+			{
+				dos.teardown(this);
+			},
+			function cleanup()
+			{
+				fileUtil.unlink(quickOpTmpDirPath, this);
 			},
 			cb
 		);
