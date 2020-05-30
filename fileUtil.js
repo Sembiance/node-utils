@@ -34,25 +34,20 @@ exports.identify = function identify(filePath, cb)
 	tiptoe(
 		function runIndentifiers()
 		{
-			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic:/usr/share/misc/magic.mgc", "-b", filePath], runUtil.SILENT, this.parallel());
-			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic:/usr/share/misc/magic.mgc", "-b", "--extension", filePath], runUtil.SILENT, this.parallel());
+			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic.mgc", "-b", filePath], runUtil.SILENT, this.parallel());
 			runUtil.run("tridid", ["--jsonOutput", filePath], runUtil.SILENT, this.parallel());
 			runUtil.run("fido", ["-q", "-noextension", "-matchprintf", "%(info.formatname)s", filePath], runUtil.SILENT, this.parallel());
 		},
-		function parseResults(magicRaw, magicExtensionsRaw, trididRaw, fidoRaw)
+		function parseResults(magicRaw, trididRaw, fidoRaw)
 		{
-			const results = [];
-
-			const magicResult = {magic : magicRaw.trim(), from : "file"};
-			if(magicExtensionsRaw && magicExtensionsRaw.length>0 && magicExtensionsRaw.trim()!=="???")
-				magicResult.extensions = magicExtensionsRaw.trim().toLowerCase().split("/").map(ext => (ext.charAt(0)==="." ? "" : ".") + ext).filter(ext => ext!==".???");
-			results.push(magicResult);
+			const results = [{magic : magicRaw.trim(), from : "file"}];
 
 			try { results.push(...JSON.parse(trididRaw).map(v => { v.from = "trid"; return v; })); }
 			catch(parseErr) { }
 
-			if(fidoRaw && fidoRaw.trim().length>0)
-				results.push({magic : fidoRaw.trim(), from : "fido"});
+			const fido = (fidoRaw || "").trim();
+			if(fido.length>0)
+				results.push({magic : fido, from : "fido"});
 
 			return results.multiSort(match => (match.percentage || 0), true);
 		},

@@ -42,15 +42,18 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "adfOFS":
 					runUtil.run("extract-adf", ["-a", path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
+				case "boltGameData":
+					runUtil.run("gameextractor", ["-extract", "-input", path.resolve(filePath), "-output", path.resolve(extractionPath)], {silent : true, timeout : XU.MINUTE*5, virtualX : true}, this);
+					break;
 				case "bz2":
 					extractSingleWithSuffix("bunzip2", ".bz2", filePath, extractionPath, this);
 					break;
-				case "crunchmania":
+				case "crunchMania":
 					runUtil.run("decrmtool", [filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
 					break;
 				case "dms":
 				case "lzx":
-				case "powerpack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
+				case "powerPack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
 				case "sit":
 					extractWithSafeFilename("unar", ["-f", "-D", "-o", "out", "%archive%"], filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
 					break;
@@ -69,8 +72,14 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "mbox":
 					runUtil.run("unmbox", [filenameWithExtPath, extractionRelativePath], runOptions, this);
 					break;
-				case "mscompress":
+				case "msCompress":
 					extractSingleWithSuffix("msexpand", "_", filePath, extractionPath, this);
+					break;
+				case "msCompound":
+					runUtil.run("7z", ["x", "-o" + extractionRelativePath, filenameWithExtPath], runOptions, this);
+					break;
+				case "nrg":
+					runUtil.run("unnrg", [filenameWithExtPath, extractionRelativePath], runOptions, this);
 					break;
 				case "pcxlib":
 					extractWithSafeFilename("unpcx", ["%archive%", "out"], filePath, extractionPath, ".pcl", this);
