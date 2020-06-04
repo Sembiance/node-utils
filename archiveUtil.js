@@ -7,6 +7,7 @@ const XU = require("@sembiance/xu"),
 	unicodeUtil = require("./unicodeUtil.js"),
 	{DOS} = require("./dosUtil.js"),
 	runUtil = require("./runUtil.js"),
+	hashUtil = require("./hashUtil.js"),
 	path = require("path");
 
 // Extracts the files in the given filePath if supported
@@ -48,17 +49,26 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "bz2":
 					extractSingleWithSuffix("bunzip2", ".bz2", filePath, extractionPath, this);
 					break;
-				case "crunchMania":
-					runUtil.run("decrmtool", [filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
-					break;
+				case "compactPro":
 				case "dms":
 				case "lzx":
 				case "powerPack":	// was before: app-arch/ppunpack  runUtil.run("ppunpack", [filePath, path.join(extractionPath, (ext===".pp" ? path.basename(filenameWithExt, ext) : filenameWithoutExt))], runUtil.SILENT, this);
+				case "sea":
 				case "sit":
 					extractWithSafeFilename("unar", ["-f", "-D", "-o", "out", "%archive%"], filePath, extractionPath, (archiveType==="powerpack" ? ".pp" : "." + archiveType), this);
 					break;
+				case "crunchMania":
+					runUtil.run("decrmtool", [filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
+					break;
+				case "director":
+					runUtil.run("undirector", ["pc", filePath, extractionPath], runUtil.SILENT, this.parallel());
+					runUtil.run("undirector", ["mac", filePath, extractionPath], runUtil.SILENT, this.parallel());
+					break;
 				case "gz":
 					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
+					break;
+				case "hypercard":
+					hypercardExtract(filePath, extractionPath, this);
 					break;
 				case "iso":
 					runUtil.run("uniso", [filenameWithExtPath, extractionRelativePath], runOptions, this);
@@ -155,10 +165,13 @@ function extractWithSafeFilename(command, _args, filePath, extractionPath, exten
 	tiptoe(
 		function mkTmpExtractionPath()
 		{
-			fs.mkdir(tmpExtractionPath, {recursive : true}, this);
+			hashUtil.hashFile("sha1", filePath, this.parallel());
+			fs.mkdir(tmpExtractionPath, {recursive : true}, this.parallel());
 		},
-		function copyFileOver()
+		function copyFileOver(fileHash)
 		{
+			this.data.fileHash = fileHash;
+
 			fs.copyFile(filePath, path.join(tmpDirPath, tmpArchiveName), this);
 		},
 		function runUnar()
@@ -169,19 +182,28 @@ function extractWithSafeFilename(command, _args, filePath, extractionPath, exten
 		{
 			fileUtil.glob(tmpExtractionPath, "**", {nodir : true}, this);
 		},
-		function renameSingleFileIfNeeded(outFilePaths)
+		function checkDuplicateFile(outFilePaths)
 		{
 			if(outFilePaths.length===0)
 				return this.jump(-1);
 				
 			if(outFilePaths.length>1)
-				return this();
-			
-			const outFilename = path.basename(outFilePaths[0]);
-			if(outFilename==="wip")
-				fs.rename(path.join(tmpExtractionPath, outFilename), path.join(tmpExtractionPath, path.basename(filePath, path.extname(filePath))), this);
-			else if(path.basename(outFilename, path.extname(outFilename))==="wip")
-				fs.rename(path.join(tmpExtractionPath, outFilename), path.join(tmpExtractionPath, path.basename(filePath, path.extname(filePath)) + path.extname(outFilename)), this);
+				return this.jump(-2);
+
+			this.data.outFilename = path.basename(outFilePaths[0]);
+			this.data.outFilePath = path.join(tmpExtractionPath, this.data.outFilename);
+
+			hashUtil.hashFile("sha1", this.data.outFilePath, this);
+		},
+		function renameSingleFileIfNeeded(outFileHash)
+		{
+			if(outFileHash===this.data.fileHash)
+				return fileUtil.unlink(this.data.outFilePath, this);
+
+			if(this.data.outFilename==="wip")
+				fs.rename(this.data.outFilePath, path.join(tmpExtractionPath, path.basename(filePath, path.extname(filePath))), this);
+			else if(path.basename(this.data.outFilename, path.extname(this.data.outFilename))==="wip")
+				fs.rename(this.data.outFilePath, path.join(tmpExtractionPath, path.basename(filePath, path.extname(filePath)) + path.extname(this.data.outFilename)), this);
 			else
 				this();
 		},
@@ -248,6 +270,40 @@ function amosExtract(filePath, extractionPath, cb)
 				return this();
 
 			fs.writeFile(path.join(extractionPath, filename + "_sourceCode"), sourceCodeRaw.trim(), XU.UTF8, this);
+		},
+		cb
+	);
+}
+
+function hypercardExtract(filePath, extractionPath, cb)
+{
+	const safeFilename = "_archiveUtilHypercardStack";
+	const autoExtractedDirPath = path.join(extractionPath, safeFilename + ".xstk");
+
+	tiptoe(
+		function makeSymlink()
+		{
+			fs.symlink(filePath, path.join(extractionPath, safeFilename), this);
+		},
+		function performExtraction()
+		{
+			runUtil.run("stackimport", ["--dumprawblocks", safeFilename], {silent : true, cwd : extractionPath}, this);
+		},
+		function findResults()
+		{
+			if(!fileUtil.existsSync(autoExtractedDirPath))
+				return this.jump(-1);
+
+			fileUtil.glob(autoExtractedDirPath, "*", this);
+		},
+		function moveResults(extractedPaths)
+		{
+			extractedPaths.parallelForEach((extractedPath, subcb) => fileUtil.move(extractedPath, path.join(extractionPath, path.basename(extractedPath)), subcb), this);
+		},
+		function removeSymlink()
+		{
+			fileUtil.unlink(autoExtractedDirPath, this.parallel());
+			fileUtil.unlink(path.join(extractionPath, safeFilename), this.parallel());
 		},
 		cb
 	);

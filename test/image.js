@@ -7,7 +7,7 @@ const tiptoe = require("tiptoe"),
 	imageUtil = require("../index").image;
 
 const FILES_DIR = path.join(__dirname, "files");
-const TEST_COMPRESS = false;
+const TEST_COMPRESS = true;
 
 tiptoe(
 	function getWH()
@@ -35,13 +35,13 @@ tiptoe(
 	},
 	function compress()
 	{
-		imageUtil.compress(path.join(FILES_DIR, "input.png"), path.join(FILES_DIR, "lossless.png"), false, this.parallel());
-		imageUtil.compress(path.join(FILES_DIR, "input.png"), path.join(FILES_DIR, "lossy.png"), true, this.parallel());
+		imageUtil.compress(path.join(FILES_DIR, "input.png"), path.join(FILES_DIR, "lossless.png"), "png", false, this.parallel());
+		imageUtil.compress(path.join(FILES_DIR, "input.png"), path.join(FILES_DIR, "lossy.png"), "png", true, this.parallel());
 		
-		imageUtil.compress(path.join(FILES_DIR, "input.jpg"), path.join(FILES_DIR, "lossless.jpg"), false, this.parallel());
-		imageUtil.compress(path.join(FILES_DIR, "input.jpg"), path.join(FILES_DIR, "lossy.jpg"), true, this.parallel());
+		imageUtil.compress(path.join(FILES_DIR, "input.jpg"), path.join(FILES_DIR, "lossless.jpg"), "jpg", false, this.parallel());
+		imageUtil.compress(path.join(FILES_DIR, "input.jpg"), path.join(FILES_DIR, "lossy.jpg"), "jpg", true, this.parallel());
 
-		imageUtil.compress(path.join(FILES_DIR, "input.gif"), path.join(FILES_DIR, "lossless.gif"), false, this.parallel());
+		imageUtil.compress(path.join(FILES_DIR, "input.gif"), path.join(FILES_DIR, "lossless.gif"), "gif", false, this.parallel());
 	},
 	function finish(err)
 	{

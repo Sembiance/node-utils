@@ -1,7 +1,6 @@
 "use strict";
 
 const XU = require("@sembiance/xu"),
-	path = require("path"),
 	fileUtil = require("./fileUtil.js"),
 	fs = require("fs"),
 	runUtil = require("./runUtil.js"),
@@ -83,68 +82,45 @@ exports.getAutoCropDimensions = function getAutoCropDimensions(inputFilePath, _o
 };
 
 // Will compress the given image at inputFilePath to outputFilePath. If lossy is true then it will reduce image quality as needed to achieve higher compression
-exports.compress = function compress(inputFilePath, outputFilePath, lossy, cb)
+exports.compress = function compress(inputFilePath, outputFilePath, fileType, lossy, cb)
 {
-	const extension = path.extname(inputFilePath).toLowerCase().substring(1);
-	if(!(["jpg", "jpeg", "png", "gif"]).includes(extension))
-		throw new Error("Unsupported image extension: " + extension);
+	if(!(["jpg", "png", "gif"]).includes(fileType))
+		throw new Error("Unsupported image type: " + fileType);
 
-	const tmpFilePath = fileUtil.generateTempFilePath();
-	let deleteInput = false;
+	const tmpInputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", "." + fileType);
+	const tmpOutputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", "." + fileType);
 
 	tiptoe(
-		function checkIfInputOutputMatch()
-		{
-			if(inputFilePath===outputFilePath)
-			{
-				const inputTMP = fileUtil.generateTempFilePath();
-				fs.copyFile(inputFilePath, inputTMP, this);
-				inputFilePath = inputTMP;	// eslint-disable-line no-param-reassign
-				deleteInput = true;
-			}
-			else
-			{
-				this();
-			}
-		},
 		function prepare()
 		{
-			if(extension==="png")
-				fs.copyFile(inputFilePath, tmpFilePath, this);
-			else
-				this();
+			fs.copyFile(inputFilePath, tmpInputFilePath, this);
 		},
 		function performCompression()
 		{
-			if(extension==="png")
+			if(fileType==="png")
 			{
 				if(lossy)
-					runUtil.run("pngquant", ["--speed=1", "--strip", "--output", outputFilePath, inputFilePath], runUtil.SILENT, this);
+					runUtil.run("pngquant", ["--speed=1", "--strip", "--output", tmpOutputFilePath, tmpInputFilePath], runUtil.SILENT, this);
 				else
-					runUtil.run("zopflipng", ["-y", "--splitting=3", "--filters=01234mepb", tmpFilePath, outputFilePath], runUtil.SILENT, this);
+					runUtil.run("zopflipng", ["-m", tmpInputFilePath, tmpOutputFilePath], runUtil.SILENT, this);
 			}
-			else if(extension==="jpg" || extension==="jpeg")
+			else if(fileType==="jpg")
 			{
 				if(lossy)
-					runUtil.run("guetzli", ["-quality", "95%", inputFilePath, outputFilePath], runUtil.SILENT, this);
+					runUtil.run("guetzli", ["--quality", "90", tmpInputFilePath, tmpOutputFilePath], runUtil.SILENT, this);
 				else
-					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", outputFilePath, inputFilePath], runUtil.SILENT, this);
+					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", tmpOutputFilePath, tmpInputFilePath], runUtil.SILENT, this);
 			}
-			else if(extension==="gif")
+			else if(fileType==="gif")
 			{
-				runUtil.run("gifsicle", ["-O3", inputFilePath, "-o", outputFilePath], runUtil.SILENT, this);
-			}
-			else
-			{
-				this();
+				runUtil.run("gifsicle", ["--optimize=3", tmpInputFilePath, "-o", tmpOutputFilePath], runUtil.SILENT, this);
 			}
 		},
 		function cleanup()
 		{
-			if(deleteInput)
-				fileUtil.unlink(inputFilePath, this.parallel());
-			
-			this();
+			if(fileUtil.existsSync(tmpOutputFilePath))
+				fileUtil.move(tmpOutputFilePath, outputFilePath, this.parallel());
+			fileUtil.unlink(tmpInputFilePath, this.parallel());
 		},
 		cb
 	);
