@@ -178,7 +178,11 @@ exports.convert = function convert(srcFilePath, outFilePath, _options, _cb)
 				if(cropProps && cropProps.length===1)
 					convertArgs.push("-vf", cropProps[0].trim());
 			}
-			convertArgs.push("-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", outFilePath);
+
+			if(options.browserFriendly)
+				convertArgs.push("-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "1", "-preset", "veryslow", outFilePath);	// Browser compatible color space (YUV420 instead of YUV444) and spend more CPU time compressing
+			else
+				convertArgs.push("-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", outFilePath);	// Pixel perfect, very fast
 
 			runUtil.run("ffmpeg", convertArgs, runUtil.SILENT, this);
 		},
