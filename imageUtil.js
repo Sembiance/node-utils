@@ -3,6 +3,7 @@
 const XU = require("@sembiance/xu"),
 	fileUtil = require("./fileUtil.js"),
 	fs = require("fs"),
+	path = require("path"),
 	runUtil = require("./runUtil.js"),
 	tiptoe = require("tiptoe");
 
@@ -30,7 +31,7 @@ exports.getInfo = function getInfo(imageFilePath, cb)
 	tiptoe(
 		function runIdentifiers()
 		{
-			runUtil.run("identify", ["-quiet", "-format", Object.entries(PROPS).map(([k, v]) => k + ":" + v).join("\\n"), imageFilePath], runUtil.SILENT, this);
+			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => k + ":" + v).join("\\n"), path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this);
 		},
 		function parseResults(imResultsRaw)
 		{
