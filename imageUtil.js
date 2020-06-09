@@ -6,6 +6,54 @@ const XU = require("@sembiance/xu"),
 	runUtil = require("./runUtil.js"),
 	tiptoe = require("tiptoe");
 
+// Returns a bunch of info about the given image
+exports.getInfo = function getInfo(imageFilePath, cb)
+{
+	const PROPS =
+	{
+		height             : "%h",
+		colorCount         : "%k",
+		format             : "%[magick]",
+		width              : "%w",
+		canvasHeight       : "%H",
+		canvasWidth        : "%W",
+		size               : "%B",
+		compressionType    : "%C",
+		compressionQuality : "%Q",
+		entropy            : "%[entropy]",
+		opaque             : "%[opaque]"
+	};
+
+	const NUMS = ["width", "height", "canvasWidth", "canvasHeight", "colorCount", "size", "compressionQuality", "entropy"];
+	const BOOLS = ["opaque"];
+
+	tiptoe(
+		function runIdentifiers()
+		{
+			runUtil.run("identify", ["-quiet", "-format", Object.entries(PROPS).map(([k, v]) => k + ":" + v).join("\\n"), imageFilePath], runUtil.SILENT, this);
+		},
+		function parseResults(imResultsRaw)
+		{
+			const imLines = (imResultsRaw || "").trim().split("\n");
+			if(imLines.length===0)
+				return this();
+			
+			const imageInfo = {};
+			imLines.forEach(imgLine =>
+			{
+				const lineProps = (imgLine.match(/(?<propName>[^:]+):(?<propValue>.*)$/) || {}).groups;
+				if(!lineProps || !Object.keys(PROPS).includes(lineProps.propName))
+					return;
+				
+				imageInfo[lineProps.propName] = NUMS.includes(lineProps.propName) ? +lineProps.propValue : (BOOLS.includes(lineProps.propName) ? lineProps.propValue.toLowerCase()==="true" : lineProps.propValue);
+			});
+			
+			this(undefined, Object.keys(imageInfo).length===0 ? undefined : imageInfo);
+		},
+		cb
+	);
+};
+
 // Will return [width, height] of the image at imageFilePath
 exports.getWidthHeight = function getWidthHeight(imageFilePath, cb)
 {

@@ -30,7 +30,7 @@ tiptoe(
 		assert.strictEqual(cropVidInfo.width, 1920);
 		assert.strictEqual(cropVidInfo.height, 1080);
 		assert.strictEqual(cropVidInfo.duration, 9.8);
-		assert.strictEqual(cropVidInfo.framesPerSecond, 60);
+		assert.strictEqual(cropVidInfo.fps, 60);
 
 		videoUtil.autocrop(CROP_VIDEO_PATH, destCroppedVideoPath, {cropColor : "#FFC0CB"}, this);
 	},
@@ -43,7 +43,7 @@ tiptoe(
 		assert.strictEqual(trimVidInfo.width, 1280);
 		assert.strictEqual(trimVidInfo.height, 720);
 		assert.strictEqual(trimVidInfo.duration, 9.8);
-		assert.strictEqual(trimVidInfo.framesPerSecond, 60);
+		assert.strictEqual(trimVidInfo.fps, 60);
 
 		videoUtil.trimSolidFrames(destCroppedVideoPath, destTrimmedVideoPath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this);
 	},
@@ -57,7 +57,7 @@ tiptoe(
 		assert.strictEqual(trimmedVidInfo.width, 1280);
 		assert.strictEqual(trimmedVidInfo.height, 720);
 		assert.strictEqual(trimmedVidInfo.duration, 9.57);
-		assert.strictEqual(trimmedVidInfo.framesPerSecond, 60);
+		assert.strictEqual(trimmedVidInfo.fps, 60);
 
 		videoUtil.generateThumbnail(VIDEO_PATH, "00:00:" + (videoInfo.duration<40 ? Math.floor(Math.floor(videoInfo.duration)/2) : 30), VIDEO_PATH + ".thumb.png", 400, 600, this);
 	},

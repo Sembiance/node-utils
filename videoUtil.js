@@ -261,7 +261,7 @@ exports.getInfo = function getInfo(videoPath, cb)
 				if(parts[0]==="ID_VIDEO_HEIGHT")
 					info.height = +parts[1];
 				if(parts[0]==="ID_VIDEO_FPS")
-					info.framesPerSecond = +parts[1];
+					info.fps = +parts[1];
 				if(parts[0]==="ID_VIDEO_ASPECT")
 					info.aspectRatio = +parts[1];
 				if(parts[0]==="ID_VIDEO_FORMAT")

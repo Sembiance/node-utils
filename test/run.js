@@ -63,7 +63,7 @@ function testVirtualXRecord(cb)
 			assert.strictEqual(vidInfo.width, 1280);
 			assert.strictEqual(vidInfo.height, 720);
 			assert(vidInfo.duration>=9.5 && vidInfo.duration<=9.8, vidInfo.duration);
-			assert.strictEqual(vidInfo.framesPerSecond, 60);
+			assert.strictEqual(vidInfo.fps, 60);
 
 			fileUtil.unlink(OUTPUT_VIDEO_FILE_PATH, this);
 		},
