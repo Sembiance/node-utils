@@ -4,6 +4,7 @@ const assert = require("assert"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
 	fs = require("fs"),
+	hashUtil = require("../index").hash,
 	fileUtil = require("../index").file,
 	videoUtil = require("../index").video;
 
@@ -17,10 +18,25 @@ const CROP_VIDEO_PATH = path.join(FILES_DIR, "cropme.mp4");
 assert(fs.existsSync(VIDEO_PATH));
 assert(fs.existsSync(CROP_VIDEO_PATH));
 
+const frameFromEndFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".png");
+const framePercentageEndFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".png");
 const destCroppedVideoPath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
 const destTrimmedVideoPath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
 
 tiptoe(
+	function extractFrame()
+	{
+		videoUtil.extractFrame(VIDEO_PATH, frameFromEndFilePath, "-12000", this.parallel());
+		videoUtil.extractFrame(VIDEO_PATH, framePercentageEndFilePath, "47%", this.parallel());
+	},
+	function verifyScreenshot()
+	{
+		assert.strictEqual(hashUtil.hash("sha1", fs.readFileSync(frameFromEndFilePath)), "bb08673009babc45268f5be3407a4ee85210eb32");
+		assert.strictEqual(hashUtil.hash("sha1", fs.readFileSync(framePercentageEndFilePath)), "e48b898fddb84a86f8747260ae283a8653cfe9f8");
+		
+		fs.unlink(frameFromEndFilePath, this.parallel());
+		fs.unlink(framePercentageEndFilePath, this.parallel());
+	},
 	function getCroppedVideoInfoBefore()
 	{
 		videoUtil.getInfo(CROP_VIDEO_PATH, this);
