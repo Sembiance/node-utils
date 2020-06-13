@@ -3,7 +3,9 @@
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	fs = require("fs"),
+	{performance} = require("perf_hooks"),
 	runUtil = require("./runUtil"),
+	videoUtil = require("./videoUtil"),
 	fileUtil = require("./fileUtil"),
 	path = require("path");
 
@@ -11,20 +13,24 @@ const XU = require("@sembiance/xu"),
 // https://unix.stackexchange.com/questions/259294/use-xvfb-to-automate-x-program
 // https://stackoverflow.com/questions/5094389/automation-using-xdotool-and-xvfb
 
-const MAX_DOSBOXES_AT_ONCE = 15;
+let lastLaunch = 0;
+const MIN_LAUNCH_INTERVAL = XU.SECOND*2;
+const MAX_DOSBOXES_AT_ONCE = 5;
 
 class DOS
 {
-	constructor(_masterHDFilePath=path.join(__dirname, "dos", "hd.img"), _debug=false)
+	constructor({masterHDFilePath=path.join(__dirname, "dos", "hd.img"), debug=false, recordVideoFilePath=null}={})
 	{
-		this.masterHDFilePath = _masterHDFilePath;
+		this.masterHDFilePath = masterHDFilePath;
 		this.masterConfigFilePath = path.join(__dirname, "dos", "dosbox.conf");
 		this.loopNum = null;
 		this.setupDone = false;
 		this.dosBoxCP = null;
 		this.autoExecVanilla = null;
 		this.exitCallbacks = [];
-		this.debug = _debug;
+		this.debug = debug;
+		if(recordVideoFilePath)
+			this.recordVideoFilePath = recordVideoFilePath;
 	}
 
 	// Will create a temporary directory in RAM and copy the master HD image and config file over
@@ -73,6 +79,22 @@ class DOS
 	{
 		const self=this;
 		tiptoe(
+			function waitToStart()
+			{
+				function doWaiting(waitcb)
+				{
+					const diff = performance.now()-lastLaunch;
+					if(diff>MIN_LAUNCH_INTERVAL)
+					{
+						lastLaunch = performance.now();
+						return setImmediate(waitcb);
+					}
+
+					setTimeout(() => doWaiting(waitcb), MIN_LAUNCH_INTERVAL);
+				}
+
+				doWaiting(this);
+			},
 			function getDOSBoxProcList()
 			{
 				runUtil.run("ps", ["-C", "dosbox", "--no-headers", "-o", "pid"], {"ignore-errors" : true, silent : true}, this);
@@ -355,7 +377,15 @@ class DOS
 		tiptoe(
 			function runDOSBox()
 			{
-				runUtil.run("dosbox", ["-conf", self.configFilePath], {virtualX : !self.debug, virtualXPortNumFile : self.portNumFilePath, silent : !self.debug, detached : true}, this);
+				const runArgs = {detached : true};
+				runArgs.silent = !self.debug;
+				runArgs.virtualX = !self.debug;
+				runArgs.virtualXPortNumFile = self.portNumFilePath;
+
+				if(self.recordVideoFilePath)
+					runArgs.recordVirtualX = self.recordVideoFilePath;
+
+				runUtil.run("dosbox", ["-conf", self.configFilePath], runArgs, this);
 			},
 			function recordChildProcess(cp)
 			{
@@ -416,10 +446,15 @@ class DOS
 		);
 	}
 
-	static quickOp({inFiles, outFiles, cmds, keys}, cb)
+	static quickOp({inFiles, outFiles, cmds, keys, screenshot=null}, cb)
 	{
 		const quickOpTmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/tmp");
-		const dos = new DOS();
+		const videoTmpFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
+		const dosArgs = {};
+		if(screenshot)
+			dosArgs.recordVideoFilePath = videoTmpFilePath;
+
+		const dos = new DOS(dosArgs);
 		
 		tiptoe(
 			function createTmpDir()
@@ -445,13 +480,22 @@ class DOS
 				this.capture();	// We might not have an output file, so we just catch the error and ignore it
 				Object.entries(outFiles).serialForEach(([dosFilePath, diskFilePath], subcb) => dos.copyFromHD(dosFilePath, diskFilePath, subcb), this);
 			},
+			function copyScreenshot()
+			{
+				if(!screenshot)
+					return this();
+
+				videoUtil.extractFrame(videoTmpFilePath, screenshot.filePath, "" + screenshot.loc, this);
+			},
 			function teardown()
 			{
 				dos.teardown(this);
 			},
 			function cleanup()
 			{
-				fileUtil.unlink(quickOpTmpDirPath, this);
+				if(screenshot)
+					fileUtil.unlink(videoTmpFilePath, this.parallel());
+				fileUtil.unlink(quickOpTmpDirPath, this.parallel());
 			},
 			cb
 		);
