@@ -76,6 +76,7 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "lbr":
 					runUtil.run("lbrate", [path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
+				case "lhaSelfExtract":
 				case "lha":
 					runUtil.run("lha", ["-x", "-w=" + extractionRelativePath, filenameWithExtPath], runOptions, this);
 					break;
