@@ -19,7 +19,7 @@ const MAX_DOSBOXES_AT_ONCE = 5;
 
 class DOS
 {
-	constructor({masterHDFilePath=path.join(__dirname, "dos", "hd.img"), debug=false, recordVideoFilePath=null}={})
+	constructor({masterHDFilePath=path.join(__dirname, "dos", "hd.img"), debug=false, recordVideoFilePath=null, timeout=XU.MINUTE*15}={})
 	{
 		this.masterHDFilePath = masterHDFilePath;
 		this.masterConfigFilePath = path.join(__dirname, "dos", "dosbox.conf");
@@ -28,6 +28,7 @@ class DOS
 		this.dosBoxCP = null;
 		this.autoExecVanilla = null;
 		this.exitCallbacks = [];
+		this.timeout = timeout;
 		this.debug = debug;
 		if(recordVideoFilePath)
 			this.recordVideoFilePath = recordVideoFilePath;
@@ -381,6 +382,7 @@ class DOS
 				runArgs.silent = !self.debug;
 				runArgs.virtualX = !self.debug;
 				runArgs.virtualXPortNumFile = self.portNumFilePath;
+				runArgs.timeout = self.timeout;
 
 				if(self.recordVideoFilePath)
 					runArgs.recordVirtualX = self.recordVideoFilePath;
