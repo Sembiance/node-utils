@@ -15,11 +15,11 @@ const XU = require("@sembiance/xu"),
 
 let lastLaunch = 0;
 const MIN_LAUNCH_INTERVAL = XU.SECOND*2;
-const MAX_DOSBOXES_AT_ONCE = 5;
+const MAX_DOSBOXES_AT_ONCE = 10;
 
 class DOS
 {
-	constructor({masterHDFilePath=path.join(__dirname, "dos", "hd.img"), debug=false, recordVideoFilePath=null, timeout=XU.MINUTE*15}={})
+	constructor({masterHDFilePath=path.join(__dirname, "dos", "hd.img"), debug=false, recordVideoFilePath=null, timeout=XU.MINUTE*10}={})
 	{
 		this.masterHDFilePath = masterHDFilePath;
 		this.masterConfigFilePath = path.join(__dirname, "dos", "dosbox.conf");
@@ -448,13 +448,17 @@ class DOS
 		);
 	}
 
-	static quickOp({inFiles, outFiles, cmds, keys, screenshot=null}, cb)
+	static quickOp({inFiles, outFiles, cmds, keys, timeout, screenshot=null, debug}, cb)
 	{
 		const quickOpTmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/tmp");
 		const videoTmpFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
 		const dosArgs = {};
 		if(screenshot)
 			dosArgs.recordVideoFilePath = videoTmpFilePath;
+		if(timeout)
+			dosArgs.timeout = timeout;
+		if(debug)
+			dosArgs.debug = debug;
 
 		const dos = new DOS(dosArgs);
 		
