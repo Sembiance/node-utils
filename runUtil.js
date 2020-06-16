@@ -45,6 +45,19 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 	if(options.detached)
 	{
 		const cp = childProcess.spawn(command, args, options);
+		if(options.timeout)
+		{
+			let timeoutid = setTimeout(() => { timeoutid = null; cp.kill(); }, options.timeout);
+			cp.on("exit", () =>
+			{
+				if(timeoutid!==null)
+				{
+					clearTimeout(timeoutid);
+					timeoutid = null;
+				}
+			});
+		}
+		
 		return setImmediate(() => cb(undefined, cp));
 	}
 
