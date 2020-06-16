@@ -31,11 +31,15 @@ exports.getInfo = function getInfo(imageFilePath, cb)
 	tiptoe(
 		function runIdentifiers()
 		{
-			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => k + ":" + v).join("\\n"), path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this);
+			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => k + ":" + v).join("\\n"), path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
+			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
 		},
-		function parseResults(imResultsRaw)
+		function parseResults(imResultsRaw, whRaw)
 		{
-			const imLines = (imResultsRaw || "").trim().split("\n");
+			let imLines = (imResultsRaw || "").trim().split("\n");
+			if(imLines.length===0 || imResultsRaw.includes("corrupt image"))
+				imLines = (whRaw || "").trim().split("\n");
+			
 			if(imLines.length===0)
 				return this();
 			
