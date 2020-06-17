@@ -45,6 +45,13 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 	if(options.detached)
 	{
 		const cp = childProcess.spawn(command, args, options);
+
+		if(options.liveOutput)
+		{
+			cp.stdout.pipe(process.stdout);
+			cp.stderr.pipe(process.stderr);
+		}
+		
 		if(options.timeout)
 		{
 			let timeoutid = setTimeout(() => { timeoutid = null; cp.kill(); }, options.timeout);
