@@ -31,6 +31,9 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 
 			switch(archiveType)
 			{
+				case "arj":
+					runUtil.run("unarj", ["x", path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
+					break;
 				case "arc":
 					runUtil.run("arc", ["x", path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
@@ -64,8 +67,16 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					runUtil.run("undirector", ["pc", filePath, extractionPath], runUtil.SILENT, this.parallel());
 					runUtil.run("undirector", ["mac", filePath, extractionPath], runUtil.SILENT, this.parallel());
 					break;
+				case "diskImage":
+				case "msCompound":
+					runUtil.run("7z", ["x", "-o" + extractionRelativePath, filenameWithExtPath], runOptions, this);
+					break;
 				case "gz":
 					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
+					break;
+				case "gxlib":
+				case "pcxlib":
+					extractWithSafeFilename("unpcx", ["%archive%", "out"], filePath, extractionPath, ".pcl", this);
 					break;
 				case "hypercard":
 					hypercardExtract(filePath, extractionPath, this);
@@ -76,7 +87,6 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "lbr":
 					runUtil.run("lbrate", [path.relative(extractionPath, filePath)], {cwd : extractionPath, silent : true}, this);
 					break;
-				case "lhaSelfExtract":
 				case "lha":
 					runUtil.run("lha", ["-x", "-w=" + extractionRelativePath, filenameWithExtPath], runOptions, this);
 					break;
@@ -86,23 +96,18 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "msCompress":
 					extractSingleWithSuffix("msexpand", "_", filePath, extractionPath, this);
 					break;
-				case "msCompound":
-					runUtil.run("7z", ["x", "-o" + extractionRelativePath, filenameWithExtPath], runOptions, this);
-					break;
 				case "nrg":
 					runUtil.run("unnrg", [filenameWithExtPath, extractionRelativePath], runOptions, this);
 					break;
-				case "pcxlib":
-					extractWithSafeFilename("unpcx", ["%archive%", "out"], filePath, extractionPath, ".pcl", this);
+				case "pog":
+				case "rsrc":
+					runUtil.run("deark", ["-od", extractionRelativePath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
 					break;
 				case "rar":
 					runUtil.run("unrar", ["x", "-p-", filenameWithExtPath, extractionRelativePath], runOptions, this);
 					break;
 				case "rnc":
 					runUtil.run("ancient", ["decompress", filenameWithExtPath, path.join(extractionRelativePath, filenameWithoutExt)], runOptions, this);
-					break;
-				case "rsrc":
-					runUtil.run("deark", ["-od", extractionRelativePath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
 					break;
 				case "stc":
 				case "xpk":
