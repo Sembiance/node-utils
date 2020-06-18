@@ -3,7 +3,6 @@
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	fs = require("fs"),
-	{performance} = require("perf_hooks"),
 	runUtil = require("./runUtil"),
 	videoUtil = require("./videoUtil"),
 	fileUtil = require("./fileUtil"),
@@ -13,9 +12,9 @@ const XU = require("@sembiance/xu"),
 // https://unix.stackexchange.com/questions/259294/use-xvfb-to-automate-x-program
 // https://stackoverflow.com/questions/5094389/automation-using-xdotool-and-xvfb
 
-let lastLaunch = 0;
-const MIN_LAUNCH_INTERVAL = XU.SECOND*2;
-const MAX_DOSBOXES_AT_ONCE = 10;
+const LAST_LAUNCH_FILE_PATH = "/mnt/ram/tmp/dosUtilLastLaunch";
+const MIN_LAUNCH_INTERVAL = XU.SECOND*5;
+const MAX_DOSBOXES_AT_ONCE = 15;
 
 class DOS
 {
@@ -32,6 +31,9 @@ class DOS
 		this.debug = debug;
 		if(recordVideoFilePath)
 			this.recordVideoFilePath = recordVideoFilePath;
+
+		if(!fileUtil.existsSync(LAST_LAUNCH_FILE_PATH))
+			fs.writeFileSync(LAST_LAUNCH_FILE_PATH, "0", XU.UTF8);
 	}
 
 	// Will create a temporary directory in RAM and copy the master HD image and config file over
@@ -84,10 +86,10 @@ class DOS
 			{
 				function doWaiting(waitcb)
 				{
-					const diff = performance.now()-lastLaunch;
+					const diff = Date.now()-(+(fs.readFileSync(LAST_LAUNCH_FILE_PATH, XU.UTF8)));
 					if(diff>MIN_LAUNCH_INTERVAL)
 					{
-						lastLaunch = performance.now();
+						fs.writeFileSync(LAST_LAUNCH_FILE_PATH, "" + Date.now(), XU.UTF8);
 						return setImmediate(waitcb);
 					}
 
@@ -342,10 +344,16 @@ class DOS
 		const self=this;
 		setTimeout(() =>
 		{
+			if(!fileUtil.existsSync(self.portNumFilePath))
+				return setImmediate(cb);
+
 			const xPortNum = fs.readFileSync(self.portNumFilePath, XU.UTF8).trim();
 
 			Array.force(keys).serialForEach((key, subcb) =>
 			{
+				if(Object.isObject(key) && key.delay)
+					return setTimeout(subcb, key.delay), undefined;
+
 				tiptoe(
 					function sendKey()
 					{
@@ -448,17 +456,24 @@ class DOS
 		);
 	}
 
-	static quickOp({inFiles, outFiles, cmds, keys, timeout, screenshot=null, debug}, cb)
+	static quickOp({inFiles, outFiles, cmds, keys, keyOpts, timeout, screenshot=null, video=null, debug}, cb)
 	{
 		const quickOpTmpDirPath = fileUtil.generateTempFilePath("/mnt/ram/tmp");
-		const videoTmpFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
 		const dosArgs = {};
+		if(video)
+			dosArgs.recordVideoFilePath = video;
 		if(screenshot)
-			dosArgs.recordVideoFilePath = videoTmpFilePath;
+			dosArgs.recordVideoFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
 		if(timeout)
 			dosArgs.timeout = timeout;
 		if(debug)
 			dosArgs.debug = debug;
+		
+		//if(!dosArgs.recordVideoFilePath)
+		//{
+		//	dosArgs.recordVideoFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
+		//	console.log({inFiles, outFiles, cmds, vidDebug : dosArgs.recordVideoFilePath});
+		//}
 
 		const dos = new DOS(dosArgs);
 		
@@ -479,7 +494,7 @@ class DOS
 			{
 				dos.autoExec(Array.force(cmds), this.parallel());
 				if(keys)
-					dos.sendKeys(Array.force(keys), this.parallel());
+					dos.sendKeys(Array.force(keys), keyOpts || {}, this.parallel());
 			},
 			function copyFileResult()
 			{
@@ -491,7 +506,7 @@ class DOS
 				if(!screenshot)
 					return this();
 
-				videoUtil.extractFrame(videoTmpFilePath, screenshot.filePath, "" + screenshot.loc, this);
+				videoUtil.extractFrame(dosArgs.recordVideoFilePath, screenshot.filePath, "" + screenshot.loc, this);
 			},
 			function teardown()
 			{
@@ -500,7 +515,7 @@ class DOS
 			function cleanup()
 			{
 				if(screenshot)
-					fileUtil.unlink(videoTmpFilePath, this.parallel());
+					fileUtil.unlink(dosArgs.recordVideoFilePath, this.parallel());
 				fileUtil.unlink(quickOpTmpDirPath, this.parallel());
 			},
 			cb
