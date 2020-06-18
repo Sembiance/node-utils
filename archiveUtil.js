@@ -71,12 +71,17 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 				case "msCompound":
 					runUtil.run("7z", ["x", "-o" + extractionRelativePath, filenameWithExtPath], runOptions, this);
 					break;
-				case "gz":
-					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
+				case "grasp":
+				case "pog":
+				case "rsrc":
+					runUtil.run("deark", ["-od", extractionRelativePath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
 					break;
 				case "gxlib":
 				case "pcxlib":
 					extractWithSafeFilename("unpcx", ["%archive%", "out"], filePath, extractionPath, ".pcl", this);
+					break;
+				case "gz":
+					extractSingleWithSuffix("gunzip", ".gz", filePath, extractionPath, this);
 					break;
 				case "hypercard":
 					hypercardExtract(filePath, extractionPath, this);
@@ -98,10 +103,6 @@ exports.extract = function extract(archiveType, filePath, extractionPath, cb)
 					break;
 				case "nrg":
 					runUtil.run("unnrg", [filenameWithExtPath, extractionRelativePath], runOptions, this);
-					break;
-				case "pog":
-				case "rsrc":
-					runUtil.run("deark", ["-od", extractionRelativePath, "-o", path.basename(filePath, path.extname(filePath)), filenameWithExtPath], runOptions, this);	// Can pass this to RAW extract all resources: -opt macrsrc:extractraw
 					break;
 				case "rar":
 					runUtil.run("unrar", ["x", "-p-", filenameWithExtPath, extractionRelativePath], runOptions, this);
@@ -317,39 +318,32 @@ function hypercardExtract(filePath, extractionPath, cb)
 
 function tscompExtract(filePath, extractionPath, cb)
 {
-	const dos = new DOS();
-	const safeDOSFile = "COMPRESD.TSC";
+	const tsFilesTmpFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".txt");
 
 	tiptoe(
-		function setup()
+		function generateFileList()
 		{
-			dos.setup(this);
+			DOS.quickOp({
+				inFiles  : {[filePath] : "TMP/F.TSC"},
+				outFiles : {"TMP/TSFILES.TXT" : tsFilesTmpFilePath},
+				timeout  : XU.MINUTE,
+				cmds     : ["C:\\APP\\TSCOMP.EXE -l C:\\TMP\\F.TSC > C:\\TMP\\TSFILES.TXT"]}, this);
 		},
-		function copyArchiveToHD()
+		function extractFiles()
 		{
-			dos.copyToHD(filePath, path.join("WORK", safeDOSFile), this);
-		},
-		function execTSComp()
-		{
-			dos.autoExec(["C:\\APP\\TSCOMP.EXE -l C:\\WORK\\" + safeDOSFile + " > C:\\TMP\\TSFILES.TXT"], this);
-		},
-		function readFileList()
-		{
-			dos.readFromHD("TMP/TSFILES.TXT", this);
-		},
-		function prepareExtractCmd(tscompOutput)
-		{
-			this.data.tscompFilenames = tscompOutput.toString("utf8").split("\n").filter(line => line.trim().startsWith("=>")).map(line => line.trim().substring(2));
-
-			dos.autoExec(["cd WORK", ...this.data.tscompFilenames.map(fn => "C:\\APP\\TSCOMP.EXE -d " + safeDOSFile + " " + fn)], this);
-		},
-		function copyFileResults()
-		{
-			dos.copyFromHD(this.data.tscompFilenames.map(fn => path.join("WORK", fn)), extractionPath, this);
+			const tscompFilenames = fs.readFileSync(tsFilesTmpFilePath, XU.UTF8).toString("utf8").split("\n").filter(line => line.trim().startsWith("=>")).map(line => line.trim().substring(2));
+			const outFiles = {};
+			tscompFilenames.forEach(tscompFilename => { outFiles[path.join("TMP", tscompFilename)] = path.join(extractionPath, tscompFilename); });
+			
+			DOS.quickOp({
+				inFiles  : {[filePath] : "TMP/F.TSC"},
+				outFiles,
+				timeout  : XU.MINUTE,
+				cmds     : ["cd TMP", ...tscompFilenames.map(fn => "C:\\APP\\TSCOMP.EXE -d F.TSC " + fn)]}, this);
 		},
 		function cleanup()
 		{
-			dos.teardown(this);
+			fileUtil.unlink(tsFilesTmpFilePath, this);
 		},
 		cb
 	);
