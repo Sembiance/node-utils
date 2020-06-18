@@ -20,5 +20,6 @@ module.exports =
 	get archive() { return require("./archiveUtil.js"); },
 	get adsTxt() { return require("./adsTxtUtil.js"); },
 	get hash() { return require("./hashUtil.js"); },
-	get dos() { return require("./dosUtil.js"); }
+	get dos() { return require("./dosUtil.js"); },
+	get wine() { return require("./wineUtil.js"); }
 };
