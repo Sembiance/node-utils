@@ -128,11 +128,14 @@ function httpExecute(targetURL, options, cb)
 	const requestOptions =
 	{
 		hostname : uo.hostname,
-		port     : uo.port || (targetURL.startsWith("https") ? 443 : 80),
+		port     : uo.port || (uo.protocol.startsWith("https") ? 443 : 80),
 		method   : options.method,
 		path     : decodeURIComponent(uo.pathname).split("/").map(s => (!s || !s.length ? "" : urlencode(s))).join("/") + (uo.search ? uo.search : ""),
 		headers  : getHeaders(options.headers)
 	};
+
+	if(uo.protocol.startsWith("https"))
+		requestOptions.rejectUnauthorized = false;
 
 	requestOptions.headers.Host = requestOptions.hostname;
 
@@ -202,7 +205,7 @@ function httpExecute(targetURL, options, cb)
 		}
 	};
 
-	httpRequest = (targetURL.startsWith("https") ? https : http).request(requestOptions, httpResponse);
+	httpRequest = (uo.protocol.startsWith("https") ? https : http).request(requestOptions, httpResponse);
 
 	httpRequest.on("error", err =>
 	{
