@@ -2,18 +2,22 @@
 /* eslint-disable no-param-reassign */
 
 const XU = require("@sembiance/xu"),
+	path = require("path"),
 	childProcess = require("child_process");
 
 // Options include:
-//        detached : Set to 'true' and have the cb be called right away, with the childProcess result
-//         verbose : Set to 'true' to console.log() the command, stdout and stderr
-//          silent : Set to 'true' to not output anything at all
-//       maxBuffer : Set maximum buffer size for stdout
-//      liveOutput : Set to 'true' to pipe stdout and stderr of the process to the equilivant live stdout/stderr streams
-//       inputData : Pass data to 'stdin' of the process
-// redirect-stderr : Redirect all stderr content to stdout result
-//             env : Pass an object of key/value pairs to set for environment variables
-//         timeout : Number of 'ms' to allow the process to run and then terminate it
+//            detached : Set to 'true' and have the cb be called right away, with the childProcess result
+//             verbose : Set to 'true' to console.log() the command, stdout and stderr
+//              silent : Set to 'true' to not output anything at all
+//           maxBuffer : Set maximum buffer size for stdout
+//          liveOutput : Set to 'true' to pipe stdout and stderr of the process to the equilivant live stdout/stderr streams
+//           inputData : Pass data to 'stdin' of the process
+//     redirect-stderr : Redirect all stderr content to stdout result
+//                 env : Pass an object of key/value pairs to set for environment variables
+//             timeout : Number of 'ms' to allow the process to run and then terminate it
+//            virtualX : If true, run this command in a virtual X environment
+//      recordVirtualX : If virtualX is true, then record a video to the path specified by this option
+// virtualXPortNumFile : If virtualX is true, then pass this as the portNumFile for the virtual framebuffer to use
 exports.run = function run(_command, _args, options={}, cb=() => {})
 {
 	if(!options.maxBuffer)
@@ -35,7 +39,7 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 		if(options.recordVirtualX)
 			args.unshift("--recordVideo=" + options.recordVirtualX);
 			
-		command = "xRun";
+		command = path.join(__dirname, "bin", "virtualXRun");
 	}
 
 	if(!options.silent)

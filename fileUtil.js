@@ -4,9 +4,9 @@ const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	path = require("path"),
 	os = require("os"),
+	rimraf = require("rimraf"),	// eslint-disable-line node/no-restricted-require
 	{performance} = require("perf_hooks"),
 	globModule = require("glob"),	// eslint-disable-line node/no-restricted-require
-	runUtil = require("./runUtil.js"),
 	tiptoe = require("tiptoe");
 
 // Glob has many built in issues, which is probably why the author wants to rewrite it: https://github.com/isaacs/node-glob/issues/405
@@ -26,33 +26,6 @@ exports.glob = function glob(baseDirPath, matchPattern, _options, _cb)
 		// Since we changed our cwd, we need to resolve our results relative to that
 		cb(undefined, results.map(v => path.resolve(path.join(baseDirPath, v))));
 	});
-};
-
-// Returns an array of possible identifications of this file type based on the output from `trid`
-exports.identify = function identify(filePath, cb)
-{
-	tiptoe(
-		function runIndentifiers()
-		{
-			runUtil.run("file", ["-m", "/mnt/compendium/sys/magic/my-magic.mgc", "-b", filePath], runUtil.SILENT, this.parallel());
-			runUtil.run("tridid", ["--jsonOutput", filePath], runUtil.SILENT, this.parallel());
-			runUtil.run("fido", ["-q", "-noextension", "-matchprintf", "%(info.formatname)s", filePath], runUtil.SILENT, this.parallel());
-		},
-		function parseResults(magicRaw, trididRaw, fidoRaw)
-		{
-			const results = [{magic : magicRaw.trim(), from : "file"}];
-
-			try { results.push(...JSON.parse(trididRaw).map(v => { v.from = "trid"; return v; })); }
-			catch(parseErr) { }
-
-			const fido = (fidoRaw || "").trim();
-			if(fido.length>0)
-				results.push({magic : fido, from : "fido"});
-
-			return results.multiSort(match => (match.percentage || 0), true);
-		},
-		cb
-	);
 };
 
 exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
@@ -263,7 +236,7 @@ exports.unlink = function unlink(target, cb)
 				return setImmediate(cb);
 				
 			if(stats.isDirectory())
-				fs.rmdir(target, {recursive : true}, cb);
+				rimraf(target, cb);
 			else
 				fs.unlink(target, cb);
 		});
