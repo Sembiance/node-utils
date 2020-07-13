@@ -52,7 +52,7 @@ function testVirtualXRecord(cb)
 	tiptoe(
 		function runProcess()
 		{
-			runUtil.run("mplayer", [path.join(FILES_DIR, "catvid.mp4")], {silent : true, recordVirtualX : OUTPUT_VIDEO_FILE_PATH, virtualX : true}, this);
+			runUtil.run("mplayer", [path.join(FILES_DIR, "catvid.mp4")], {silent : true, recordVideoFilePath : OUTPUT_VIDEO_FILE_PATH, virtualX : true, videoProcessedCB : this.parallel()}, this.parallel());
 		},
 		function getOutputVideoInfo()
 		{
@@ -62,7 +62,7 @@ function testVirtualXRecord(cb)
 		{
 			assert.strictEqual(vidInfo.width, 1280);
 			assert.strictEqual(vidInfo.height, 720);
-			assert(vidInfo.duration>=9.5 && vidInfo.duration<=9.8, vidInfo.duration);
+			assert(vidInfo.duration>=9.4 && vidInfo.duration<=9.9, vidInfo.duration);
 			assert.strictEqual(vidInfo.fps, 60);
 
 			fileUtil.unlink(OUTPUT_VIDEO_FILE_PATH, this);

@@ -1,0 +1,21 @@
+PCEM, Bocs, QEMU and dosemu are alternative emulators
+# Can launch with:
+qemu-system-i386 -m 16 -k en-us -rtc base=localtime -soundhw sb16,adlib -device cirrus-vga -display gtk -boot order=d -hda hd.img
+
+# Could change display to something else for headless or VNC or launch in a virtual X
+
+# How to create a hard drive in Linux
+# Note that THIS IS NOT CORRECT!
+dd if=/dev/zero of=test.img bs=512 count=131040
+
+# Put this in ~/.mtoolsrc
+drive c: file="/full/path/to/test.img" partition=1
+
+# Now I can use mtools to work with the test.img
+mpartition -I -s 63 -t 130 -h 16 c:
+mpartition -cpv -s 63 -t 130 -h 16 c:
+mformat c:
+# couldn't actually boot from test.img nor could I install MSDOS 6.22 to it. Sigh.
+# not sure what the missing piece is
+# I do know I Can create an image with bximage, but then I can't use 'mtools' to manipulate it. Sigh.
+

@@ -3,6 +3,10 @@
 
 const XU = require("@sembiance/xu"),
 	path = require("path"),
+	fs = require("fs"),
+	fileUtil = require(path.join(__dirname, "index.js")).file,
+	videoUtil = require(path.join(__dirname, "index.js")).video,
+	tiptoe = require("tiptoe"),
 	childProcess = require("child_process");
 
 // Options include:
@@ -15,32 +19,60 @@ const XU = require("@sembiance/xu"),
 //     redirect-stderr : Redirect all stderr content to stdout result
 //                 env : Pass an object of key/value pairs to set for environment variables
 //             timeout : Number of 'ms' to allow the process to run and then terminate it
-//            virtualX : If true, run this command in a virtual X environment
-//      recordVirtualX : If virtualX is true, then record a video to the path specified by this option
-// virtualXPortNumFile : If virtualX is true, then pass this as the portNumFile for the virtual framebuffer to use
-exports.run = function run(_command, _args, options={}, cb=() => {})
+//            virtualX : Set to true to run this in a virtual X environment
+//     portNumFilePath : If virtualX, record the virtual framebuffer port number to portNumFilePath
+// recordVideoFilePath : If virtualX, record the session as a video to recordVideoFilePath
+//    videoProcessedCB : If virtualX and recordVideoFilePath, this is the callback to call once the video is done being processed
+exports.run = function run(_command, _args, _options={}, cb=() => {})
 {
+	const options = XU.clone(_options);
 	if(!options.maxBuffer)
 		options.maxBuffer = (1024*1024)*20;	// 20MB Buffer
 	if(!options.hasOwnProperty("redirect-stderr"))
 		options["redirect-stderr"] = true;
 	
-	if(options.env)
-		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line node/no-process-env
-	
-	let command = _command;
+	const command = _command;
 	const args = _args.slice();
+
+	let xvfbCP = null;
+	
+	const recordedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4") : null;
+	const croppedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4") : null;
+	let ffmpegCP = null;
+	const finalizeVideo = function finalizeVideo(finalizecb=() => {})
+	{
+		tiptoe(
+			function cropVideo() { videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CB"}, this); },
+			function trimVideo() { videoUtil.trimSolidFrames(croppedVidFilePath, options.recordVideoFilePath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this); },
+			finalizecb
+		);
+	};
+
 	if(options.virtualX)
 	{
-		args.unshift(command);
+		const existingSessions = fileUtil.globSync("/tmp/.X11-unix", "X*", {nodir : true}).map(existingSessionFilePath => +path.basename(existingSessionFilePath).substring(1));
+		let xPort = Math.randomInt(10, 9999);
+		while(existingSessions.includes(xPort))
+			xPort = Math.randomInt(10, 9999);
 
-		if(options.virtualXPortNumFile)
-			args.unshift("--portNumFile=" + options.virtualXPortNumFile);
-		if(options.recordVirtualX)
-			args.unshift("--recordVideo=" + options.recordVirtualX);
-			
-		command = path.join(__dirname, "bin", "virtualXRun");
+		if(options.portNumFilePath)
+			fs.writeFileSync(options.portNumFilePath, ""+xPort, XU.UTF8);
+		
+		xvfbCP = exports.run("Xvfb", [":" + xPort, "-listen", "tcp", "-nocursor", "-ac", "-screen", "0", "1920x1080x24"], {silent : true, detached : true});
+		if(!options.env)
+			options.env = {};
+		options.env.DISPLAY = ":" + xPort;
+
+		if(options.recordVideoFilePath)
+		{
+			exports.run("hsetroot", ["-solid", "#FFC0CB"], {env : {DISPLAY : ":" + xPort}, silent : true, detached : true}, this);
+			const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", "127.0.0.1:" + xPort, "-y", "-c:v", "libx264rgb", "-r", "60", "-qscale", "0", "-crf", "0", "-preset", "ultrafast", recordedVidFilePath];
+			ffmpegCP = exports.run("ffmpeg", ffmpegArgs, {silent : true, detached : true});
+		}
 	}
+
+	if(options.env)
+		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line node/no-process-env
 
 	if(!options.silent)
 		console.log("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
@@ -68,8 +100,22 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 				}
 			});
 		}
-		
-		return setImmediate(() => cb(undefined, cp));
+
+		if(options.virtualX)
+		{
+			cp.on("exit", () =>
+			{
+				if(ffmpegCP)
+				{
+					ffmpegCP.on("exit", () => finalizeVideo(options.videoProcessedCB));
+					ffmpegCP.kill();
+				}
+
+				xvfbCP.kill();
+			});
+		}
+
+		return cp;
 	}
 
 	if(cb)
@@ -118,6 +164,15 @@ exports.run = function run(_command, _args, options={}, cb=() => {})
 
 		if(options.verbose)
 			console.log("%s %s\n%s %s", command, args.join(" "), stdout || "", stderr || "");
+
+		if(ffmpegCP)
+		{
+			ffmpegCP.on("exit", () => finalizeVideo(options.videoProcessedCB));
+			ffmpegCP.kill();
+		}
+			
+		if(xvfbCP)
+			xvfbCP.kill();
 
 		if(cb)
 		{

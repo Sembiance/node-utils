@@ -19,4 +19,5 @@ module.exports =
 	get redis() { return require("./redisUtil.js"); },
 	get adsTxt() { return require("./adsTxtUtil.js"); },
 	get hash() { return require("./hashUtil.js"); },
+	get dos() { return require("./dosUtil.js"); }
 };

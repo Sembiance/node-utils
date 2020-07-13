@@ -1,0 +1,136 @@
+#!/usr/bin/env node
+"use strict";
+/* eslint-disable no-param-reassign */
+const XU = require("@sembiance/xu"),
+	tiptoe = require("tiptoe"),
+	path = require("path"),
+	fs = require("fs"),
+	videoUtil = require(path.join(__dirname, "..", "index.js")).video,
+	fileUtil = require(path.join(__dirname, "..", "index.js")).file,
+	runUtil = require(path.join(__dirname, "..", "index.js")).run;
+
+if(process.argv.length<3)
+	process.exit(console.error(`Usage: ${path.basename(process.argv[1])} [--recordVideo=/path/to/video.mp4] command [args]...`));
+
+const pargs = process.argv.slice(2);
+
+function getArg(argName)
+{
+	let argToRemove = null;
+	let r = undefined;
+	pargs.forEach((parg, i) =>
+	{
+		if(!parg.startsWith(argName))
+			return;
+		
+		argToRemove = i;
+		r = parg.split("=").slice(1).join("=");
+	});
+
+	if(argToRemove!==null)
+		pargs.splice(argToRemove, 1);
+
+	return r;
+}
+
+const recordVideoFilePath = getArg("--recordVideo");
+const portNumFilePath = getArg("--portNumFile");
+const command = pargs.shift();
+
+let xPort = Math.randomInt(10, 9999);
+let xvfbCP = null;
+const recordedVidFilePath = recordVideoFilePath ? fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4") : null;
+const croppedVidFilePath = recordVideoFilePath ? fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4") : null;
+
+let ffmpegCP = null;
+let mainCommandCP = null;
+
+function shutdownEarly()
+{
+	if(mainCommandCP)
+		mainCommandCP.kill();
+}
+
+process.on("SIGINT", shutdownEarly);
+process.on("SIGTERM", shutdownEarly);
+
+tiptoe(
+	function getExistingXSessions()
+	{
+		fileUtil.glob("/tmp/.X11-unix", "X*", {nodir : true}, this);
+	},
+	function startXvfb(existingSessionFilePaths)
+	{
+		const existingSessions = existingSessionFilePaths.map(existingSessionFilePath => +path.basename(existingSessionFilePath).substring(1));
+		while(existingSessions.includes(xPort))
+			xPort = Math.randomInt(10, 9999);
+		
+		if(portNumFilePath)
+			fs.writeFileSync(portNumFilePath, ""+xPort, XU.UTF8);
+
+		runUtil.run("Xvfb", [":" + xPort, "-listen", "tcp", "-nocursor", "-ac", "-screen", "0", "1920x1080x24"], {liveOutput : true, detached : true}, this);
+	},
+	function setBackgroundPink(_xvfbCP)
+	{
+		xvfbCP = _xvfbCP;
+
+		// If we are not recording, we don't need a pink background, so we can continue
+		if(!recordVideoFilePath)
+			return this();
+		
+		runUtil.run("hsetroot", ["-solid", "#FFC0CB"], {env : {DISPLAY : ":" + xPort}, silent : true, detached : true}, this);
+	},
+	function startRecording()
+	{
+		if(!recordVideoFilePath)
+			return this();
+
+		const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", "127.0.0.1:" + xPort, "-y", "-c:v", "libx264rgb", "-r", "60", "-qscale", "0", "-crf", "0", "-preset", "ultrafast", recordedVidFilePath];
+		runUtil.run("ffmpeg", ffmpegArgs, {silent : true, detached : true}, this);
+	},
+	function runProcess(_ffmpegCP)
+	{
+		if(_ffmpegCP)
+			ffmpegCP = _ffmpegCP;
+
+		this.capture();
+		mainCommandCP = runUtil.run(command, pargs, {liveOutput : true, env : {DISPLAY : ":" + xPort}}, this);
+	},
+	function stopFFMPEG(err, stdout, stderr)
+	{
+		mainCommandCP = null;
+
+		if(err || stderr)
+			console.error(err, stderr, stdout);
+		else
+			console.log(stdout);
+
+		if(!recordVideoFilePath)
+			return this();
+		
+		ffmpegCP.on("exit", () => this());
+		ffmpegCP.kill();
+	},
+	function stopXvfb()
+	{
+		xvfbCP.on("exit", () => this());
+		xvfbCP.kill();
+	},
+	function cropVideo()
+	{
+		if(!recordVideoFilePath)
+			return this.finish();
+
+		videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CB"}, this);
+	},
+	function trimVideo()
+	{
+		videoUtil.trimSolidFrames(croppedVidFilePath, recordVideoFilePath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this);
+	},
+	function removeTmpVideoFiles()
+	{
+		fileUtil.unlink(recordedVidFilePath, this.parallel());
+		fileUtil.unlink(croppedVidFilePath, this.parallel());
+	},
+	XU.FINISH
+);

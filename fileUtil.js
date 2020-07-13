@@ -28,6 +28,12 @@ exports.glob = function glob(baseDirPath, matchPattern, _options, _cb)
 	});
 };
 
+// Sync version of glob above
+exports.globSync = function globSync(baseDirPath, matchPattern, options={})
+{
+	return globModule.sync(matchPattern, Object.assign({dot : true, cwd : baseDirPath}, options)).map(v => path.resolve(path.join(baseDirPath, v)));
+};
+
 exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
 {
 	let tempFilePath = null;
