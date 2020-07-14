@@ -75,7 +75,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line node/no-process-env
 
 	if(!options.silent)
-		console.log("RUNNING%s: %s %s", (options.cwd ? " (cwd: " + options.cwd + ")": ""), command, args.join(" "));
+		XU.log`Running ${command} in cwd ${options.cwd || process.cwd()} with args ${args} and options ${_options}`;
 
 	let p = null;
 	if(options.detached)
@@ -87,7 +87,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 			cp.stdout.pipe(process.stdout);
 			cp.stderr.pipe(process.stderr);
 		}
-		
+
 		if(options.timeout)
 		{
 			let timeoutid = setTimeout(() => { timeoutid = null; cp.kill(); }, options.timeout);
@@ -163,7 +163,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		}
 
 		if(options.verbose)
-			console.log("%s %s\n%s %s", command, args.join(" "), stdout || "", stderr || "");
+			XU.log`"${command} ${args.join(" ")}\n${stdout || ""} ${stderr || ""}`;
 
 		if(ffmpegCP)
 		{

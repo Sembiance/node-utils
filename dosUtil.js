@@ -6,6 +6,7 @@ const XU = require("@sembiance/xu"),
 	runUtil = require("./runUtil"),
 	videoUtil = require("./videoUtil"),
 	os = require("os"),
+	streamBuffers = require("stream-buffers"),
 	fileUtil = require("./fileUtil"),
 	path = require("path");
 
@@ -17,7 +18,7 @@ const C_DIR_PATH = path.join(__dirname, "dos", "c");
 
 class DOS
 {
-	constructor({dosCWD=path.join(__dirname, "dos", "msdos622"), autoExec=[], debug=false, recordVideoFilePath=null, timeout=XU.MINUTE*10, tmpDirPath=os.tmpdir()}={})
+	constructor({dosCWD=path.join(__dirname, "dos", "msdos622"), autoExec=[], tries=5, verbose=0, debug=false, recordVideoFilePath=null, timeout=XU.MINUTE*10, tmpDirPath=os.tmpdir()}={})
 	{
 		this.dosCWD = dosCWD;
 		this.tmpDirPath = tmpDirPath;
@@ -28,6 +29,8 @@ class DOS
 		this.exitCallbacks = [];
 		this.timeout = timeout;
 		this.debug = debug;
+		this.tries = tries;
+		this.verbose = verbose;
 		if(recordVideoFilePath)
 			this.recordVideoFilePath = recordVideoFilePath;
 	}
@@ -87,7 +90,8 @@ class DOS
 				tiptoe(
 					function sendKey()
 					{
-						runUtil.run("xdotool", ["search", "--class", "dosbox", "windowfocus", Array.isArray(key) ? "key" : "type", "--delay", "100", Array.isArray(key) ? key[0] : key], {silent : true, env : {"DISPLAY" : ":" + xPortNum}}, this);
+						const xdotoolOptions = {silent : self.verbose<=1, liveOutput : self.verbose>=3, env : {"DISPLAY" : ":" + xPortNum}};
+						runUtil.run("xdotool", ["search", "--class", "dosbox", "windowfocus", Array.isArray(key) ? "key" : "type", "--delay", "100", Array.isArray(key) ? key[0] : key], xdotoolOptions, this);
 					},
 					function waitDelay()
 					{
@@ -109,19 +113,27 @@ class DOS
 			throw new Error("DOSBox already running!");
 		
 		const runArgs = {detached : true};
-		runArgs.silent = !this.debug;
+		runArgs.silent = this.verbose<=1 && !this.debug;
+		runArgs.liveOutput = this.verbose>=3;
 		runArgs.virtualX = !this.debug;
 		runArgs.portNumFilePath = this.portNumFilePath;
 		runArgs.timeout = this.timeout;
-		runArgs.sync = true;
 
 		if(this.recordVideoFilePath)
 			runArgs.recordVideoFilePath = this.recordVideoFilePath;
 
 		this.dosBoxCP = runUtil.run("dosbox", ["-conf", this.configFilePath], runArgs, this);
-		this.dosBoxCP.on("exit", this.exitHandler.bind(this));
 
-		this.registerExitCallback(exitcb);
+		this.dosboxOutput = new streamBuffers.WritableStreamBuffer();
+		this.dosBoxCP.stdout.on("data", data => this.dosboxOutput.write(data));
+
+		if(this.dosBoxCP.exitCode!==null)
+			this.exitHandler();
+		else
+			this.dosBoxCP.once("exit", this.exitHandler.bind(this));
+
+		if(exitcb)
+			this.registerExitCallback(exitcb);
 	}
 
 	// Registers a cb to be called when DOSBox exits
@@ -137,6 +149,21 @@ class DOS
 	exitHandler()
 	{
 		this.dosBoxCP = null;
+
+		// Often DOSBox will fail to launch correctly. Either it'll just exit with no output, or an error about being unable to open X11 display. Not sure why. So let's uhm, just try again rofl
+		const dosboxOutputString = this.dosboxOutput.getContentsAsString("utf8");
+		if(!dosboxOutputString || dosboxOutputString.includes("Exit to error: Can't init SDL Couldn't open X11 display"))
+		{
+			if(this.verbose>=2)
+				XU.log`DOSBox Failed to launch. ${this.tries>0 ? "Trying again with " + XU.c.fg.cyan + this.tries + XU.c.fg.magenta + " remaining" : ""}`;
+
+			if(this.tries>0)
+			{
+				this.tries-=1;
+				this.start();
+				return;
+			}
+		}
 
 		this.exitCallbacks.splice(0, this.exitCallbacks.length).forEach(exitCallback => setImmediate(exitCallback));
 	}
@@ -165,18 +192,16 @@ class DOS
 		);
 	}
 
-	static quickOp({dosCWD, autoExec, keys, keyOpts, timeout, screenshot=null, video=null, debug, tmpDirPath=os.tmpdir()}, cb)
+	static quickOp({dosCWD, autoExec, keys, keyOpts, timeout, screenshot=null, video=null, debug=false, tmpDirPath=os.tmpdir(), verbose=0}, cb)
 	{
 		const quickOpTmpDirPath = fileUtil.generateTempFilePath(this.tmpDirPath);
-		const dosArgs = {tmpDirPath, dosCWD, autoExec};
+		const dosArgs = {tmpDirPath, dosCWD, autoExec, verbose, debug};
 		if(video)
 			dosArgs.recordVideoFilePath = video;
 		if(screenshot)
 			dosArgs.recordVideoFilePath = fileUtil.generateTempFilePath(this.tmpDirPath, ".mp4");
 		if(timeout)
 			dosArgs.timeout = timeout;
-		if(debug)
-			dosArgs.debug = debug;
 
 		const dos = new DOS(dosArgs);
 
