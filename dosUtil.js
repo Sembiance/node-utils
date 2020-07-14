@@ -3,11 +3,12 @@
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	fs = require("fs"),
-	runUtil = require("./runUtil"),
-	videoUtil = require("./videoUtil"),
+	runUtil = require("./index.js").run,
+	videoUtil = require("./index.js").video,
+	imageUtil = require("./index.js").image,
+	fileUtil = require("./index.js").file,
 	os = require("os"),
 	streamBuffers = require("stream-buffers"),
-	fileUtil = require("./fileUtil"),
 	path = require("path");
 
 // Resources for controlling dosbox more via xdotool through xvfb:
@@ -120,17 +121,23 @@ class DOS
 		runArgs.timeout = this.timeout;
 
 		if(this.recordVideoFilePath)
+		{
 			runArgs.recordVideoFilePath = this.recordVideoFilePath;
-
+			runArgs.videoProcessedCB = this.exitHandler.bind(this);
+		}
+			
 		this.dosBoxCP = runUtil.run("dosbox", ["-conf", this.configFilePath], runArgs, this);
 
 		this.dosboxOutput = new streamBuffers.WritableStreamBuffer();
 		this.dosBoxCP.stdout.on("data", data => this.dosboxOutput.write(data));
 
-		if(this.dosBoxCP.exitCode!==null)
-			this.exitHandler();
-		else
-			this.dosBoxCP.once("exit", this.exitHandler.bind(this));
+		if(!this.recordVideoFilePath)
+		{
+			if(this.dosBoxCP.exitCode!==null)
+				this.exitHandler();
+			else
+				this.dosBoxCP.once("exit", this.exitHandler.bind(this));
+		}
 
 		if(exitcb)
 			this.registerExitCallback(exitcb);
@@ -194,15 +201,15 @@ class DOS
 
 	static quickOp({dosCWD, autoExec, keys, keyOpts, timeout, screenshot=null, video=null, debug=false, tmpDirPath=os.tmpdir(), verbose=0}, cb)
 	{
-		const quickOpTmpDirPath = fileUtil.generateTempFilePath(this.tmpDirPath);
+		const quickOpTmpDirPath = fileUtil.generateTempFilePath(tmpDirPath);
 		const dosArgs = {tmpDirPath, dosCWD, autoExec, verbose, debug};
 		if(video)
 			dosArgs.recordVideoFilePath = video;
 		if(screenshot)
-			dosArgs.recordVideoFilePath = fileUtil.generateTempFilePath(this.tmpDirPath, ".mp4");
+			dosArgs.recordVideoFilePath = fileUtil.generateTempFilePath(tmpDirPath, ".mp4");
 		if(timeout)
 			dosArgs.timeout = timeout;
-
+		
 		const dos = new DOS(dosArgs);
 
 		tiptoe(
@@ -223,9 +230,25 @@ class DOS
 			function copyScreenshot()
 			{
 				if(!screenshot)
-					return this();
+					return this.jump(-2);
 
 				videoUtil.extractFrame(dosArgs.recordVideoFilePath, screenshot.filePath, "" + screenshot.loc, this);
+			},
+			function getCropDimensions()
+			{
+				imageUtil.getAutoCropDimensions(screenshot.filePath, {cropColor : "#FFC0CB"}, this);
+			},
+			function cropIfNeeded(cropInfo)
+			{
+				if(!cropInfo || !cropInfo.w || !cropInfo.h)
+					return this();
+				
+				this.data.croppedScreenshotFilePath = fileUtil.generateTempFilePath(tmpDirPath, ".png");
+				runUtil.run("convert", [screenshot.filePath, "-crop", cropInfo.w + "x" + cropInfo.h + "+" + cropInfo.x||0 + "+" + cropInfo.y||0, this.data.croppedScreenshotFilePath], runUtil.SILENT, this);
+			},
+			function renameCroppedFile()
+			{
+				fileUtil.move(this.data.croppedScreenshotFilePath, screenshot.filePath, this);
 			},
 			function teardown()
 			{

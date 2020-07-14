@@ -304,7 +304,7 @@ exports.extractFrame = function extractFrame(videoFilePath, frameFilePath, frame
 		{
 			const fromEndProps = (frameLoc.match(/^-(?<ms>\d+)$/) || {}).groups;
 			const percentageProps = (frameLoc.match(/^(?<percent>\d+)%$/) || {}).groups;
-			const loc = fromEndProps ? (vidInfo.duration*XU.SECOND)-(fromEndProps.ms) : Math.floor((vidInfo.duration*XU.SECOND)*((+percentageProps.percent)/100));
+			const loc = fromEndProps ? (vidInfo.duration*XU.SECOND)-(+fromEndProps.ms) : Math.floor((vidInfo.duration*XU.SECOND)*((+percentageProps.percent)/100));
 			const ss = ("" + Math.floor(loc/XU.HOUR)).padStart(2, "0") + ":" + ("" + Math.floor((loc%XU.HOUR)/XU.MINUTE)).padStart(2, "0") + ":" + ("" + Math.floor((loc%XU.MINUTE)/XU.SECOND)).padStart(2, "0");
 
 			runUtil.run("ffmpeg", ["-i", videoFilePath, "-ss", ss, "-vframes", "1", frameFilePath], runUtil.SILENT, this);

@@ -36,14 +36,16 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 
 	let xvfbCP = null;
 	
-	const recordedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4") : null;
-	const croppedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4") : null;
+	const recordedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(undefined, ".mp4") : null;
+	const croppedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(undefined, ".mp4") : null;
 	let ffmpegCP = null;
+
 	const finalizeVideo = function finalizeVideo(finalizecb=() => {})
 	{
 		tiptoe(
 			function cropVideo() { videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CB"}, this); },
 			function trimVideo() { videoUtil.trimSolidFrames(croppedVidFilePath, options.recordVideoFilePath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this); },
+			function cleanupVids() { fileUtil.unlink(recordedVidFilePath, this.parallel()); fileUtil.unlink(croppedVidFilePath, this.parallel()); },
 			finalizecb
 		);
 	};
