@@ -58,17 +58,17 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 			xPort = Math.randomInt(10, 9999);
 
 		if(options.portNumFilePath)
-			fs.writeFileSync(options.portNumFilePath, ""+xPort, XU.UTF8);
+			fs.writeFileSync(options.portNumFilePath, `${xPort}`, XU.UTF8);
 		
-		xvfbCP = exports.run("Xvfb", [":" + xPort, "-listen", "tcp", "-nocursor", "-ac", "-screen", "0", "1920x1080x24"], {silent : true, detached : true});
+		xvfbCP = exports.run("Xvfb", [`:${xPort}`, "-listen", "tcp", "-nocursor", "-ac", "-screen", "0", "1920x1080x24"], {silent : true, detached : true});
 		if(!options.env)
 			options.env = {};
-		options.env.DISPLAY = ":" + xPort;
+		options.env.DISPLAY = `:${xPort}`;
 
 		if(options.recordVideoFilePath)
 		{
-			exports.run("hsetroot", ["-solid", "#FFC0CB"], {env : {DISPLAY : ":" + xPort}, silent : true, detached : true}, this);
-			const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", "127.0.0.1:" + xPort, "-y", "-c:v", "libx264rgb", "-r", "60", "-qscale", "0", "-crf", "0", "-preset", "ultrafast", recordedVidFilePath];
+			exports.run("hsetroot", ["-solid", "#FFC0CB"], {env : {DISPLAY : `:${xPort}`}, silent : true, detached : true}, this);
+			const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", `127.0.0.1:${xPort}`, "-y", "-c:v", "libx264rgb", "-r", "60", "-qscale", "0", "-crf", "0", "-preset", "ultrafast", recordedVidFilePath];
 			ffmpegCP = exports.run("ffmpeg", ffmpegArgs, {silent : true, detached : true});
 		}
 	}

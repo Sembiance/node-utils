@@ -8,8 +8,10 @@ const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe");
 
 // Returns a bunch of info about the given image
-exports.getInfo = function getInfo(imageFilePath, cb)
+exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 {
+	const {options, cb} = XU.optionscb(_options, _cb, {});
+
 	const PROPS =
 	{
 		height             : "%h",
@@ -31,15 +33,20 @@ exports.getInfo = function getInfo(imageFilePath, cb)
 	tiptoe(
 		function runIdentifiers()
 		{
-			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => k + ":" + v).join("\\n"), path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
+			if(options.simpleOnly)
+				this.parallel()();
+			else
+				runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
+
 			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
 		},
 		function parseResults(imResultsRaw, whRaw)
 		{
-			let imLines = (imResultsRaw || "").trim().split("\n");
-			if(imLines.length===0 || imResultsRaw.includes("corrupt image"))
-				imLines = (whRaw || "").trim().split("\n");
+			let imResults = (imResultsRaw || "").trim();
+			if(imResults.length===0 || imResults.includes("corrupt image"))
+				imResults = (whRaw || "").trim();
 			
+			const imLines = imResults.split("\n");
 			if(imLines.length===0)
 				return this();
 			
@@ -74,7 +81,7 @@ exports.getWidthHeight = function getWidthHeight(imageFilePath, cb)
 
 			const matches = result.trim().match(/[^ ]+ [^ ]+ (?<width>\d+)x(?<height>\d+) .*/);
 			if(!matches || matches.length<3 || !matches.groups)
-				return cb(new Error("Invalid image: " + imageFilePath));
+				return cb(new Error(`Invalid image: ${imageFilePath}`));
 			
 			cb(null, [+matches.groups.width, +matches.groups.height]);
 		}
@@ -97,7 +104,7 @@ exports.randomCrop = function randomCrop(inputFilePath, outputFilePath, targetWi
 			const xOffset = (targetWidth<dimensions[0]) ? Math.randomInt(0, (dimensions[0]-targetWidth)) : 0;
 			const yOffset = (targetHeight<dimensions[1]) ? Math.randomInt(0, (dimensions[1]-targetHeight)) : 0;
 
-			runUtil.run("convert", [inputFilePath, "-crop", targetWidth + "x" + targetHeight + "+" + xOffset + "+" + yOffset, "+repage", outputFilePath], runUtil.SILENT, this);
+			runUtil.run("convert", [inputFilePath, "-crop", `${targetWidth}x${targetHeight}+${xOffset}+${yOffset}`, "+repage", outputFilePath], runUtil.SILENT, this);
 		},
 		cb
 	);
@@ -126,7 +133,7 @@ exports.getAutoCropDimensions = function getAutoCropDimensions(inputFilePath, _o
 
 			const cropInfoMatch = cropInfoRaw.trim().match(/(?<w>\d+)x(?<h>\d+) \d+x\d+\+(?<x>\d+)\+(?<y>\d+)/);
 			if(!cropInfoMatch)
-				throw new Error("Failed to get crop info for image [" + inputFilePath + "] with results: "+ cropInfoRaw.trim());
+				throw new Error(`Failed to get crop info for image [${inputFilePath}] with results: ${cropInfoRaw.trim()}`);
 
 			this(undefined, Object.map(cropInfoMatch.groups, (k, v) => ((+v)-(["x", "y"].includes(k) ? 1 : 0))));
 		},
@@ -138,10 +145,10 @@ exports.getAutoCropDimensions = function getAutoCropDimensions(inputFilePath, _o
 exports.compress = function compress(inputFilePath, outputFilePath, fileType, lossy, cb)
 {
 	if(!(["jpg", "png", "gif"]).includes(fileType))
-		throw new Error("Unsupported image type: " + fileType);
+		throw new Error(`Unsupported image type: ${fileType}`);
 
-	const tmpInputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", "." + fileType);
-	const tmpOutputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", "." + fileType);
+	const tmpInputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", `.${fileType}`);
+	const tmpOutputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", `.${fileType}`);
 
 	tiptoe(
 		function prepare()

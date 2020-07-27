@@ -32,7 +32,7 @@ exports.trimSolidFrames = function trimSolidFrames(srcFilePath, destFilePath, _o
 		function generateFrames(srcVidInfo)
 		{
 			this.data.srcVidInfo = srcVidInfo;
-			runUtil.run("ffmpeg", ["-i", srcFilePath, "-vf", "fps=" + options.fps, "frame-%09d.png"], {cwd : tmpWorkDir, silent : true}, this);
+			runUtil.run("ffmpeg", ["-i", srcFilePath, "-vf", `fps=${options.fps}`, "frame-%09d.png"], {cwd : tmpWorkDir, silent : true}, this);
 		},
 		function getFrameList()
 		{
@@ -80,9 +80,9 @@ exports.trimSolidFrames = function trimSolidFrames(srcFilePath, destFilePath, _o
 
 			const ffmpegArgs = ["-i", srcFilePath];
 			if(startTrimDuration>0)
-				ffmpegArgs.push("-ss", startTrimDuration + "ms");
+				ffmpegArgs.push("-ss", `${startTrimDuration}ms`);
 			if(endTrimDuration>0)
-				ffmpegArgs.push("-t", ((this.data.srcVidInfo.duration*1000)-(endTrimDuration+startTrimDuration)) + "ms");
+				ffmpegArgs.push("-t", `${((this.data.srcVidInfo.duration*1000)-(endTrimDuration+startTrimDuration))}ms`);
 
 			ffmpegArgs.push("-y", "-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", destFilePath);
 			runUtil.run("ffmpeg", ffmpegArgs, runUtil.SILENT, this);
@@ -119,7 +119,7 @@ exports.autocrop = function autocrop(srcFilePath, destFilePath, _options, _cb)
 			if(options.fuzz)
 				autoCropOptions.fuzz = options.fuzz;
 
-			[].pushSequence(1, options.numSampleFrames).parallelForEach((frameNum, subcb) => imageUtil.getAutoCropDimensions(path.join(tmpWorkDir, "frame-" + (""+frameNum).padStart(9, "0") + ".png"), autoCropOptions, subcb), this);
+			[].pushSequence(1, options.numSampleFrames).parallelForEach((frameNum, subcb) => imageUtil.getAutoCropDimensions(path.join(tmpWorkDir, `frame-${`${frameNum}`.padStart(9, "0")}.png`), autoCropOptions, subcb), this);
 		},
 		function performCropping(framesCropInfo)
 		{
@@ -129,7 +129,7 @@ exports.autocrop = function autocrop(srcFilePath, destFilePath, _options, _cb)
 				if(frameCropInfo.trimAll)
 					return;
 
-				const cropid = frameCropInfo.w + "x" + frameCropInfo.h + "+" + frameCropInfo.x + "+" + frameCropInfo.y;
+				const cropid = `${frameCropInfo.w}x${frameCropInfo.h}+${frameCropInfo.x}+${frameCropInfo.y}`;
 				if(!sums.hasOwnProperty(cropid))
 					sums[cropid] = {count : 0, frameCropInfo};
 				
@@ -138,9 +138,9 @@ exports.autocrop = function autocrop(srcFilePath, destFilePath, _options, _cb)
 
 			const cropInfo = Object.entries(sums).multiSort(([, v]) => v.count, true)[0][1].frameCropInfo;
 			if(!cropInfo)
-				throw new Error("Failed to find crop info for video [" + srcFilePath + "]");
+				throw new Error(`Failed to find crop info for video [${srcFilePath}]`);
 			
-			runUtil.run("ffmpeg", ["-i", srcFilePath, "-vf", "crop=" + cropInfo.w + ":" + cropInfo.h + ":" + cropInfo.x + ":" + cropInfo.y, "-y", "-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", destFilePath], runUtil.SILENT, this);
+			runUtil.run("ffmpeg", ["-i", srcFilePath, "-vf", `crop=${cropInfo.w}:${cropInfo.h}:${cropInfo.x}:${cropInfo.y}`, "-y", "-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", destFilePath], runUtil.SILENT, this);
 		},
 		function cleanup()
 		{
@@ -209,7 +209,7 @@ exports.generateThumbnail = function generateThumbnail(videoPath, startTime, thu
 		},
 		function generateImage()
 		{
-			runUtil.run(COMMAND_MOGRIFY, ["-scale", thumbnailWidth + "x" + thumbnailHeight, path.join(this.data.tempDir, "00000001.jpg")], runUtil.SILENT, this);
+			runUtil.run(COMMAND_MOGRIFY, ["-scale", `${thumbnailWidth}x${thumbnailHeight}`, path.join(this.data.tempDir, "00000001.jpg")], runUtil.SILENT, this);
 		},
 		function convertOrCopy()
 		{
@@ -305,7 +305,7 @@ exports.extractFrame = function extractFrame(videoFilePath, frameFilePath, frame
 			const fromEndProps = (frameLoc.match(/^-(?<ms>\d+)$/) || {}).groups;
 			const percentageProps = (frameLoc.match(/^(?<percent>\d+)%$/) || {}).groups;
 			const loc = fromEndProps ? (vidInfo.duration*XU.SECOND)-(+fromEndProps.ms) : Math.floor((vidInfo.duration*XU.SECOND)*((+percentageProps.percent)/100));
-			const ss = ("" + Math.floor(loc/XU.HOUR)).padStart(2, "0") + ":" + ("" + Math.floor((loc%XU.HOUR)/XU.MINUTE)).padStart(2, "0") + ":" + ("" + Math.floor((loc%XU.MINUTE)/XU.SECOND)).padStart(2, "0");
+			const ss = ("" + Math.floor(loc/XU.HOUR)).padStart(2, "0") + ":" + ("" + Math.floor((loc%XU.HOUR)/XU.MINUTE)).padStart(2, "0") + ":" + ("" + Math.floor((loc%XU.MINUTE)/XU.SECOND)).padStart(2, "0");	// eslint-disable-line prefer-template
 
 			runUtil.run("ffmpeg", ["-i", videoFilePath, "-ss", ss, "-vframes", "1", frameFilePath], runUtil.SILENT, this);
 		},

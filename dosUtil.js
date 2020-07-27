@@ -73,7 +73,7 @@ class DOS
 	// Will send the keys to the virtual doesbox window with the given delay then call the cb. Only works if virtualX was set
 	sendKeys(keys, _options, _cb)
 	{
-		const {options, cb} = XU.optionscb(_options, _cb, {interval : XU.SECOND, delay : XU.SECOND*15});
+		const {options, cb} = XU.optionscb(_options, _cb, {interval : XU.SECOND, delay : XU.SECOND*10});
 	
 		const self=this;
 		setTimeout(() =>
@@ -232,7 +232,7 @@ class DOS
 				if(!screenshot)
 					return this.jump(-2);
 
-				videoUtil.extractFrame(dosArgs.recordVideoFilePath, screenshot.filePath, "" + screenshot.loc, this);
+				videoUtil.extractFrame(dosArgs.recordVideoFilePath, screenshot.filePath, `${screenshot.loc}`, this);
 			},
 			function getCropDimensions()
 			{
@@ -244,7 +244,7 @@ class DOS
 					return this();
 				
 				this.data.croppedScreenshotFilePath = fileUtil.generateTempFilePath(tmpDirPath, ".png");
-				runUtil.run("convert", [screenshot.filePath, "-crop", cropInfo.w + "x" + cropInfo.h + "+" + cropInfo.x||0 + "+" + cropInfo.y||0, this.data.croppedScreenshotFilePath], runUtil.SILENT, this);
+				runUtil.run("convert", [screenshot.filePath, "-crop", `${cropInfo.w}x${cropInfo.h}+${cropInfo.x || 0}+${cropInfo.y || 0}`, "-strip", this.data.croppedScreenshotFilePath], runUtil.SILENT, this);
 			},
 			function renameCroppedFile()
 			{
@@ -260,7 +260,16 @@ class DOS
 					fileUtil.unlink(dosArgs.recordVideoFilePath, this.parallel());
 				fileUtil.unlink(quickOpTmpDirPath, this.parallel());
 			},
-			cb
+			function handleError(err)
+			{
+				if(err)
+				{
+					console.trace();
+					console.error(err);
+				}
+
+				cb(err);
+			}
 		);
 	}
 }
