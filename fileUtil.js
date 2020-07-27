@@ -40,7 +40,7 @@ exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix="
 	const filePathPrefix = path.join(prefix.startsWith("/") ? "" : os.tmpdir(), prefix);
 
 	do
-		tempFilePath = path.join(filePathPrefix, ((""+performance.now()).replaceAll(".", "") + Math.randomInt(0, 1000000)) + suffix);
+		tempFilePath = path.join(filePathPrefix, ((`${performance.now()}`).replaceAll(".", "") + Math.randomInt(0, 1000000)) + suffix);
 	while(exports.existsSync(tempFilePath));
 
 	if(!tempFilePath)
@@ -173,7 +173,7 @@ exports.concat = function concat(_files, dest, _options, _cb)
 exports.move = function move(src, dest, cb)
 {
 	if(src===dest)
-		return cb(new Error("src and dest are identical: " + src));
+		return cb(new Error(`src and dest are identical: ${src}`));
 
 	tiptoe(
 		function checkExisting()
@@ -259,7 +259,7 @@ exports.getFirstLetterDir = function getFirstLetterDir(filePath)
 		return firstLetter;
 	
 	// If the first letter is a number, return '0'
-	if([].pushSequence(0, 9).map(v => ("" + v)).includes(firstLetter))
+	if([].pushSequence(0, 9).map(v => (`${v}`)).includes(firstLetter))
 		return "0";
 	
 	// Otherwise return underscore

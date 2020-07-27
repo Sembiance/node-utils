@@ -21,7 +21,7 @@ function hashFile(algorithm, filePath, cb)
 		function performHashing(exists)
 		{
 			if(!exists)
-				throw new Error("Unable to access file: " + filePath);
+				return this();
 			
 			const fileStream = fs.createReadStream(filePath);
 			const h = crypto.createHash(algorithm);

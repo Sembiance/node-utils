@@ -63,8 +63,10 @@ exports.get = function get(targetURL, _options, _cb)
 	let cachePath = "";
 	if(_options.cacheBase)
 	{
+		["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"].forEach(v => fs.mkdirSync(path.join(_options.cacheBase, v), {recursive : true}));
+
 		const hash = hashUtil.hash("sha256", targetURL);
-		cachePath = path.join(_options.cacheBase, hash);
+		cachePath = path.join(_options.cacheBase, hash.charAt(0), hash);
 		if(fileUtil.existsSync(cachePath))
 			return fs.readFile(cachePath, XU.UTF8, cb);
 	}
@@ -143,7 +145,7 @@ function httpExecute(targetURL, options, cb)
 		requestOptions.agent = false;
 
 	if(options.username && options.password)
-		requestOptions.headers.Authorization = "Basic " + Buffer.from(options.username + ":" + options.password).toString("base64");
+		requestOptions.headers.Authorization = `Basic ${Buffer.from(`${options.username}:${options.password}`).toString("base64")}`;
 
 	if(options.postData)
 	{
@@ -159,7 +161,7 @@ function httpExecute(targetURL, options, cb)
 	if(options.downloadTo && options.resume && fileUtil.existsSync(options.downloadTo))
 	{
 		outputFileOptions.flags = "a";
-		requestOptions.headers.Range = "bytes=" + fs.statSync(options.downloadTo).size + "-";
+		requestOptions.headers.Range = `bytes=${fs.statSync(options.downloadTo).size}-`;
 	}
 	const outputFile = options.downloadTo ? fs.createWriteStream(options.downloadTo, outputFileOptions) : undefined;
 
@@ -175,7 +177,7 @@ function httpExecute(targetURL, options, cb)
 			if(options.downloadTo)
 				outputFile.close();
 
-			return httpExecute((response.headers.location.startsWith("http") ? "" : ("http" + (targetURL.startsWith("https") ? "s" : "") + "://" + uo.host)) + response.headers.location, options, cb);
+			return httpExecute((response.headers.location.startsWith("http") ? "" : (`http${(targetURL.startsWith("https") ? "s" : "")}://${uo.host}`)) + response.headers.location, options, cb);
 		}
 
 		if(options.method==="HEAD")
