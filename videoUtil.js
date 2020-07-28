@@ -22,6 +22,8 @@ exports.trimSolidFrames = function trimSolidFrames(srcFilePath, destFilePath, _o
 {
 	const {options, cb} = XU.optionscb(_options, _cb, {color : "#000000", trimStart : true, trimEnd : true, fuzz : "10%", fps : 10});
 	const tmpWorkDir = fileUtil.generateTempFilePath("/mnt/ram/tmp");
+	if(!fileUtil.existsSync(srcFilePath))
+		return setImmediate(cb);
 
 	tiptoe(
 		function createWorkDirAndGetInfo()
@@ -123,6 +125,9 @@ exports.autocrop = function autocrop(srcFilePath, destFilePath, _options, _cb)
 		},
 		function performCropping(framesCropInfo)
 		{
+			if(!framesCropInfo || framesCropInfo.length===0 || framesCropInfo.filterEmpty().length===0)
+				return this();
+
 			const sums = {};
 			framesCropInfo.forEach(frameCropInfo =>
 			{
@@ -138,7 +143,7 @@ exports.autocrop = function autocrop(srcFilePath, destFilePath, _options, _cb)
 
 			const cropInfo = Object.entries(sums).multiSort(([, v]) => v.count, true)[0][1].frameCropInfo;
 			if(!cropInfo)
-				throw new Error(`Failed to find crop info for video [${srcFilePath}]`);
+				return this.jump(-1);
 			
 			runUtil.run("ffmpeg", ["-i", srcFilePath, "-vf", `crop=${cropInfo.w}:${cropInfo.h}:${cropInfo.x}:${cropInfo.y}`, "-y", "-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", destFilePath], runUtil.SILENT, this);
 		},
@@ -179,8 +184,8 @@ exports.convert = function convert(srcFilePath, outFilePath, _options, _cb)
 					convertArgs.push("-vf", cropProps[0].trim());
 			}
 
-			if(options.browserFriendly)
-				convertArgs.push("-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "1", "-preset", "veryslow", outFilePath);	// Browser compatible color space (YUV420 instead of YUV444) and spend more CPU time compressing
+			if(options.browserFriendly)	// These args sometimes cause the conversion to fail: "-pix_fmt", "yuv420p"
+				convertArgs.push("-c:v", "libx264", "-crf", "1", "-preset", "veryslow", outFilePath);	// Browser compatible color space (YUV420 instead of YUV444) and spend more CPU time compressing
 			else
 				convertArgs.push("-c:v", "libx264rgb", "-crf", "0", "-preset", "ultrafast", outFilePath);	// Pixel perfect, very fast
 

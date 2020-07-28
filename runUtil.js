@@ -45,7 +45,11 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		tiptoe(
 			function cropVideo() { videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CB"}, this); },
 			function trimVideo() { videoUtil.trimSolidFrames(croppedVidFilePath, options.recordVideoFilePath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this); },
-			function cleanupVids() { fileUtil.unlink(recordedVidFilePath, this.parallel()); fileUtil.unlink(croppedVidFilePath, this.parallel()); },
+			function cleanupVids()
+			{
+				fileUtil.unlink(recordedVidFilePath, this.parallel());
+				fileUtil.unlink(croppedVidFilePath, this.parallel());
+			},
 			finalizecb
 		);
 	};

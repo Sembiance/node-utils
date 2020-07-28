@@ -133,7 +133,7 @@ exports.getAutoCropDimensions = function getAutoCropDimensions(inputFilePath, _o
 
 			const cropInfoMatch = cropInfoRaw.trim().match(/(?<w>\d+)x(?<h>\d+) \d+x\d+\+(?<x>\d+)\+(?<y>\d+)/);
 			if(!cropInfoMatch)
-				throw new Error(`Failed to get crop info for image [${inputFilePath}] with results: ${cropInfoRaw.trim()}`);
+				return this.finish();
 
 			this(undefined, Object.map(cropInfoMatch.groups, (k, v) => ((+v)-(["x", "y"].includes(k) ? 1 : 0))));
 		},

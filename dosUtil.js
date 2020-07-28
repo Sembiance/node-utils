@@ -56,12 +56,12 @@ class DOS
 			function addMountAndBootToConfig()
 			{
 				fs.appendFile(self.configFilePath, [
-					"mount C " + C_DIR_PATH,
+					`mount C ${C_DIR_PATH}`,
 					"PATH C:\\DOS",
 					"SET TEMP=C:\\TMP",
 					"SET TMP=C:\\TMP",
 					"C:\\CTMOUSE\\CTMOUSE /3",
-					"mount E " + self.dosCWD,
+					`mount E ${self.dosCWD}`,
 					"E:",
 					...self.autoExec,
 					"REBOOT.COM"].join("\n"), XU.UTF8, this);
@@ -91,7 +91,7 @@ class DOS
 				tiptoe(
 					function sendKey()
 					{
-						const xdotoolOptions = {silent : self.verbose<=1, liveOutput : self.verbose>=3, env : {"DISPLAY" : ":" + xPortNum}};
+						const xdotoolOptions = {silent : self.verbose<=1, liveOutput : self.verbose>=3, env : {"DISPLAY" : `:${xPortNum}`}};
 						runUtil.run("xdotool", ["search", "--class", "dosbox", "windowfocus", Array.isArray(key) ? "key" : "type", "--delay", "100", Array.isArray(key) ? key[0] : key], xdotoolOptions, this);
 					},
 					function waitDelay()
@@ -162,7 +162,7 @@ class DOS
 		if(!dosboxOutputString || dosboxOutputString.includes("Exit to error: Can't init SDL Couldn't open X11 display"))
 		{
 			if(this.verbose>=2)
-				XU.log`DOSBox Failed to launch. ${this.tries>0 ? "Trying again with " + XU.c.fg.cyan + this.tries + XU.c.fg.magenta + " remaining" : ""}`;
+				XU.log`DOSBox Failed to launch. ${this.tries>0 ? `Trying again with ${this.tries} remaining` : ""}`;
 
 			if(this.tries>0)
 			{
