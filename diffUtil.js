@@ -1,5 +1,5 @@
 "use strict";
-
+/* eslint-disable prefer-template */
 const XU = require("@sembiance/xu"),
 	util = require("util"),
 	ansidiff = require("ansidiff"),
@@ -53,7 +53,7 @@ function diffArray(o, n, options)
 	{
 		if(o.length!==n.length)
 		{
-			result += "Arrays are not equal length, cannot compare them directly: old [" + o.length + "] vs new [" + n.length + "]";
+			result += `Arrays are not equal length, cannot compare them directly: old [${o.length}] vs new [${n.length}]`;
 		}
 		else
 		{

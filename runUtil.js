@@ -1,11 +1,11 @@
 "use strict";
 /* eslint-disable no-param-reassign */
-
 const XU = require("@sembiance/xu"),
 	path = require("path"),
+	os = require("os"),
 	fs = require("fs"),
-	fileUtil = require(path.join(__dirname, "index.js")).file,
-	videoUtil = require(path.join(__dirname, "index.js")).video,
+	fileUtil = require("./index.js").file,
+	videoUtil = require("./index.js").video,
 	tiptoe = require("tiptoe"),
 	childProcess = require("child_process");
 
@@ -17,11 +17,14 @@ const XU = require("@sembiance/xu"),
 //          liveOutput : Set to 'true' to pipe stdout and stderr of the process to the equilivant live stdout/stderr streams
 //           inputData : Pass data to 'stdin' of the process
 //     redirect-stderr : Redirect all stderr content to stdout result
+//	   redirect-stdout : Redirect stdout to a given file path
 //                 env : Pass an object of key/value pairs to set for environment variables
 //             timeout : Number of 'ms' to allow the process to run and then terminate it
+//			tmpDirPath : The path to use for temporary files (used in video recording)
 //            virtualX : Set to true to run this in a virtual X environment
 //     portNumFilePath : If virtualX, record the virtual framebuffer port number to portNumFilePath
 // recordVideoFilePath : If virtualX, record the session as a video to recordVideoFilePath
+//       dontCropVideo : Set to true to skip cropping of the output video
 //    videoProcessedCB : If virtualX and recordVideoFilePath, this is the callback to call once the video is done being processed
 exports.run = function run(_command, _args, _options={}, cb=() => {})
 {
@@ -30,25 +33,36 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		options.maxBuffer = (1024*1024)*20;	// 20MB Buffer
 	if(!options.hasOwnProperty("redirect-stderr"))
 		options["redirect-stderr"] = true;
+	if(options.hasOwnProperty("timeout") && !options.hasOwnProperty("killSignal"))
+		options.killSignal = "SIGINT";
 	
 	const command = _command;
 	const args = _args.slice();
 
 	let xvfbCP = null;
 	
-	const recordedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(undefined, ".mp4") : null;
-	const croppedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(undefined, ".mp4") : null;
+	const recordedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(options.tmpDirPath || os.tmpdir(), ".mp4") : null;
+	const croppedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(options.tmpDirPath || os.tmpdir(), ".mp4") : null;
+	const trimmedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(options.tmpDirPath || os.tmpdir(), ".mp4") : null;
 	let ffmpegCP = null;
 
 	const finalizeVideo = function finalizeVideo(finalizecb=() => {})
 	{
 		tiptoe(
-			function cropVideo() { videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CB"}, this); },
-			function trimVideo() { videoUtil.trimSolidFrames(croppedVidFilePath, options.recordVideoFilePath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this); },
+			function cropVideo()
+			{
+				if(options.dontCropVideo)
+					fs.symlink(recordedVidFilePath, croppedVidFilePath, this);
+				else
+					videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CB"}, this);
+			},
+			function trimVideo() { videoUtil.trimSolidFrames(croppedVidFilePath, trimmedVidFilePath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this); },
+			function makeBrowserFriendly() { exports.run("ffmpeg", ["-i", trimmedVidFilePath, "-c:v", "libx264", "-crf", "1", "-preset", "slow", options.recordVideoFilePath], exports.SILENT, this); },
 			function cleanupVids()
 			{
 				fileUtil.unlink(recordedVidFilePath, this.parallel());
 				fileUtil.unlink(croppedVidFilePath, this.parallel());
+				fileUtil.unlink(trimmedVidFilePath, this.parallel());
 			},
 			finalizecb
 		);
@@ -124,16 +138,21 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		return cp;
 	}
 
-	if(cb)
-		p = childProcess.execFile(command, args, options, handler);
-	else
-		p = childProcess.execFile(command, args, handler);
+	if(options["redirect-stdout"])
+		options.encoding = "binary";
 
-	if(options.liveOutput)
+	p = cb ? childProcess.execFile(command, args, options, handler) : childProcess.execFile(command, args, handler);
+
+	if(options["redirect-stdout"])
+	{
+		p.stdout.pipe(fs.createWriteStream(options["redirect-stdout"], {encoding : "binary"}));
+	}
+	else if(options.liveOutput)
 	{
 		p.stdout.pipe(process.stdout);
 		p.stderr.pipe(process.stderr);
 	}
+
 
 	if(options.inputData)
 		p.stdin.end(options.inputData);

@@ -30,12 +30,13 @@ function getHeaders(extraHeaders)
 
 /*
 	Global options for all httpUtil.* methods:
-username & password		Specific a username and password for Basic authorization
-    headers : {}		Allows you to manually include HTTP headers in the request
-contentType : ""		Specify what content-type of data is being sent. Not usually directly set by the you.
-    timeout : ###		How many ms to allow the request to take before cancelling the request
-progressBar	: .			An NPM progress or multi-progress bar that should be tick updated was bytes come in
-      retry : ###		How many times to retry the request if it fails
+ username & password		Specific a username and password for Basic authorization
+     headers : {}		Allows you to manually include HTTP headers in the request
+ contentType : ""		Specify what content-type of data is being sent. Not usually directly set by the you.
+     timeout : ###		How many ms to allow the request to take before cancelling the request
+ignoreErrors : false	Set to true to ignore any errors that take place
+ progressBar : .		An NPM progress or multi-progress bar that should be tick updated was bytes come in
+       retry : ###		How many times to retry the request if it fails
 */
 
 // Will download the given targetURL to the given destinationPath. cb(err, headers, statusCode)
@@ -227,6 +228,9 @@ function httpExecute(targetURL, options, cb)
 		}
 		else
 		{
+			if(options.ignoreErrors)
+				return cb();
+
 			return cb(err);
 		}
 	});

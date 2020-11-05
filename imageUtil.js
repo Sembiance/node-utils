@@ -36,7 +36,7 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 			if(options.simpleOnly)
 				this.parallel()();
 			else
-				runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
+				runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), path.basename(imageFilePath)], {timeout : XU.MINUTE*3, silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
 
 			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
 		},
@@ -57,7 +57,11 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 				if(!lineProps || !Object.keys(PROPS).includes(lineProps.propName))
 					return;
 				
-				imageInfo[lineProps.propName] = NUMS.includes(lineProps.propName) ? +lineProps.propValue : (BOOLS.includes(lineProps.propName) ? lineProps.propValue.toLowerCase()==="true" : lineProps.propValue);
+				const propValue = NUMS.includes(lineProps.propName) ? +lineProps.propValue : (BOOLS.includes(lineProps.propName) ? lineProps.propValue.toLowerCase()==="true" : lineProps.propValue);
+				if(propValue==="Undefined")
+					return;
+				
+				imageInfo[lineProps.propName] = propValue;
 			});
 			
 			this(undefined, Object.keys(imageInfo).length===0 ? undefined : imageInfo);

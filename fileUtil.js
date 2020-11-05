@@ -1,15 +1,14 @@
 "use strict";
-
 const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	path = require("path"),
 	os = require("os"),
-	rimraf = require("rimraf"),	// eslint-disable-line node/no-restricted-require
 	{performance} = require("perf_hooks"),
 	globModule = require("glob"),	// eslint-disable-line node/no-restricted-require
 	tiptoe = require("tiptoe");
 
 // Glob has many built in issues, which is probably why the author wants to rewrite it: https://github.com/isaacs/node-glob/issues/405
+// Further options: https://github.com/isaacs/node-glob
 // This wrapper is an attempt to fix some of the issues that I myself have run into when using glob. sigh.
 exports.glob = function glob(baseDirPath, matchPattern, _options, _cb)
 {
@@ -24,7 +23,7 @@ exports.glob = function glob(baseDirPath, matchPattern, _options, _cb)
 			return setImmediate(() => cb(err));
 		
 		// Since we changed our cwd, we need to resolve our results relative to that
-		cb(undefined, results.map(v => path.resolve(path.join(baseDirPath, v))));
+		cb(undefined, results.map(v => path.resolve(path.join(baseDirPath, v)) + (options.mark && v.endsWith("/") ? "/" : "")));
 	});
 };
 
@@ -32,6 +31,22 @@ exports.glob = function glob(baseDirPath, matchPattern, _options, _cb)
 exports.globSync = function globSync(baseDirPath, matchPattern, options={})
 {
 	return globModule.sync(matchPattern, Object.assign({dot : true, cwd : baseDirPath}, options)).map(v => path.resolve(path.join(baseDirPath, v)));
+};
+
+// Will safely write a file to disc by first writing to a tmp file and then renaming it
+exports.writeFileSafe = function writeFileSafe(filePath, fileData, fileOptions, cb)
+{
+	tiptoe(
+		function writeToTmpFile()
+		{
+			fs.writeFile(`${filePath}.tmp`, fileData, fileOptions, this);
+		},
+		function renameFile()
+		{
+			fs.rename(`${filePath}.tmp`, filePath, this);
+		},
+		cb
+	);
 };
 
 exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
@@ -229,24 +244,9 @@ exports.exists = function exists(target, cb)
 };
 
 // Deletes the target from disk, if it's a directory, will remove the entire directory and all sub directories and files
-exports.unlink = function unlink(target, cb)
+exports.unlink = function unlink(targetPath, cb)
 {
-	exports.exists(target, (ignored, exists) =>
-	{
-		if(!exists)
-			return setImmediate(cb);
-
-		fs.stat(target, (err, stats) =>
-		{
-			if(!stats)
-				return setImmediate(cb);
-				
-			if(stats.isDirectory())
-				rimraf(target, cb);
-			else
-				fs.unlink(target, cb);
-		});
-	});
+	fs.rmdir(targetPath, {force : true, maxRetries : 1, recursive : true}, cb);
 };
 
 // Returns the first letter of a file that can be used for dir breaking up

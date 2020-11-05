@@ -75,7 +75,7 @@ tiptoe(
 		assert.strictEqual(trimmedVidInfo.duration, 9.57);
 		assert.strictEqual(trimmedVidInfo.fps, 60);
 
-		videoUtil.generateThumbnail(VIDEO_PATH, "00:00:" + (videoInfo.duration<40 ? Math.floor(Math.floor(videoInfo.duration)/2) : 30), VIDEO_PATH + ".thumb.png", 400, 600, this);
+		videoUtil.generateThumbnail(VIDEO_PATH, `00:00:${(videoInfo.duration<40 ? Math.floor(Math.floor(videoInfo.duration)/2) : 30)}`, `${VIDEO_PATH}.thumb.png`, 400, 600, this);
 	},
 	function removeThumbnail()
 	{

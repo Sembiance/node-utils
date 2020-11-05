@@ -41,7 +41,7 @@ function getCharCodeCategory(charCode)
 {
 	let result = null;
 	if(categoryData===null)
-		categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.assign(r, require("unicode/category/" + categorySymbol)), {})]);	// eslint-disable-line node/global-require
+		categoryData = Object.map(categories, (categoryName, categorySymbols) => [categoryName, categorySymbols.reduce((r, categorySymbol) => Object.assign(r, require(`unicode/category/${categorySymbol}`)), {})]);	// eslint-disable-line node/global-require
 
 	Object.forEach(categoryData, (categoryName, data) =>
 	{

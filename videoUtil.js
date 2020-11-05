@@ -141,6 +141,9 @@ exports.autocrop = function autocrop(srcFilePath, destFilePath, _options, _cb)
 				sums[cropid].count++;
 			});
 
+			if(Object.keys(sums).length===0)
+				return this.jump(-1);
+
 			const cropInfo = Object.entries(sums).multiSort(([, v]) => v.count, true)[0][1].frameCropInfo;
 			if(!cropInfo)
 				return this.jump(-1);

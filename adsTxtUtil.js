@@ -85,7 +85,7 @@ exports.reformulate = function reformulate(adsTxt)
 		{
 			let line = util.format("%s, %s, %s", groupEntry.domain, groupEntry.accountid, groupEntry.type);
 			if(groupEntry.authid)
-				line += ", " + groupEntry.authid;
+				line += `, ${groupEntry.authid}`;
 			
 			lines.push(line);
 		});

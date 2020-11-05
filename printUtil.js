@@ -1,5 +1,5 @@
 "use strict";
-
+/* eslint-disable prefer-template */
 const XU = require("@sembiance/xu"),
 	chalk = require("chalk");
 
@@ -25,10 +25,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 	if(options.sorter)
 		rows.sort(options.sorter);
 
-	if(options.formatter)
-		rows = rows.map(options.formatter);
-	else
-		rows = rows.map(row => { row[1] = (typeof row[1]==="number" ? row[1].toLocaleString() : row[1]); return row; });
+	rows = options.formatter ? rows.map(options.formatter) : rows.map(row => { row[1] = (typeof row[1]==="number" ? row[1].toLocaleString() : row[1]); return row; });
 
 	if(options.header)
 		rows.unshift(options.header);
@@ -86,10 +83,17 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 	if(options.sorter)
 		rows.sort(options.sorter);
 
-	if(options.formatter)
-		rows.forEach(object => colNames.forEach(colName => { object[colName] = options.formatter(colName, object[colName], object); }));
-	else
-		rows.forEach(object => colNames.forEach((colName, i) => { const v=object[colName]; object[colName] = colTypes[i]==="boolean" ? booleanValues[v ? 0 : 1] : (colTypes[i]==="number" ? (typeof v==="number" ? v.toLocaleString() : 0) : (typeof v==="undefined" ? "" : v)); }));	// eslint-disable-line max-len
+	function defaultFormatter(k, v, o, i)
+	{
+		if(colTypes[i]==="boolean")
+			return booleanValues[v ? 0 : 1];
+		if(colTypes[i]==="number")
+			return (typeof v==="number" ? v.toLocaleString() : 0);
+
+		return typeof v==="undefined" ? "" : v;
+	}
+
+	rows.forEach(object => colNames.forEach((colName, i) => { object[colName] = (options.formatter || defaultFormatter)(colName, object[colName], object, i); }));
 
 	const maxColSizeMap = {};
 
@@ -113,12 +117,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 
 			let color = rowNum===0 ? "#FFFFFF" : null;
 			if(rowNum>1 && options && options.color && options.color[colName])
-			{
-				if((typeof options.color[colName]==="function"))
-					color = options.color[colName](objects[rowNum-2][colName], objects[rowNum-2]);
-				else
-					color = options.color[colName];
-			}
+				color = (typeof options.color[colName]==="function") ? options.color[colName](objects[rowNum-2][colName], objects[rowNum-2]) : options.color[colName];
 
 			rowOut += (color ? chalk.hex(color)(col) : col);
 

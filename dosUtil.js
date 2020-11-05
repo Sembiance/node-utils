@@ -262,11 +262,11 @@ class DOS
 			},
 			function handleError(err)
 			{
-				if(err)
+				/*if(err)
 				{
 					console.trace();
 					console.error(err);
-				}
+				}*/
 
 				cb(err);
 			}
