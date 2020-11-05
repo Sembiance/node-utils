@@ -246,7 +246,7 @@ exports.exists = function exists(target, cb)
 // Deletes the target from disk, if it's a directory, will remove the entire directory and all sub directories and files
 exports.unlink = function unlink(targetPath, cb)
 {
-	fs.rmdir(targetPath, {force : true, maxRetries : 1, recursive : true}, cb);
+	fs.rm(targetPath, {force : true, maxRetries : 1, recursive : true}, cb);
 };
 
 // Returns the first letter of a file that can be used for dir breaking up
