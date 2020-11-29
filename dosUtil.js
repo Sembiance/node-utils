@@ -236,12 +236,12 @@ class DOS
 			},
 			function getCropDimensions()
 			{
-				imageUtil.getAutoCropDimensions(screenshot.filePath, {cropColor : "#FFC0CB"}, this);
+				imageUtil.getAutoCropDimensions(screenshot.filePath, {cropColor : "#FFC0CA"}, this);
 			},
 			function cropIfNeeded(cropInfo)
 			{
 				if(!cropInfo || !cropInfo.w || !cropInfo.h)
-					return this();
+					return this.jump(2);
 				
 				this.data.croppedScreenshotFilePath = fileUtil.generateTempFilePath(tmpDirPath, ".png");
 				runUtil.run("convert", [screenshot.filePath, "-crop", `${cropInfo.w}x${cropInfo.h}+${cropInfo.x || 0}+${cropInfo.y || 0}`, "-strip", this.data.croppedScreenshotFilePath], runUtil.SILENT, this);

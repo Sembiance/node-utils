@@ -64,16 +64,24 @@ exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix="
 	return tempFilePath;
 };
 
-exports.searchReplace = function searchReplace(file, match, replace, cb)
+// Replaced the given findMe (which can be text or a regular expression) with replaceWith
+exports.searchReplace = function searchReplace(filePath, findMe, replaceWith, cb)
 {
 	tiptoe(
-		function loadFile()
+		function checkFileExistance()
 		{
-			fs.readFile(file, XU.UTF8, this);
+			exports.exists(filePath, this);
+		},
+		function loadFile(fileExists)
+		{
+			if(!fileExists)
+				return this.finish();
+
+			fs.readFile(filePath, XU.UTF8, this);
 		},
 		function replaceAndSave(data)
 		{
-			fs.writeFile(file, data.toString("utf8").replace(new RegExp(match, "g"), replace), XU.UTF8, this);
+			fs.writeFile(filePath, data.toString("utf8")[typeof data==="string" ? "replaceAll" : "replace"](findMe, replaceWith), XU.UTF8, this);
 		},
 		cb
 	);

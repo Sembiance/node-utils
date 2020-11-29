@@ -12,6 +12,7 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 {
 	const {options, cb} = XU.optionscb(_options, _cb, {});
 
+	// Available properties: https://imagemagick.org/script/escape.php
 	const PROPS =
 	{
 		height             : "%h",
@@ -22,8 +23,8 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 		canvasWidth        : "%W",
 		size               : "%B",
 		compressionType    : "%C",
-		compressionQuality : "%Q",
-		entropy            : "%[entropy]",
+		//compressionQuality : "%Q",	// Often is just '92' for most images and formats
+		//entropy            : "%[entropy]",	// Takes some CPU time to calculate, haven't found a good use for it yet
 		opaque             : "%[opaque]"
 	};
 

@@ -54,9 +54,9 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 				if(options.dontCropVideo)
 					fs.symlink(recordedVidFilePath, croppedVidFilePath, this);
 				else
-					videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CB"}, this);
+					videoUtil.autocrop(recordedVidFilePath, croppedVidFilePath, {cropColor : "#FFC0CA"}, this);
 			},
-			function trimVideo() { videoUtil.trimSolidFrames(croppedVidFilePath, trimmedVidFilePath, {color : "#FFC0CB", fuzz : 0, fps : 30}, this); },
+			function trimVideo() { videoUtil.trimSolidFrames(croppedVidFilePath, trimmedVidFilePath, {color : "#FFC0CA", fuzz : 0, fps : 30}, this); },
 			function makeBrowserFriendly() { exports.run("ffmpeg", ["-i", trimmedVidFilePath, "-c:v", "libx264", "-crf", "1", "-preset", "slow", options.recordVideoFilePath], exports.SILENT, this); },
 			function cleanupVids()
 			{
@@ -85,7 +85,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 
 		if(options.recordVideoFilePath)
 		{
-			exports.run("hsetroot", ["-solid", "#FFC0CB"], {env : {DISPLAY : `:${xPort}`}, silent : true, detached : true}, this);
+			exports.run("hsetroot", ["-solid", "#FFC0CA"], {env : {DISPLAY : `:${xPort}`}, silent : true, detached : true}, this);
 			const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", `127.0.0.1:${xPort}`, "-y", "-c:v", "libx264rgb", "-r", "60", "-qscale", "0", "-crf", "0", "-preset", "ultrafast", recordedVidFilePath];
 			ffmpegCP = exports.run("ffmpeg", ffmpegArgs, {silent : true, detached : true});
 		}
@@ -201,6 +201,8 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 
 		if(cb)
 		{
+			if(err || stderr)
+				console.log("error", command, args, options, err, stderr);
 			if(options["redirect-stderr"])
 				setImmediate(() => cb(err || stderr, stdout));
 			else
