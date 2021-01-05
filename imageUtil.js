@@ -1,5 +1,4 @@
 "use strict";
-
 const XU = require("@sembiance/xu"),
 	fileUtil = require("./fileUtil.js"),
 	fs = require("fs"),
@@ -152,8 +151,8 @@ exports.compress = function compress(inputFilePath, outputFilePath, fileType, lo
 	if(!(["jpg", "png", "gif"]).includes(fileType))
 		throw new Error(`Unsupported image type: ${fileType}`);
 
-	const tmpInputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", `.${fileType}`);
-	const tmpOutputFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", `.${fileType}`);
+	const tmpInputFilePath = fileUtil.generateTempFilePath(undefined, `.${fileType}`);
+	const tmpOutputFilePath = fileUtil.generateTempFilePath(undefined, `.${fileType}`);
 
 	tiptoe(
 		function prepare()

@@ -1,5 +1,4 @@
 "use strict";
-
 const crypto = require("crypto");
 
 exports.blowfishEncrypt = function blowfishEncrypt(key, iv, data)

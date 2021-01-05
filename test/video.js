@@ -18,10 +18,10 @@ const CROP_VIDEO_PATH = path.join(FILES_DIR, "cropme.mp4");
 assert(fs.existsSync(VIDEO_PATH));
 assert(fs.existsSync(CROP_VIDEO_PATH));
 
-const frameFromEndFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".png");
-const framePercentageEndFilePath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".png");
-const destCroppedVideoPath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
-const destTrimmedVideoPath = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
+const frameFromEndFilePath = fileUtil.generateTempFilePath(undefined, ".png");
+const framePercentageEndFilePath = fileUtil.generateTempFilePath(undefined, ".png");
+const destCroppedVideoPath = fileUtil.generateTempFilePath(undefined, ".mp4");
+const destTrimmedVideoPath = fileUtil.generateTempFilePath(undefined, ".mp4");
 
 tiptoe(
 	function extractFrame()

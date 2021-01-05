@@ -1,5 +1,4 @@
 "use strict";
-
 const XU = require("@sembiance/xu");
 
 exports.hmget = function hmget(redis, ...args)

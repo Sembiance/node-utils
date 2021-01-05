@@ -1,5 +1,4 @@
 "use strict";
-
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),
@@ -21,7 +20,7 @@ const COMMAND_CONVERT = "/usr/bin/convert";
 exports.trimSolidFrames = function trimSolidFrames(srcFilePath, destFilePath, _options, _cb)
 {
 	const {options, cb} = XU.optionscb(_options, _cb, {color : "#000000", trimStart : true, trimEnd : true, fuzz : "10%", fps : 10});
-	const tmpWorkDir = fileUtil.generateTempFilePath("/mnt/ram/tmp");
+	const tmpWorkDir = fileUtil.generateTempFilePath();
 	if(!fileUtil.existsSync(srcFilePath))
 		return setImmediate(cb);
 
@@ -104,7 +103,7 @@ exports.trimSolidFrames = function trimSolidFrames(srcFilePath, destFilePath, _o
 exports.autocrop = function autocrop(srcFilePath, destFilePath, _options, _cb)
 {
 	const {options, cb} = XU.optionscb(_options, _cb, {cropColor : "#000000", numSampleFrames : 30});
-	const tmpWorkDir = fileUtil.generateTempFilePath("/mnt/ram/tmp");
+	const tmpWorkDir = fileUtil.generateTempFilePath();
 
 	tiptoe(
 		function createWorkDir()

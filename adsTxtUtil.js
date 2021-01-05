@@ -1,5 +1,4 @@
 "use strict";
-
 const XU = require("@sembiance/xu"),
 	util = require("util"),
 	tiptoe = require("tiptoe"),

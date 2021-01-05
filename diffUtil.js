@@ -1,5 +1,4 @@
 "use strict";
-/* eslint-disable prefer-template */
 const XU = require("@sembiance/xu"),
 	util = require("util"),
 	ansidiff = require("ansidiff"),
@@ -61,7 +60,7 @@ function diffArray(o, n, options)
 			{
 				const subResult = diff(item, n[i], options);
 				if(subResult)
-					result += " ".repeat(options.indent*4) + "[" + i + "]" + (options.arrayKey && item.hasOwnProperty(options.arrayKey) ? (" " + item[options.arrayKey]) : "") + ": " + subResult;
+					result += `${" ".repeat(options.indent*4)}[${i}]${options.arrayKey && item.hasOwnProperty(options.arrayKey) ? (` ${item[options.arrayKey]}`) : ""}: ${subResult}`;
 			});
 		}
 	}
@@ -79,9 +78,9 @@ function diffValues(o, n)
 	if(o!==n)
 	{
 		if(typeof o==="string")
-			return ansidiff.words(JSON.stringify(o), JSON.stringify(n), ansidiff.subtle) + "\n";
+			return `${ansidiff.words(JSON.stringify(o), JSON.stringify(n), ansidiff.subtle)}\n`;
 
-		return chalk.whiteBright(JSON.stringify(o)) + chalk.yellow(" => ") + chalk.whiteBright(JSON.stringify(n)) + "\n";
+		return `${chalk.whiteBright(JSON.stringify(o)) + chalk.yellow(" => ") + chalk.whiteBright(JSON.stringify(n))}\n`;
 	}
 
 	return "";

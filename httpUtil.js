@@ -1,5 +1,4 @@
 "use strict";
-
 const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	path = require("path"),

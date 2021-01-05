@@ -8,7 +8,7 @@ const XU = require("@sembiance/xu"),
 	hashUtil = require("../index").hash,
 	ftpUtil = require("../index").ftp;
 
-const TEST_FILE_PATH = path.join("/mnt/ram/tmp", `${performance.now()}.zip`);
+const TEST_FILE_PATH = path.join(undefined, `${performance.now()}.zip`);
 
 ftpUtil.download("ftp://ftp.padua.org/pub/c64/Demos/pal/padua/embryo.zip", TEST_FILE_PATH, err =>
 {

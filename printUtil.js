@@ -1,5 +1,4 @@
 "use strict";
-/* eslint-disable prefer-template */
 const XU = require("@sembiance/xu"),
 	chalk = require("chalk");
 
@@ -8,15 +7,15 @@ chalk.level = 2;
 exports.toSize = function toSize(num, precision=1)
 {
 	if(num<XU.KB)
-		return num.toLocaleString() + " bytes";
+		return `${num.toLocaleString()} bytes`;
 	else if(num<XU.MB)
-		return (num/XU.KB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "KB";
+		return `${(num/XU.KB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision})}KB`;
 	else if(num<XU.GB)
-		return (num/XU.MB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "MB";
+		return `${(num/XU.MB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision})}MB`;
 	else if(num<XU.TB)
-		return (num/XU.GB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "GB";
+		return `${(num/XU.GB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision})}GB`;
 	else if(num<XU.PB)
-		return (num/XU.TB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision}) + "TB";
+		return `${(num/XU.TB).toLocaleString("en", {minimumFractionDigits : precision, maximumFractionDigits : precision})}TB`;
 };
 
 exports.columnizeObject = function columnizeObject(o, options={})
@@ -34,7 +33,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 		options.alignment = options.alignment.map(a => a.charAt(0).toLowerCase());
 
 	const maxColSizes = [];
-	rows.forEach(row => row.forEach((col, i) => { maxColSizes[i] = Math.max((maxColSizes[i] || 0), (""+col).length); }));
+	rows.forEach(row => row.forEach((col, i) => { maxColSizes[i] = Math.max((maxColSizes[i] || 0), (`${col}`).length); }));
 
 	if(options.header)
 		rows.splice(1, 0, maxColSizes.map(maxColSize => chalk.hex("#00FFFF")("-".repeat(maxColSize))));
@@ -47,7 +46,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 		let rowOut = "";
 		row.forEach((_col, i) =>
 		{
-			const col = "" + _col;
+			const col = `${_col}`;
 			
 			const a = (options.header && rowNum===0) ? "c" : (options.alignment ? (options.alignment[i] || "l") : "l");
 			const colPadding = maxColSizes[i] - col.length;
@@ -63,7 +62,7 @@ exports.columnizeObject = function columnizeObject(o, options={})
 			rowOut += " ".repeat(spacing);
 		});
 
-		result += rowOut + "\n";
+		result += `${rowOut}\n`;
 	});
 
 	return result;
@@ -97,7 +96,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 
 	const maxColSizeMap = {};
 
-	rows.forEach(row => colNames.forEach(colName => { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (""+row[colName]).length, colNameMap[colName].length); } }));	// eslint-disable-line curly
+	rows.forEach(row => colNames.forEach(colName => { if(row.hasOwnProperty(colName)) { maxColSizeMap[colName] = Math.max((maxColSizeMap[colName] || 0), (`${row[colName]}`).length, colNameMap[colName].length); } }));	// eslint-disable-line curly
 
 	rows.unshift(Object.map(colNameMap, (k, v) => v), Object.map(colNameMap, k => [k, chalk.hex("#00FFFF")("-".repeat(maxColSizeMap[k]))]));
 
@@ -108,7 +107,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 		let rowOut = "";
 		colNames.forEach((colName, i) =>
 		{
-			const col = "" + row[colName];
+			const col = `${row[colName]}`;
 			const a = rowNum===0 ? "c" : (options.alignment ? (options.alignment[colName] || alignmentDefault) : (colTypes[i]==="number" ? "r" : (colTypes[i]==="boolean" ? "c" : alignmentDefault)));
 			const colPadding = maxColSizeMap[colName] - col.length;
 
@@ -127,7 +126,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 			rowOut += " ".repeat((options.padding ? (typeof options.padding==="function" ? options.padding(colName) : (Object.isObject(options.padding) ? (options.padding[colName] || 5) : options.padding)) : 5));
 		});
 
-		result += rowOut + (row.hasOwnProperty("_suffix") ? row._suffix : "") + "\n";	// eslint-disable-line no-underscore-dangle
+		result += `${rowOut + (row.hasOwnProperty("_suffix") ? row._suffix : "")}\n`;	// eslint-disable-line no-underscore-dangle
 	});
 
 	return (options.noHeader ? result.split("\n").slice(2).join("\n") : result);
@@ -147,11 +146,11 @@ exports.singleLineBooleanPie = function singleLineBooleanPie(o, label="Label", l
 		values.push(0);
 
 	// Labels
-	process.stdout.write(chalk.whiteBright(label) + ": ");
+	process.stdout.write(`${chalk.whiteBright(label)}: `);
 	process.stdout.write(chalk.hex("#FFFF00")(keys[0]));
-	const firstValue = " " + values[0].toLocaleString() + " (" + Math.round((values[0]/TOTAL)*100) + "%)";
+	const firstValue = ` ${values[0].toLocaleString()} (${Math.round((values[0]/TOTAL)*100)}%)`;
 	process.stdout.write(firstValue);
-	const secondValue = " " + values[1].toLocaleString() + " (" + Math.round((values[1]/TOTAL)*100) + "%)";
+	const secondValue = ` ${values[1].toLocaleString()} (${Math.round((values[1]/TOTAL)*100)}%)`;
 	process.stdout.write(" ".repeat(barLength-((keys[0].length+keys[1].length+firstValue.length+secondValue.length)-1)));
 	process.stdout.write(chalk.hex("#FFFF00")(keys[1]));
 	process.stdout.write(secondValue);
@@ -173,18 +172,18 @@ exports.multiLineBarChart = function multiLineBarChart(o, label="Label", lineLen
 	const COLORS = ["#FF8700", "#AF5FD7", "#00FF5F", "#D7FF00", "#D70087", "#005FFF", "#BCBCBC"].pushCopyInPlace(100);
 	const LINES = Object.entries(o).sort((a, b) => b[1]-a[1]);
 	const TOTAL = Object.values(o).sum();
-	const VALUES = LINES.map(line => line[1].toLocaleString() + " (" + Math.round((line[1]/TOTAL)*100) + "%)");
+	const VALUES = LINES.map(line => `${line[1].toLocaleString()} (${Math.round((line[1]/TOTAL)*100)}%)`);
 	const longestKey = LINES.map(line => line[0].length).sort((a, b) => b-a)[0];
 	const barLength = lineLength-(longestKey+2);
 
-	process.stdout.write(" ".repeat(Math.round((lineLength-label.length)/2)) + chalk.yellowBright(label) + "\n");
-	process.stdout.write(chalk.cyanBright("=").repeat(lineLength) + "\n");
+	process.stdout.write(`${" ".repeat(Math.round((lineLength-label.length)/2)) + chalk.yellowBright(label)}\n`);
+	process.stdout.write(`${chalk.cyanBright("=").repeat(lineLength)}\n`);
 
 	LINES.forEach((LINE, i) =>
 	{
-		process.stdout.write(chalk.whiteBright(LINE[0].padStart(longestKey)) + ": ");
+		process.stdout.write(`${chalk.whiteBright(LINE[0].padStart(longestKey))}: `);
 		process.stdout.write(chalk.hex(COLORS[i])("█".repeat(Math.max((LINE[1] > 0 ? 1 : 0), Math.round(barLength*(LINE[1]/TOTAL))))));
-		process.stdout.write(" " + VALUES[i]);
+		process.stdout.write(` ${VALUES[i]}`);
 		process.stdout.write("\n");
 	});
 
@@ -200,9 +199,9 @@ exports.majorHeader = function majorHeader(text, options={})
 	if(options.prefix)
 		process.stdout.write(options.prefix);
 
-	XU.log`${XU.c.fg.cyan + "/" + "-".repeat(text.length+2) + "\\"}`;
-	XU.log`${XU.c.fg.cyan + "|"} ${XU.c.fg.white + text} ${XU.c.fg.cyan + "|"}`;
-	XU.log`${XU.c.fg.cyan + "\\" + "-".repeat(text.length+2) + "/"}`;
+	XU.log`${`${XU.c.fg.cyan}/${"-".repeat(text.length+2)}\\`}`;
+	XU.log`${`${XU.c.fg.cyan}|`} ${XU.c.fg.white + text} ${`${XU.c.fg.cyan}|`}`;
+	XU.log`${`${XU.c.fg.cyan}\\${"-".repeat(text.length+2)}/`}`;
 
 	if(options.suffix)
 		process.stdout.write(options.suffix);
@@ -230,9 +229,9 @@ exports.list = function list(items, options={})
 		process.stdout.write(options.prefix);
 
 	if(options.header)
-		exports[(options.headerType==="major" ? "major" : "minor") + "Header"](options.header, (options.headerColor ? { color : options.headerColor } : undefined));
+		exports[`${options.headerType==="major" ? "major" : "minor"}Header`](options.header, (options.headerColor ? { color : options.headerColor } : undefined));
 
-	items.forEach(item => process.stdout.write(" ".repeat(options.indent || 2) + "* " + item + "\n"));
+	items.forEach(item => process.stdout.write(`${" ".repeat(options.indent || 2)}* ${item}\n`));
 
 	if(options.suffix)
 		process.stdout.write(options.suffix);

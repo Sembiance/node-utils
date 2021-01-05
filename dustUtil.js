@@ -1,5 +1,4 @@
 "use strict";
-
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	path = require("path"),

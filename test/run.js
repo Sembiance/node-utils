@@ -47,7 +47,7 @@ function testLiveOutput(cb)
 
 function testVirtualXRecord(cb)
 {
-	const OUTPUT_VIDEO_FILE_PATH = fileUtil.generateTempFilePath("/mnt/ram/tmp", ".mp4");
+	const OUTPUT_VIDEO_FILE_PATH = fileUtil.generateTempFilePath(undefined, ".mp4");
 	console.log(OUTPUT_VIDEO_FILE_PATH);
 	tiptoe(
 		function runProcess()

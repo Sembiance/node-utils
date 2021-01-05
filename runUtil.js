@@ -2,7 +2,6 @@
 /* eslint-disable no-param-reassign */
 const XU = require("@sembiance/xu"),
 	path = require("path"),
-	os = require("os"),
 	fs = require("fs"),
 	fileUtil = require("./index.js").file,
 	videoUtil = require("./index.js").video,
@@ -16,11 +15,11 @@ const XU = require("@sembiance/xu"),
 //           maxBuffer : Set maximum buffer size for stdout
 //          liveOutput : Set to 'true' to pipe stdout and stderr of the process to the equilivant live stdout/stderr streams
 //           inputData : Pass data to 'stdin' of the process
+//       ignore-stderr : Ignore stderr output entirely
 //     redirect-stderr : Redirect all stderr content to stdout result
 //	   redirect-stdout : Redirect stdout to a given file path
 //                 env : Pass an object of key/value pairs to set for environment variables
 //             timeout : Number of 'ms' to allow the process to run and then terminate it
-//			tmpDirPath : The path to use for temporary files (used in video recording)
 //            virtualX : Set to true to run this in a virtual X environment
 //     portNumFilePath : If virtualX, record the virtual framebuffer port number to portNumFilePath
 // recordVideoFilePath : If virtualX, record the session as a video to recordVideoFilePath
@@ -41,9 +40,9 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 
 	let xvfbCP = null;
 	
-	const recordedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(options.tmpDirPath || os.tmpdir(), ".mp4") : null;
-	const croppedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(options.tmpDirPath || os.tmpdir(), ".mp4") : null;
-	const trimmedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(options.tmpDirPath || os.tmpdir(), ".mp4") : null;
+	const recordedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(undefined, ".mp4") : null;
+	const croppedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(undefined, ".mp4") : null;
+	const trimmedVidFilePath = options.recordVideoFilePath ? fileUtil.generateTempFilePath(undefined, ".mp4") : null;
 	let ffmpegCP = null;
 
 	const finalizeVideo = function finalizeVideo(finalizecb=() => {})
@@ -92,7 +91,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 	}
 
 	if(options.env)
-		options.env = Object.assign(Object.assign({}, process.env), options.env);	// eslint-disable-line node/no-process-env
+		options.env = Object.assign(Object.assign({}, process.env), options.env);
 
 	if(!options.silent)
 		XU.log`Running ${command} in cwd ${options.cwd || process.cwd()} with args ${args} and options ${_options}`;

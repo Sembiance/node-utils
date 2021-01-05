@@ -49,7 +49,29 @@ exports.writeFileSafe = function writeFileSafe(filePath, fileData, fileOptions, 
 	);
 };
 
-exports.generateTempFilePath = function generateTempFilePath(prefix="", suffix=".tmp")
+// Returns true if the target exists
+exports.existsSync = function existsSync(target)
+{
+	try
+	{
+		fs.accessSync(target, fs.F_OK);
+	}
+	catch(err)
+	{
+		return false;
+	}
+
+	return true;
+};
+
+// Calls cb(err, true) if the target exists
+exports.exists = function exists(target, cb)
+{
+	fs.access(target, fs.F_OK, err => cb(undefined, !err));
+};
+
+const TMP_DIR_PATH = exports.existsSync("/mnt/ram/tmp") ? "/mnt/ram/tmp" : os.tmpdir();
+exports.generateTempFilePath = function generateTempFilePath(prefix=TMP_DIR_PATH, suffix=".tmp")
 {
 	let tempFilePath = null;
 	const filePathPrefix = path.join(prefix.startsWith("/") ? "" : os.tmpdir(), prefix);
@@ -228,27 +250,6 @@ exports.move = function move(src, dest, cb)
 		},
 		cb
 	);
-};
-
-// Returns true if the target exists
-exports.existsSync = function existsSync(target)
-{
-	try
-	{
-		fs.accessSync(target, fs.F_OK);
-	}
-	catch(err)
-	{
-		return false;
-	}
-
-	return true;
-};
-
-// Calls cb(err, true) if the target exists
-exports.exists = function exists(target, cb)
-{
-	fs.access(target, fs.F_OK, err => cb(undefined, !err));
 };
 
 // Deletes the target from disk, if it's a directory, will remove the entire directory and all sub directories and files

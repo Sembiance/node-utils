@@ -1,5 +1,4 @@
 "use strict";
-
 const XU = require("@sembiance/xu"),
 	tiptoe = require("tiptoe"),
 	fs = require("fs"),
@@ -7,7 +6,6 @@ const XU = require("@sembiance/xu"),
 	videoUtil = require("./index.js").video,
 	imageUtil = require("./index.js").image,
 	fileUtil = require("./index.js").file,
-	os = require("os"),
 	streamBuffers = require("stream-buffers"),
 	path = require("path");
 
@@ -19,10 +17,9 @@ const C_DIR_PATH = path.join(__dirname, "dos", "c");
 
 class DOS
 {
-	constructor({dosCWD=path.join(__dirname, "dos", "msdos622"), autoExec=[], tries=5, verbose=0, debug=false, recordVideoFilePath=null, timeout=XU.MINUTE*10, tmpDirPath=os.tmpdir()}={})
+	constructor({dosCWD=path.join(__dirname, "dos", "msdos622"), autoExec=[], tries=5, verbose=0, debug=false, recordVideoFilePath=null, timeout=XU.MINUTE*10}={})
 	{
 		this.dosCWD = dosCWD;
-		this.tmpDirPath = tmpDirPath;
 		this.masterConfigFilePath = path.join(__dirname, "dos", "dosbox.conf");
 		this.autoExec = autoExec;
 		this.dosBoxCP = null;
@@ -39,9 +36,9 @@ class DOS
 	// Will create a temporary directory in RAM and copy the master HD image and config file over
 	setup(cb)
 	{
-		this.workDir = fileUtil.generateTempFilePath(this.tmpDirPath);
+		this.workDir = fileUtil.generateTempFilePath();
 		this.configFilePath = path.join(this.workDir, path.basename(this.masterConfigFilePath));
-		this.portNumFilePath = fileUtil.generateTempFilePath(this.tmpDirPath);
+		this.portNumFilePath = fileUtil.generateTempFilePath();
 
 		const self=this;
 		tiptoe(
@@ -199,14 +196,14 @@ class DOS
 		);
 	}
 
-	static quickOp({dosCWD, autoExec, keys, keyOpts, timeout, screenshot=null, video=null, debug=false, tmpDirPath=os.tmpdir(), verbose=0}, cb)
+	static quickOp({dosCWD, autoExec, keys, keyOpts, timeout, screenshot=null, video=null, debug=false, verbose=0}, cb)
 	{
-		const quickOpTmpDirPath = fileUtil.generateTempFilePath(tmpDirPath);
-		const dosArgs = {tmpDirPath, dosCWD, autoExec, verbose, debug};
+		const quickOpTmpDirPath = fileUtil.generateTempFilePath();
+		const dosArgs = {dosCWD, autoExec, verbose, debug};
 		if(video)
 			dosArgs.recordVideoFilePath = video;
 		if(screenshot)
-			dosArgs.recordVideoFilePath = fileUtil.generateTempFilePath(tmpDirPath, ".mp4");
+			dosArgs.recordVideoFilePath = fileUtil.generateTempFilePath(undefined, ".mp4");
 		if(timeout)
 			dosArgs.timeout = timeout;
 		
@@ -243,7 +240,7 @@ class DOS
 				if(!cropInfo || !cropInfo.w || !cropInfo.h)
 					return this.jump(2);
 				
-				this.data.croppedScreenshotFilePath = fileUtil.generateTempFilePath(tmpDirPath, ".png");
+				this.data.croppedScreenshotFilePath = fileUtil.generateTempFilePath(undefined, ".png");
 				runUtil.run("convert", [screenshot.filePath, "-crop", `${cropInfo.w}x${cropInfo.h}+${cropInfo.x || 0}+${cropInfo.y || 0}`, "-strip", this.data.croppedScreenshotFilePath], runUtil.SILENT, this);
 			},
 			function renameCroppedFile()
