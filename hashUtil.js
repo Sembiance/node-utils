@@ -6,7 +6,6 @@ const XU = require("@sembiance/xu"),
 	runUtil = require("./runUtil.js"),
 	crypto = require("crypto");
 
-
 // Algo list: openssl list -digest-algorithms
 
 exports.hashFile = hashFile;

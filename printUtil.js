@@ -126,7 +126,7 @@ exports.columnizeObjects = function columnizeObjects(objects, options={})
 			rowOut += " ".repeat((options.padding ? (typeof options.padding==="function" ? options.padding(colName) : (Object.isObject(options.padding) ? (options.padding[colName] || 5) : options.padding)) : 5));
 		});
 
-		result += `${rowOut + (row.hasOwnProperty("_suffix") ? row._suffix : "")}\n`;	// eslint-disable-line no-underscore-dangle
+		result += `${rowOut + (row.hasOwnProperty("_suffix") ? row._suffix : "")}\n`;
 	});
 
 	return (options.noHeader ? result.split("\n").slice(2).join("\n") : result);
