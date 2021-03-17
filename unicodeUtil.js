@@ -15,6 +15,18 @@ const categories =
 
 let categoryData = null;
 
+// Returns true if the string has any non-ascii characters
+exports.containsUnicode = function containsUnicode(str)
+{
+	for(let i=0;i<str.length;i++)
+	{
+		if(str.charCodeAt(i)>127)
+			return true;
+	}
+
+	return false;
+};
+
 // Fixes unicode characters, converting them to UTF8. This fixes problems with glob() and readdir() etc. because v8 only supports UTF8 encodings, sigh.
 exports.fixDirEncodings = function fixDirEncodings(dirPath, cb)
 {

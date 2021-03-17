@@ -1,6 +1,6 @@
 {
 	"name"         : "@sembiance/xutil",
-	"version"      : "3.1.4",
+	"version"      : "3.1.5",
 	"author"       : "Robert Schultz <robert@cosmicrealms.com>",
 	"description"  : "common util functions I use in many of my node projects",
 	"main"         : "index.js",
@@ -21,7 +21,6 @@
 		"progress-stream" : "~2.0.0",
 		"stream-buffers"  : "~3.0.1",
 		"tiptoe"          : "file:/mnt/compendium/DevLab/node-modules/tiptoe",
-		"unicode"         : "~12.1.0",
-		"urlencode"       : "~1.1.0"
+		"unicode"         : "~12.1.0"
 	}
 }

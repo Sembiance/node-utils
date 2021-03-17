@@ -6,6 +6,9 @@ const assert = require("assert"),
 const unicodeText = "ÀÆÇD";
 const asciiText = "AAECD";
 
+assert.equal(unicodeUtil.containsUnicode(unicodeText), true);
+assert.equal(unicodeUtil.containsUnicode(asciiText), false);
+
 assert.equal(unicodeUtil.unicodeToAscii(unicodeText), asciiText);
 
 const categoryString = "aÀ8‮5!＇♥ \t";

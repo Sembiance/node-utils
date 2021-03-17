@@ -259,9 +259,9 @@ exports.unlink = function unlink(targetPath, cb)
 };
 
 // Deletes the target from disk, if it's a directory, will remove the entire directory and all sub directories and files
-exports.unlinkSync = function unlinkSync(targetPath, cb)
+exports.unlinkSync = function unlinkSync(targetPath)
 {
-	fs.rmSync(targetPath, {force : true, maxRetries : 1, recursive : true}, cb);
+	fs.rmSync(targetPath, {force : true, maxRetries : 1, recursive : true});
 };
 
 // Returns the first letter of a file that can be used for dir breaking up

@@ -8,7 +8,6 @@ const XU = require("@sembiance/xu"),
 	progressStream = require("progress-stream"),
 	hashUtil = require("./hashUtil.js"),
 	querystring = require("querystring"),
-	urlencode = require("urlencode"),
 	streamBuffers = require("stream-buffers");
 
 // Default headers used for all requests
@@ -132,7 +131,7 @@ function httpExecute(targetURL, options, cb)
 		hostname : uo.hostname,
 		port     : uo.port || (uo.protocol.startsWith("https") ? 443 : 80),
 		method   : options.method,
-		path     : decodeURIComponent(uo.pathname).split("/").map(s => (!s || !s.length ? "" : urlencode(s))).join("/") + (uo.search ? uo.search : ""),
+		path     : decodeURIComponent(uo.pathname).split("/").map(s => (!s || !s.length ? "" : encodeURI(s))).join("/") + (uo.search ? uo.search : ""),
 		headers  : getHeaders(options.headers)
 	};
 
