@@ -3,6 +3,7 @@ const XU = require("@sembiance/xu"),
 	fs = require("fs"),
 	path = require("path"),
 	os = require("os"),
+	childProcess = require("child_process"),
 	{performance} = require("perf_hooks"),
 	globModule = require("glob"),	// eslint-disable-line node/no-restricted-require
 	tiptoe = require("tiptoe");
@@ -279,4 +280,20 @@ exports.getFirstLetterDir = function getFirstLetterDir(filePath)
 	
 	// Otherwise return underscore
 	return "_";
+};
+
+// Returns true if files a and b are equals. Calls out to 'cmp' due to how optimized that program is for speed
+exports.areEqual = function areEqual(a, b, cb)
+{
+	tiptoe(
+		function runCMP()
+		{
+			childProcess.execFile("cmp", ["--silent", a, b], this);
+		},
+		function returnResult(err)
+		{
+			// If they are not equal, the exit code is 1, which execFile() treats as an error
+			cb(undefined, !err);
+		}
+	);
 };

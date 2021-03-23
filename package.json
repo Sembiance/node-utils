@@ -1,6 +1,6 @@
 {
 	"name"         : "@sembiance/xutil",
-	"version"      : "3.1.5",
+	"version"      : "3.1.6",
 	"author"       : "Robert Schultz <robert@cosmicrealms.com>",
 	"description"  : "common util functions I use in many of my node projects",
 	"main"         : "index.js",

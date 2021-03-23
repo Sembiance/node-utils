@@ -168,7 +168,31 @@ function testGlob(cb)
 	);
 }
 
+// TEST: areEqual
+function testAreEqual(cb)
+{
+	tiptoe(
+		function performRuns()
+		{
+			fileUtil.areEqual(path.join(FILES_DIR, "catvid.mp4"), path.join(FILES_DIR, "catvidNonDupe.mp4"), this.parallel());
+			fileUtil.areEqual(path.join(FILES_DIR, "catvid.mp4"), path.join(FILES_DIR, "catvidDupe.mp4"), this.parallel());
+		},
+		function verifyResults(notEqualResult, equalResult)
+		{
+			assert.strictEqual(notEqualResult, false);
+			assert.strictEqual(equalResult, true);
+
+			this();
+		},
+		cb
+	);
+}
+
 tiptoe(
+	function runTestAreEqual()
+	{
+		testAreEqual(this);
+	},
 	function runTestGlob()
 	{
 		testGlob(this);
