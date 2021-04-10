@@ -265,6 +265,22 @@ exports.unlinkSync = function unlinkSync(targetPath)
 	fs.rmSync(targetPath, {force : true, maxRetries : 1, recursive : true});
 };
 
+// Empties the dirPath, deleting anything in it
+exports.emptyDir = function emptyDir(dirPath, cb)
+{
+	tiptoe(
+		function findFilesAndDirs()
+		{
+			exports.glob(dirPath, "*", this);
+		},
+		function deleteFilesAndDirs(fileAndDirPaths)
+		{
+			fileAndDirPaths.parallelForEach((fileAndDirPath, subcb) => exports.unlink(fileAndDirPath, subcb), this);
+		},
+		cb
+	);
+};
+
 // Returns the first letter of a file that can be used for dir breaking up
 exports.getFirstLetterDir = function getFirstLetterDir(filePath)
 {

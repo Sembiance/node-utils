@@ -105,6 +105,37 @@ function testUnlink(cb)
 	);
 }
 
+// TEST: emptyDir
+function testEmptyDir(cb)
+{
+	const EMPTY_DIR_PATH = fileUtil.generateTempFilePath();
+
+	tiptoe(
+		function setupDir()
+		{
+			fs.mkdirSync(path.join(EMPTY_DIR_PATH, "subdir"), {recursive : true});
+			fs.writeFileSync(path.join(EMPTY_DIR_PATH, "abc.txt"), "abc123", XU.UTF8);
+			fs.writeFileSync(path.join(EMPTY_DIR_PATH, "subdir", "subfile.dat"), "DATA\nGOES\nHERE", XU.UTF8);
+
+			assert.strictEqual(fileUtil.existsSync(path.join(EMPTY_DIR_PATH, "subdir")), true);
+			assert.strictEqual(fileUtil.existsSync(path.join(EMPTY_DIR_PATH, "abc.txt")), true);
+			assert.strictEqual(fileUtil.existsSync(path.join(EMPTY_DIR_PATH, "subdir", "subfile.dat")), true);
+
+			this.capture();
+			fileUtil.emptyDir(EMPTY_DIR_PATH, this);
+		},
+		function verifyEmpty(err)
+		{
+			assert(!err);
+			assert.strictEqual(fileUtil.existsSync(path.join(EMPTY_DIR_PATH, "subdir")), false);
+			assert.strictEqual(fileUtil.existsSync(path.join(EMPTY_DIR_PATH, "abc.txt")), false);
+			assert.strictEqual(fileUtil.existsSync(path.join(EMPTY_DIR_PATH, "subdir", "subfile.dat")), false);
+			this();
+		},
+		cb
+	);
+}
+
 // TEST: concat
 function testConcat(cb)
 {
@@ -189,6 +220,10 @@ function testAreEqual(cb)
 }
 
 tiptoe(
+	function runTestEmptyDir()
+	{
+		testEmptyDir(this);
+	},
 	function runTestAreEqual()
 	{
 		testAreEqual(this);

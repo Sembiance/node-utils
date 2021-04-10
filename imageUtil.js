@@ -9,7 +9,7 @@ const XU = require("@sembiance/xu"),
 // Returns a bunch of info about the given image
 exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 {
-	const {options, cb} = XU.optionscb(_options, _cb, {});
+	const {options, cb} = XU.optionscb(_options, _cb);
 
 	// Available properties: https://imagemagick.org/script/escape.php
 	const PROPS =
@@ -23,7 +23,6 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 		size               : "%B",
 		compressionType    : "%C",
 		//compressionQuality : "%Q",	// Often is just '92' for most images and formats
-		//entropy            : "%[entropy]",	// Takes some CPU time to calculate, haven't found a good use for it yet
 		opaque             : "%[opaque]"
 	};
 
@@ -33,17 +32,15 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 	tiptoe(
 		function runIdentifiers()
 		{
-			if(options.simpleOnly)
-				this.parallel()();
-			else
-				runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), path.basename(imageFilePath)], {timeout : XU.MINUTE*3, silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
-
-			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", path.basename(imageFilePath)], {silent : true, cwd : path.dirname(imageFilePath)}, this.parallel());
+			// Calculating colorCount takes FOREVER but is a useful metric, so we try it, but only give it a small amount of time to calculate
+			const RUN_OPTIONS = {timeout : XU.MINUTE*5, silent : true, killSignal : "SIGTERM", cwd : path.dirname(imageFilePath)};	// imageMagick needs a TERM to kill when identifying an image, otherwise it runs like, forever on huge images
+			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), path.basename(imageFilePath)], {...RUN_OPTIONS, timeout : (options.timeout || RUN_OPTIONS.timeout)}, this.parallel());
+			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", path.basename(imageFilePath)], RUN_OPTIONS, this.parallel());
 		},
 		function parseResults(imResultsRaw, whRaw)
 		{
 			let imResults = (imResultsRaw || "").trim();
-			if(imResults.length===0 || imResults.includes("corrupt image"))
+			if(imResults.length===0 || imResults.includes("corrupt image") || imResults.toLowerCase().startsWith("error: command failed"))
 				imResults = (whRaw || "").trim();
 			
 			const imLines = imResults.split("\n");
