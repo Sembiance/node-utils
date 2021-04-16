@@ -77,7 +77,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		if(options.portNumFilePath)
 			fs.writeFileSync(options.portNumFilePath, `${xPort}`, XU.UTF8);
 		
-		xvfbCP = exports.run("Xvfb", [`:${xPort}`, "-extension", "GLX", "-listen", "tcp", "-nocursor", "-ac", "-screen", "0", "1920x1080x24"], {silent : true, detached : true});
+		xvfbCP = exports.run("Xvfb", [`:${xPort}`, "+extension", "GLX", "-listen", "tcp", "-nocursor", "-ac", "-screen", "0", "1920x1080x24"], {silent : true, detached : true});
 		if(!options.env)
 			options.env = {};
 		options.env.DISPLAY = `:${xPort}`;

@@ -189,7 +189,8 @@ class DOS
 		tiptoe(
 			function removeFiles()
 			{
-				fileUtil.unlink(self.workDir, this.parallel());
+				if(self.verbose<5)
+					fileUtil.unlink(self.workDir, this.parallel());
 				fileUtil.unlink(self.portNumFilePath, this.parallel());
 			},
 			cb
@@ -241,7 +242,7 @@ class DOS
 					return this.jump(2);
 				
 				this.data.croppedScreenshotFilePath = fileUtil.generateTempFilePath(undefined, ".png");
-				runUtil.run("convert", [screenshot.filePath, "-crop", `${cropInfo.w}x${cropInfo.h}+${cropInfo.x || 0}+${cropInfo.y || 0}`, "-strip", this.data.croppedScreenshotFilePath], runUtil.SILENT, this);
+				runUtil.run("convert", [screenshot.filePath, "-crop", `${cropInfo.w}x${cropInfo.h}+${cropInfo.x || 0}+${cropInfo.y || 0}`, "-strip", this.data.croppedScreenshotFilePath], verbose>=5 ? runUtil.VERBOSE : runUtil.SILENT, this);
 			},
 			function renameCroppedFile()
 			{
@@ -255,7 +256,9 @@ class DOS
 			{
 				if(screenshot)
 					fileUtil.unlink(dosArgs.recordVideoFilePath, this.parallel());
-				fileUtil.unlink(quickOpTmpDirPath, this.parallel());
+				if(verbose<5)
+					fileUtil.unlink(quickOpTmpDirPath, this.parallel());
+				this.parallel()();
 			},
 			function handleError(err)
 			{
