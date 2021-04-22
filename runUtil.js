@@ -85,7 +85,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		if(options.recordVideoFilePath)
 		{
 			exports.run("hsetroot", ["-solid", "#FFC0CA"], {env : {DISPLAY : `:${xPort}`}, silent : true, detached : true}, this);
-			const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", `127.0.0.1:${xPort}`, "-y", "-c:v", "libx264rgb", "-r", "60", "-qscale", "0", "-crf", "0", "-preset", "ultrafast", recordedVidFilePath];
+			const ffmpegArgs = ["-f", "x11grab", "-draw_mouse", "0", "-video_size", "1920x1080", "-i", `:${xPort}`, "-y", "-c:v", "libx264rgb", "-r", "60", "-qscale", "0", "-crf", "0", "-preset", "ultrafast", recordedVidFilePath];
 			ffmpegCP = exports.run("ffmpeg", ffmpegArgs, {silent : true, detached : true});
 		}
 	}
