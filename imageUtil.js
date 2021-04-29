@@ -34,8 +34,8 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 		{
 			// Calculating colorCount takes FOREVER but is a useful metric, so we try it, but only give it a small amount of time to calculate
 			const RUN_OPTIONS = {timeout : XU.MINUTE*5, silent : true, killSignal : "SIGTERM", cwd : path.dirname(imageFilePath)};	// imageMagick needs a TERM to kill when identifying an image, otherwise it runs like, forever on huge images
-			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), path.basename(imageFilePath)], {...RUN_OPTIONS, timeout : (options.timeout || RUN_OPTIONS.timeout)}, this.parallel());
-			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", path.basename(imageFilePath)], RUN_OPTIONS, this.parallel());
+			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), `./${path.basename(imageFilePath)}`], {...RUN_OPTIONS, timeout : (options.timeout || RUN_OPTIONS.timeout)}, this.parallel());
+			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", `./${path.basename(imageFilePath)}`], RUN_OPTIONS, this.parallel());
 		},
 		function parseResults(imResultsRaw, whRaw)
 		{
