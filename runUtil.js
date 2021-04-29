@@ -69,10 +69,12 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 
 	if(options.virtualX)
 	{
-		const existingSessions = fileUtil.globSync("/tmp/.X11-unix", "X*", {nodir : true}).map(existingSessionFilePath => +path.basename(existingSessionFilePath).substring(1));
-		let xPort = Math.randomInt(10, 9999);
-		while(existingSessions.includes(xPort))
+		let xPort = null, existingSessions = null;
+		do
+		{
 			xPort = Math.randomInt(10, 9999);
+			existingSessions = fileUtil.globSync("/tmp/.X11-unix", "X*", {nodir : true}).map(existingSessionFilePath => +path.basename(existingSessionFilePath).substring(1));
+		} while(existingSessions.includes(xPort));
 
 		if(options.portNumFilePath)
 			fs.writeFileSync(options.portNumFilePath, `${xPort}`, XU.UTF8);
@@ -104,7 +106,7 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 		if(options.liveOutput)
 		{
 			cp.stdout.pipe(process.stdout);
-			cp.stderr.pipe(process.stderr);
+			cp.stderr.pipe(options["redirect-stderr"] ? process.stdout : process.stderr);
 		}
 
 		if(options.timeout)
