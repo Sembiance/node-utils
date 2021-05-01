@@ -1,6 +1,5 @@
 "use strict";
 const XU = require("@sembiance/xu"),
-	fileUtil = require("./fileUtil.js"),
 	fs = require("fs"),
 	path = require("path"),
 	runUtil = require("./runUtil.js"),
@@ -143,46 +142,30 @@ exports.getAutoCropDimensions = function getAutoCropDimensions(inputFilePath, _o
 };
 
 // Will compress the given image at inputFilePath to outputFilePath. If lossy is true then it will reduce image quality as needed to achieve higher compression
-exports.compress = function compress(inputFilePath, outputFilePath, fileType, lossy, cb)
+exports.compress = function compress({src, dest, type, lossy, max, threads=10}, cb)
 {
-	if(!(["jpg", "png", "gif"]).includes(fileType))
-		throw new Error(`Unsupported image type: ${fileType}`);
+	if(!src || !dest)
+		throw new Error(`imageUtil.compress requires both src and dest options`);
+	
+	if(!["png", "jpg", "gif"].includes(type))
+		throw new Error(`Unsupported image type: ${type}`);
 
-	const tmpInputFilePath = fileUtil.generateTempFilePath(undefined, `.${fileType}`);
-	const tmpOutputFilePath = fileUtil.generateTempFilePath(undefined, `.${fileType}`);
+	if(type==="gif")
+		return runUtil.run("gifsicle", ["--optimize=3", src, "-o", dest], runUtil.SILENT, cb), undefined;
 
-	tiptoe(
-		function prepare()
-		{
-			fs.copyFile(inputFilePath, tmpInputFilePath, this);
-		},
-		function performCompression()
-		{
-			if(fileType==="png")
-			{
-				if(lossy)
-					runUtil.run("pngquant", ["--speed=1", "--strip", "--output", tmpOutputFilePath, tmpInputFilePath], runUtil.SILENT, this);
-				else
-					runUtil.run("zopflipng", ["-m", tmpInputFilePath, tmpOutputFilePath], runUtil.SILENT, this);
-			}
-			else if(fileType==="jpg")
-			{
-				if(lossy)
-					runUtil.run("guetzli", ["--quality", "90", tmpInputFilePath, tmpOutputFilePath], runUtil.SILENT, this);
-				else
-					runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", tmpOutputFilePath, tmpInputFilePath], runUtil.SILENT, this);
-			}
-			else if(fileType==="gif")
-			{
-				runUtil.run("gifsicle", ["--optimize=3", tmpInputFilePath, "-o", tmpOutputFilePath], runUtil.SILENT, this);
-			}
-		},
-		function cleanup()
-		{
-			if(fileUtil.existsSync(tmpOutputFilePath))
-				fileUtil.move(tmpOutputFilePath, outputFilePath, this.parallel());
-			fileUtil.unlink(tmpInputFilePath, this.parallel());
-		},
-		cb
-	);
+	if(type==="png" && lossy)
+		runUtil.run("pngquant", ["--speed=1", "--strip", "--output", dest, src], runUtil.SILENT, cb);
+	else if(type==="png")
+		runUtil.run("oxipng", ["--opt", "3", "--strip", "all", "--threads", threads.toString(), ...(max ? ["--zopfli"] : []), "--out", dest, src], runUtil.SILENT, cb);
+	
+	if(type==="jpg" && lossy)
+		runUtil.run("guetzli", ["--quality", "90", src, dest], runUtil.SILENT, cb);
+	else if(type==="jpg")
+		runUtil.run("jpegtran", ["-progressive", "-copy", "none", "-optimize", "-perfect", "-outfile", dest, src], runUtil.SILENT, cb);
+};
+
+// Creates a webp version of png src saving it to dest
+exports.png2webp = function png2webp(src, dest, cb)
+{
+	runUtil.run("cwebp", ["-mt", "-z", "9", src, "-o", dest], runUtil.SILENT, cb);
 };
