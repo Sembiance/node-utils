@@ -37,17 +37,26 @@ exports.globSync = function globSync(baseDirPath, matchPattern, options={})
 // Will safely write a file to disc by first writing to a tmp file and then renaming it
 exports.writeFileSafe = function writeFileSafe(filePath, fileData, fileOptions, cb)
 {
+	const tmpFilePath = `${filePath}.tmp${Math.random()}`;
 	tiptoe(
 		function writeToTmpFile()
 		{
-			fs.writeFile(`${filePath}.tmp`, fileData, fileOptions, this);
+			fs.writeFile(tmpFilePath, fileData, fileOptions, this);
 		},
 		function renameFile()
 		{
-			fs.rename(`${filePath}.tmp`, filePath, this);
+			fs.rename(tmpFilePath, filePath, this);
 		},
 		cb
 	);
+};
+
+// Same as above but sync version
+exports.writeFileSafeSync = function writeFileSafeSync(filePath, fileData, fileOptions)
+{
+	const tmpFilePath = `${filePath}.tmp${Math.random()}`;
+	fs.writeFileSync(tmpFilePath, fileData, fileOptions);
+	fs.renameSync(tmpFilePath, filePath);
 };
 
 // Returns true if the target exists

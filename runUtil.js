@@ -105,6 +105,8 @@ exports.run = function run(_command, _args, _options={}, cb=() => {})
 
 		if(options.liveOutput)
 		{
+			process.stdout.setMaxListeners(9999);
+			process.stderr.setMaxListeners(9999);
 			cp.stdout.pipe(process.stdout);
 			cp.stderr.pipe(options["redirect-stderr"] ? process.stdout : process.stderr);
 		}
