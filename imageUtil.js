@@ -72,18 +72,18 @@ exports.getWidthHeight = function getWidthHeight(imageFilePath, cb)
 	tiptoe(
 		function getSize()
 		{
-			runUtil.run("identify", ["-quiet", imageFilePath], runUtil.SILENT, this);
+			runUtil.run("identify", ["-format", "%wx%h", `${imageFilePath}[0]`], runUtil.SILENT, this);
 		},
 		function processSizes(err, result)
 		{
 			if(err)
 				return cb(err);
 
-			const matches = result.trim().match(/[^ ]+ [^ ]+ (?<width>\d+)x(?<height>\d+) .*/);
-			if(!matches || matches.length<3 || !matches.groups)
+			const parts = result.split("x");
+			if(!parts || parts.length!==2)
 				return cb(new Error(`Invalid image: ${imageFilePath}`));
 			
-			cb(null, [+matches.groups.width, +matches.groups.height]);
+			cb(null, [+parts[0], +parts[1]]);
 		}
 	);
 };
