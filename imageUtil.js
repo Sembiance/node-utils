@@ -28,25 +28,43 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 	const NUMS = ["width", "height", "canvasWidth", "canvasHeight", "colorCount", "size", "compressionQuality", "entropy"];
 	const BOOLS = ["opaque"];
 
+	const imageInfo = {};
+	const runFilePath = `./${path.basename(imageFilePath)}`;
+	const RUN_OPTIONS = {timeout : XU.MINUTE*5, silent : true, killSignal : "SIGTERM", cwd : path.dirname(imageFilePath)};	// imageMagick needs a TERM to kill when identifying an image, otherwise it runs like, forever on huge images
+
 	tiptoe(
-		function runIdentifiers()
+		function getWH()
 		{
-			// Calculating colorCount takes FOREVER but is a useful metric, so we try it, but only give it a small amount of time to calculate
-			const RUN_OPTIONS = {timeout : XU.MINUTE*5, silent : true, killSignal : "SIGTERM", cwd : path.dirname(imageFilePath)};	// imageMagick needs a TERM to kill when identifying an image, otherwise it runs like, forever on huge images
-			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), `./${path.basename(imageFilePath)}`], {...RUN_OPTIONS, timeout : (options.timeout || RUN_OPTIONS.timeout)}, this.parallel());
-			runUtil.run("identify", ["-format", "width:%w\\nheight:%h", `./${path.basename(imageFilePath)}`], RUN_OPTIONS, this.parallel());
+			// Imagemagick SUCKS big time at simply returning the width/height of an SVG. So we bypass it and use svgdim instead which uses librsvg
+			if(options.svg)
+				runUtil.run("svgdim", [runFilePath], RUN_OPTIONS, this);
+			else
+				runUtil.run("identify", ["-format", "%w\\n%h\\n", runFilePath], RUN_OPTIONS, this);
 		},
-		function parseResults(imResultsRaw, whRaw)
+		function runIdentifiers(widthHeightRaw)
 		{
-			let imResults = (imResultsRaw || "").trim();
+			widthHeightRaw.trim().split("\n").map(v => +v).batch(2).forEach(([w, h]) =>
+			{
+				imageInfo.width = Math.max(w, imageInfo.width || 0);
+				imageInfo.height = Math.max(h, imageInfo.height || 0);
+			});
+
+			// Because imagemagick is so damn slow at calculating info, we don't bother getting advanced info if the image is too large
+			if([imageInfo.width, imageInfo.height].some(v => v>=10000) || (options.svg && [imageInfo.width, imageInfo.height].some(v => v>=5000)))
+				return cb(undefined, imageInfo), undefined;
+
+			runUtil.run("identify", ["-format", Object.entries(PROPS).map(([k, v]) => `${k}:${v}`).join("\\n"), runFilePath], {...RUN_OPTIONS, timeout : (options.timeout || RUN_OPTIONS.timeout)}, this);
+		},
+		function parseResults(imResultsRaw)
+		{
+			const imResults = (imResultsRaw || "").trim();
 			if(imResults.length===0 || imResults.includes("corrupt image") || imResults.toLowerCase().startsWith("error: command failed"))
-				imResults = (whRaw || "").trim();
+				return cb(undefined, imageInfo), undefined;
 			
 			const imLines = imResults.split("\n");
 			if(imLines.length===0)
 				return this();
 			
-			const imageInfo = {};
 			imLines.forEach(imgLine =>
 			{
 				const lineProps = (imgLine.match(/(?<propName>[^:]+):(?<propValue>.*)$/) || {}).groups;
@@ -56,8 +74,8 @@ exports.getInfo = function getInfo(imageFilePath, _options, _cb)
 				const propValue = NUMS.includes(lineProps.propName) ? +lineProps.propValue : (BOOLS.includes(lineProps.propName) ? lineProps.propValue.toLowerCase()==="true" : lineProps.propValue);
 				if(propValue==="Undefined")
 					return;
-				
-				imageInfo[lineProps.propName] = propValue;
+
+				imageInfo[lineProps.propName] = NUMS.includes(lineProps.propName) ? Math.max(propValue, (imageInfo[lineProps.propName] || 0)) : propValue;
 			});
 			
 			this(undefined, Object.keys(imageInfo).length===0 ? undefined : imageInfo);
@@ -72,7 +90,7 @@ exports.getWidthHeight = function getWidthHeight(imageFilePath, cb)
 	tiptoe(
 		function getSize()
 		{
-			runUtil.run("identify", ["-format", "%wx%h", `${imageFilePath}[0]`], runUtil.SILENT, this);
+			runUtil.run("identify", ["-format", "%wx%h", `${imageFilePath}[0]`], {silent : true, "ignore-stderr" : true}, this);
 		},
 		function processSizes(err, result)
 		{
